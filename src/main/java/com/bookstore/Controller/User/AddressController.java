@@ -28,7 +28,7 @@ public class AddressController {
         return addressService.getAll(page, size, userId);
     }
 
-    @PostMapping("/create")
+    @PostMapping("")
     public ResponseEntity<GenericResponse> create(@RequestHeader("Authorization") String authorizationHeader,
                                                   @RequestBody CreateAddress createAddress) {
         String token = authorizationHeader.substring(7);

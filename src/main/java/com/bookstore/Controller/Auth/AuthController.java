@@ -3,6 +3,7 @@ package com.bookstore.Controller.Auth;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Login;
 import com.bookstore.DTO.RegisterRequest;
+import com.bookstore.DTO.VerifyDTO;
 import com.bookstore.Entity.RefreshToken;
 import com.bookstore.Entity.User;
 import com.bookstore.Exception.UserNotFoundException;
@@ -14,6 +15,7 @@ import com.bookstore.Service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -166,13 +168,9 @@ public class AuthController {
 //        return refreshTokenService.refreshAccessToken(refreshToken);
 //    }
 
-//    @GetMapping(value = "/verify", produces = MediaType.TEXT_HTML_VALUE)
-//    public String confirmRegistration(@RequestParam("token") final String token){
-//        String result = userService.validateVerificationAccount(token);
-//        Context context = new Context();
-//        context.setVariable("result", result);
-//        String content = templateEngine.process("result-confirm", context);
-//        return content;
-//    }
+    @PostMapping(value = "/verify")
+    public ResponseEntity<GenericResponse> confirmRegistration(@RequestBody VerifyDTO verifyDTO){
+        return userService.validateVerificationAccount(verifyDTO.getOtp());
+    }
 
 }

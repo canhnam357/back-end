@@ -14,4 +14,6 @@ public interface UserService {
     ResponseEntity<GenericResponse> getProfile(String userId);
 
     <S extends User> S save(S entity);
+
+    ResponseEntity<GenericResponse> validateVerificationAccount(String token);
 }

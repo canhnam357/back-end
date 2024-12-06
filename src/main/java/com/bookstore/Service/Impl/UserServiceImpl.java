@@ -4,11 +4,9 @@ import com.bookstore.DTO.AddressResponse;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Profile;
 import com.bookstore.DTO.RegisterRequest;
-import com.bookstore.Entity.Address;
-import com.bookstore.Entity.Cart;
-import com.bookstore.Entity.User;
-import com.bookstore.Repository.CartRepository;
-import com.bookstore.Repository.UserRepository;
+import com.bookstore.Entity.*;
+import com.bookstore.Repository.*;
+import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,6 +29,15 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
 
     @Autowired
     private CartRepository cartRepository;
+
+    @Autowired
+    private VerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private EmailVerificationService emailVerificationService;
+
+    @Autowired
+    private EmailVerificationRepository emailVerificationRepository;
 
     @Autowired
     private RoleService roleService;
@@ -80,7 +87,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
 
         userRepository.save(user);
 
-        //emailVerificationService.sendOtp(registerRequest.getEmail());
+        emailVerificationService.sendOtp(registerRequest.getEmail());
 
         return ResponseEntity.ok(
                 GenericResponse.builder()
@@ -136,6 +143,33 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                             .build()
             );
         }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> validateVerificationAccount(String otp) {
+        Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtp(otp);
+        if (!emailVerification.isPresent()) {
+            return ResponseEntity.badRequest().body(
+                    GenericResponse.builder()
+                            .message("Invalid token, please check the token again!")
+                            .result("")
+                            .statusCode(HttpStatus.BAD_REQUEST.value())
+                            .success(false)
+                            .build()
+            );
+        }
+        User user = userRepository.findByEmail(emailVerification.get().getEmail()).get();
+        user.setVerified(true);
+        user.setActive(true);
+        userRepository.save(user);
+        return ResponseEntity.ok().body(
+                GenericResponse.builder()
+                        .message("Account verification successful, please login!")
+                        .result("")
+                        .statusCode(HttpStatus.OK.value())
+                        .success(true)
+                        .build()
+        );
     }
 
     @Override
