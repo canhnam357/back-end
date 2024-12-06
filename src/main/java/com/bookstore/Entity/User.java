@@ -27,7 +27,7 @@ public class User implements Serializable {
     @JsonBackReference
     private String password;
 
-    private String phone;
+    private String phoneNumber;
 
     @Email
     private String email;

@@ -166,7 +166,7 @@ public class AuthController {
 //        return refreshTokenService.refreshAccessToken(refreshToken);
 //    }
 
-//    @GetMapping(value = "/registration-confirm", produces = MediaType.TEXT_HTML_VALUE)
+//    @GetMapping(value = "/verify", produces = MediaType.TEXT_HTML_VALUE)
 //    public String confirmRegistration(@RequestParam("token") final String token){
 //        String result = userService.validateVerificationAccount(token);
 //        Context context = new Context();

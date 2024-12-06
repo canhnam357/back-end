@@ -1,7 +1,10 @@
 package com.bookstore.Service.Impl;
 
+import com.bookstore.DTO.AddressResponse;
 import com.bookstore.DTO.GenericResponse;
+import com.bookstore.DTO.Profile;
 import com.bookstore.DTO.RegisterRequest;
+import com.bookstore.Entity.Address;
 import com.bookstore.Entity.Cart;
 import com.bookstore.Entity.User;
 import com.bookstore.Repository.CartRepository;
@@ -13,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -86,6 +90,52 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                         .statusCode(200)
                         .build()
         );
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> getProfile(String userId) {
+        try {
+            Optional<User> user = userRepository.findByUserIdAndIsActiveIsTrue(userId);
+            if (!user.isPresent()) {
+                return ResponseEntity.status(404).body(
+                        GenericResponse.builder()
+                                .message("Get Book Failed!!!")
+                                .result("")
+                                .statusCode(HttpStatus.NOT_FOUND.value())
+                                .success(false)
+                                .build()
+                );
+            }
+            Profile profile = new Profile();
+            profile.setEmail(user.get().getEmail());
+            profile.setPhoneNumber(user.get().getPhoneNumber());
+            profile.setFullName(user.get().getFullName());
+            profile.setAddressList(new ArrayList<>());
+            for (Address address : user.get().getAddresses()) {
+                AddressResponse addressResponse = new AddressResponse();
+                addressResponse.setAddressInformation(address.getAddressInformation());
+                addressResponse.setPhoneNumber(address.getPhoneNumber());
+                addressResponse.setFullName(address.getFullName());
+                profile.addAddress(addressResponse);
+            }
+            return ResponseEntity.ok().body(
+                    GenericResponse.builder()
+                            .message("Get Profile User Successfully!")
+                            .result(profile)
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(
+                    GenericResponse.builder()
+                            .message("Get Profile User failed!!!")
+                            .result("")
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build()
+            );
+        }
     }
 
     @Override
