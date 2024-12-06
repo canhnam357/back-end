@@ -1,0 +1,14 @@
+User - Address : 1 - N
+Author - Book : 1 - N
+Publisher - Book : 1 - N
+Contributor - Book : 1 - N
+Book - CartItem : 1 - 1
+Book - Review : 1 - N
+Book - Voucher : 1 - N
+Cart - User : 1 - 1
+Cart - CartItem : 1 - N
+Category - Book : N - N
+Orders - OrderDetail : 1 - N
+Orders - User : N - 1
+Review - User : N - N
+Role - User : 1 - 1
