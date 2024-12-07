@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @Entity
@@ -28,4 +30,11 @@ public class CartItem {
     @ManyToOne
     @JoinColumn(name = "bookId", nullable = false)
     private Book book;
+
+    @Column(precision = 12, scale = 3)
+    private BigDecimal totalPrice;
+
+    public void reCalTotalPrice() {
+        totalPrice = book.getPrice().multiply(BigDecimal.valueOf(quantity));
+    }
 }

@@ -9,5 +9,5 @@ public interface CategoryService {
 
     ResponseEntity<GenericResponse> create(CreateCategory createCategory);
 
-    ResponseEntity<GenericResponse> getAll(int page, int size);
+    ResponseEntity<GenericResponse> getAll();
 }

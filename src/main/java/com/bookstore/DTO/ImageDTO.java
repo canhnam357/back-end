@@ -9,9 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddressResponse {
-    String addressId;
-    String fullName;
-    String phoneNumber;
-    String addressInformation;
+public class ImageDTO {
+    String url;
 }

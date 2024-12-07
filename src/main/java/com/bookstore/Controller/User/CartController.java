@@ -24,6 +24,8 @@ public class CartController {
     public ResponseEntity<GenericResponse> getCart(@RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        System.err.println(userId);
+        System.err.println("Get cart");
         return cartService.getCart(userId);
     }
 
@@ -32,6 +34,16 @@ public class CartController {
                                                      @RequestBody AddToCart addToCart) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        System.err.println("add to cart" + userId);
         return cartService.addToCart(addToCart, userId);
+    }
+
+    @DeleteMapping("/{bookId}")
+    public ResponseEntity<GenericResponse> removeFromCart(@RequestHeader("Authorization") String authorizationHeader,
+                                                          @PathVariable String bookId) {
+        String token = authorizationHeader.substring(7);
+        String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        System.err.println("Remove from cart" + userId);
+        return cartService.removeFromCart(bookId, userId);
     }
 }

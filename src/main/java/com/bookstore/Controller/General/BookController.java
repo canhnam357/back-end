@@ -14,8 +14,8 @@ public class BookController {
 
     @GetMapping("")
     public ResponseEntity<GenericResponse> getAllBook(@RequestParam(defaultValue = "1") int page,
-                                                      @RequestParam(defaultValue = "10") int size) {
-
+                                                      @RequestParam(defaultValue = "100") int size) {
+        System.err.println("Get all Book from general - default 100 / page");
         return bookService.getAllBookNotDeleted(page, size);
     }
 

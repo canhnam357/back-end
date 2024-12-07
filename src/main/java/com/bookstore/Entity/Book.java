@@ -90,6 +90,11 @@ public class Book {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images;
 
+    private String urlThumbnail;
+
+    public void addImage(Image image) {
+        images.add(image);
+    }
 
     @PrePersist
     void createdAt() {

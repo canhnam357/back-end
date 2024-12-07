@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
@@ -46,9 +48,9 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> getAll(int page, int size) {
+    public ResponseEntity<GenericResponse> getAll() {
         try {
-            Page<Category> categories = categoryRepository.findAll(PageRequest.of(page - 1, size));
+            List<Category> categories = categoryRepository.findAll();
             return ResponseEntity.ok().body(
                     GenericResponse.builder()
                             .message("Get All Category Successfully!")

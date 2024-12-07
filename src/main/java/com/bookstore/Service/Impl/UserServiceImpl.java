@@ -120,6 +120,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             profile.setAddressList(new ArrayList<>());
             for (Address address : user.get().getAddresses()) {
                 AddressResponse addressResponse = new AddressResponse();
+                addressResponse.setAddressId(address.getAddressId());
                 addressResponse.setAddressInformation(address.getAddressInformation());
                 addressResponse.setPhoneNumber(address.getPhoneNumber());
                 addressResponse.setFullName(address.getFullName());

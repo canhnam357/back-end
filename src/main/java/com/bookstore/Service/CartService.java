@@ -9,4 +9,6 @@ public interface CartService {
     ResponseEntity<GenericResponse> getCart(String userId);
 
     ResponseEntity<GenericResponse> addToCart(AddToCart addToCart, String userId);
+
+    ResponseEntity<GenericResponse> removeFromCart(String bookId, String userId);
 }

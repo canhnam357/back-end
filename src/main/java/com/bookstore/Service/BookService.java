@@ -4,6 +4,7 @@ import com.bookstore.DTO.CreateBook;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Entity.Book;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface BookService {
 
@@ -14,4 +15,6 @@ public interface BookService {
     ResponseEntity<GenericResponse> getByIdNotDeleted(String bookId);
 
     ResponseEntity<GenericResponse> create(CreateBook createBook);
+
+    ResponseEntity<GenericResponse> upload(MultipartFile file, String bookId);
 }

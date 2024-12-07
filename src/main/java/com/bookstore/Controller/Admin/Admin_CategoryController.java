@@ -17,9 +17,8 @@ public class Admin_CategoryController {
     private CategoryService categoryService;
 
     @GetMapping("")
-    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
-                                                   @RequestParam(defaultValue = "10") int size) {
-        return categoryService.getAll(page, size);
+    public ResponseEntity<GenericResponse> getAll () {
+        return categoryService.getAll();
     }
 
     @PostMapping("/create")

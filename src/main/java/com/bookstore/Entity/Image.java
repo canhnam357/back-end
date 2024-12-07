@@ -1,5 +1,6 @@
 package com.bookstore.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,5 +23,6 @@ public class Image {
 
     @ManyToOne
     @JoinColumn(name = "bookId", nullable = false)
+    @JsonIgnore
     private Book book;
 }

@@ -33,10 +33,11 @@ public class AddressController {
                                                   @RequestBody CreateAddress createAddress) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        System.err.println(userId);
         return addressService.create(createAddress, userId);
     }
 
-    @DeleteMapping("/delete/{addressId}")
+    @DeleteMapping("/{addressId}")
     public ResponseEntity<GenericResponse> delete(@RequestHeader("Authorization") String authorizationHeader,
                                                   @PathVariable String addressId) {
         String token = authorizationHeader.substring(7);

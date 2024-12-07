@@ -70,6 +70,17 @@ public class CartServiceImpl implements CartService {
                 _cartItem = cartItem.get();
                 _cartItem.setQuantity(_cartItem.getQuantity() + addToCart.getQuantity());
             }
+            _cartItem.reCalTotalPrice();;
+            if (_cartItem.getQuantity() <= 0) {
+                return ResponseEntity.badRequest().body(
+                        GenericResponse.builder()
+                                .message("Quantity must greater than 0!")
+                                .result("")
+                                .statusCode(HttpStatus.BAD_REQUEST.value())
+                                .success(false)
+                                .build()
+                );
+            }
             return ResponseEntity.status(201).body(
                     GenericResponse.builder()
                             .message("Add to Cart successfully!")
@@ -89,4 +100,41 @@ public class CartServiceImpl implements CartService {
             );
         }
     }
+
+    @Override
+    public ResponseEntity<GenericResponse> removeFromCart(String bookId, String userId) {
+        try {
+            Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
+            if (!cartItem.isPresent()) {
+                return ResponseEntity.status(404).body(
+                        GenericResponse.builder()
+                                .message("Not found cartItem!!!")
+                                .result("")
+                                .statusCode(HttpStatus.NOT_FOUND.value())
+                                .success(false)
+                                .build()
+                );
+            }
+            cartItemRepository.delete(cartItem.get());
+            return ResponseEntity.ok().body(
+                    GenericResponse.builder()
+                            .message("Remove from Cart successfully!")
+                            .result("")
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build()
+            );
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(
+                    GenericResponse.builder()
+                            .message("Remove from Cart failed!!!")
+                            .result("")
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build()
+            );
+        }
+    }
+
+
 }
