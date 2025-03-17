@@ -17,6 +17,9 @@ public class RegisterRequest {
     @NotEmpty(message = "Password is required")
     private String password;
 
+    @NotEmpty(message = "Phone Number is required")
+    private String phoneNumber;
+
     @NotEmpty(message = "Confirm Password is required")
     private String confirmPassword;
 }

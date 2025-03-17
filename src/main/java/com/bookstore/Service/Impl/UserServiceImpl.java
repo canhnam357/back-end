@@ -78,6 +78,8 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
         user.setEmail(registerRequest.getEmail());
         user.setUserId(UUID.randomUUID().toString().split("-")[0]);
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        System.err.println(registerRequest.getPhoneNumber());
+        user.setPhoneNumber(registerRequest.getPhoneNumber());
         user.setRole(roleService.findByName("USER"));
 
         Cart cart = new Cart();
