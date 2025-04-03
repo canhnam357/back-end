@@ -11,4 +11,8 @@ public interface CartService {
     ResponseEntity<GenericResponse> addToCart(AddToCart addToCart, String userId);
 
     ResponseEntity<GenericResponse> removeFromCart(String bookId, String userId);
+
+    ResponseEntity<GenericResponse> changeQuantity(String bookId, String userId, int quantity);
+
+    ResponseEntity<GenericResponse> updateQuantity(String bookId, String userId, int quantity);
 }

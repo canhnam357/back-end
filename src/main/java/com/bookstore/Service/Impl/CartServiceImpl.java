@@ -136,5 +136,92 @@ public class CartServiceImpl implements CartService {
         }
     }
 
+    @Override
+    public ResponseEntity<GenericResponse> changeQuantity(String bookId, String userId, int quantity) {
+        try {
+            Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
+            if (!cartItem.isPresent()) {
+                return ResponseEntity.status(404).body(
+                        GenericResponse.builder()
+                                .message("Not found cartItem!!!")
+                                .result("")
+                                .statusCode(HttpStatus.NOT_FOUND.value())
+                                .success(false)
+                                .build()
+                );
+            }
+            System.out.println("BEFORE " + cartItem.get().getQuantity());
+            if (cartItem.get().getQuantity() + quantity <= 0) {
+                cartItemRepository.delete(cartItem.get());
+            }
+            else
+            {
+                cartItem.get().setQuantity(cartItem.get().getQuantity() + quantity);
+                cartItemRepository.save(cartItem.get());
+            }
+            System.out.println("AFTER " + cartItem.get().getQuantity());
+            return ResponseEntity.ok().body(
+                    GenericResponse.builder()
+                            .message("Changed quantity cart-item successfully!")
+                            .result("")
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build()
+            );
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(
+                    GenericResponse.builder()
+                            .message("Change quantity cart-item failed!!!")
+                            .result("")
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build()
+            );
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> updateQuantity(String bookId, String userId, int quantity) {
+        try {
+            Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
+            if (!cartItem.isPresent()) {
+                return ResponseEntity.status(404).body(
+                        GenericResponse.builder()
+                                .message("Not found cartItem!!!")
+                                .result("")
+                                .statusCode(HttpStatus.NOT_FOUND.value())
+                                .success(false)
+                                .build()
+                );
+            }
+
+            if (quantity <= 0) {
+                cartItemRepository.delete(cartItem.get());
+            }
+            else
+            {
+                cartItem.get().setQuantity(quantity);
+                cartItemRepository.save(cartItem.get());
+            }
+            return ResponseEntity.ok().body(
+                    GenericResponse.builder()
+                            .message("Updated quantity cart-item successfully!")
+                            .result("")
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build()
+            );
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(
+                    GenericResponse.builder()
+                            .message("Update quantity cart-item failed!!!")
+                            .result("")
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build()
+            );
+        }
+    }
+
 
 }

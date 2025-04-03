@@ -2,7 +2,9 @@ package com.bookstore.Controller.User;
 
 
 import com.bookstore.DTO.AddToCart;
+import com.bookstore.DTO.ChangeQuantity;
 import com.bookstore.DTO.GenericResponse;
+import com.bookstore.DTO.UpdateQuantity;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +40,30 @@ public class CartController {
         return cartService.addToCart(addToCart, userId);
     }
 
-    @DeleteMapping("/{bookId}")
+    @DeleteMapping("/{bookId}") // for delete button
     public ResponseEntity<GenericResponse> removeFromCart(@RequestHeader("Authorization") String authorizationHeader,
                                                           @PathVariable String bookId) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println("Remove from cart" + userId);
         return cartService.removeFromCart(bookId, userId);
+    }
+
+    @PostMapping("/change-quantity") // for +1 /-1 button
+    public ResponseEntity<GenericResponse> changeQuantity(@RequestHeader("Authorization") String authorizationHeader,
+                                                     @RequestBody ChangeQuantity changeQuantity) {
+        String token = authorizationHeader.substring(7);
+        String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        System.err.println("Change quantity " + userId + " bookId " + changeQuantity.getBookId());
+        return cartService.changeQuantity(changeQuantity.getBookId(), userId, changeQuantity.getQuantity());
+    }
+
+    @PostMapping("/update-quantity") // for quantity - text box
+    public ResponseEntity<GenericResponse> updateQuantity(@RequestHeader("Authorization") String authorizationHeader,
+                                                          @RequestBody UpdateQuantity updateQuantity) {
+        String token = authorizationHeader.substring(7);
+        String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        System.err.println("Update quantity " + userId + " bookId " + updateQuantity.getBookId());
+        return cartService.updateQuantity(updateQuantity.getBookId(), userId, updateQuantity.getQuantity());
     }
 }
