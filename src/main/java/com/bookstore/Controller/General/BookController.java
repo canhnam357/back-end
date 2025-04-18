@@ -19,6 +19,13 @@ public class BookController {
         return bookService.getAllBookNotDeleted(page, size);
     }
 
+    @GetMapping("/new_arrivals")
+    public ResponseEntity<GenericResponse> getAllBookNewArrivals(@RequestParam(defaultValue = "1") int page,
+                                                      @RequestParam(defaultValue = "100") int size) {
+        System.err.println("Get all Book from general - default 100 / page");
+        return bookService.getAllBookNotDeleted(page, size);
+    }
+
     @GetMapping("/{bookId}")
     public ResponseEntity<GenericResponse> getById(@PathVariable String bookId) {
         return bookService.getByIdNotDeleted(bookId);

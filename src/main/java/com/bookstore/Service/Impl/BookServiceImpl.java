@@ -130,6 +130,30 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    public ResponseEntity<GenericResponse> getNewArrivalsBook(int page, int size) {
+        try {
+            Page<Book> books = bookRepository.findAllByIsDeletedIsFalseAndNewArrivalIsTrue(PageRequest.of(page - 1, size));
+            return ResponseEntity.ok().body(
+                    GenericResponse.builder()
+                            .message("Get New Arrival Book Successfully!")
+                            .result(books)
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build()
+            );
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(
+                    GenericResponse.builder()
+                            .message("Get New Arrival Book failed!!!")
+                            .result("")
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build()
+            );
+        }
+    }
+
+    @Override
     public ResponseEntity<GenericResponse> create(CreateBook createBook) {
         try {
             Book book = new Book();

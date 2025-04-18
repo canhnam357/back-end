@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface BookRepository extends JpaRepository<Book, String> {
     Page<Book> findAllByIsDeletedIsFalse(Pageable pageable);
 
+    Page<Book> findAllByIsDeletedIsFalseAndNewArrivalIsTrue(Pageable pageable);
     Page<Book> findAll(Pageable pageable);
 
     Optional<Book> findByBookIdAndIsDeletedIsFalse(String bookId);

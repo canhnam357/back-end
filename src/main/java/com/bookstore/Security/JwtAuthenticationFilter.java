@@ -38,59 +38,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         return Optional.empty();
     }
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
         CustomHttpServletRequestWrapper requestWrapper = new CustomHttpServletRequestWrapper(request);
         try {
             Optional<String> jwt = getJwtFromRequest(requestWrapper);
 
-            if (jwt.isPresent() && jwtTokenProvider.validateToken(jwt.get())) {
-                String id = jwtTokenProvider.getUserIdFromJwt(jwt.get());
-                UserDetails userDetails = userDetailService.loadUserByUserId(id);
-                if(userDetails != null) {
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(requestWrapper));
+            if (jwt.isPresent()) {
+                // validateToken sẽ ném exception nếu token sai/hết hạn
+                if (jwtTokenProvider.validateToken(jwt.get())) {
+                    String id = jwtTokenProvider.getUserIdFromJwt(jwt.get());
+                    UserDetails userDetails = userDetailService.loadUserByUserId(id);
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                    response.addHeader("Authorization", "Bearer " + jwt);
+                    if (userDetails != null) {
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(requestWrapper));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        response.addHeader("Authorization", "Bearer " + jwt.get());
+                    }
                 }
             }
-        }catch(MalformedJwtException e){
-            response.setStatus(401);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            PrintWriter out = response.getWriter();
-            out.print("{\"success\": false, \"message\": \"Access Denied\", \"result\": \"Invalid JWT token. Please login again!\", \"statusCode\": \"401\"}");
-            out.flush();
-            return;
-        }catch(ExpiredJwtException e){
-            response.setStatus(401);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            PrintWriter out = response.getWriter();
-            out.print("{\"success\": false, \"message\": \"Access Denied\", \"result\": \"Token is expired. Please login again!\", \"statusCode\": \"401\"}");
-            out.flush();
-            return;
-        } catch (SignatureException ex){
-            response.setStatus(401);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            PrintWriter out = response.getWriter();
-            out.print("{\"success\": false, \"message\": \"Access Denied\", \"result\": \"In valid JWT signature. Please login again!\", \"statusCode\": \"401\"}");
-            out.flush();
-            return;
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            response.setStatus(401);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            PrintWriter out = response.getWriter();
-            out.print("{\"success\": false, \"message\": \"Access Denied\", \"result\": \"Please login again!\", \"statusCode\": \"401\"}");
-            out.flush();
-            return;
-        }
 
-        filterChain.doFilter(requestWrapper, response);
+            filterChain.doFilter(requestWrapper, response);
+
+        } catch (ExpiredJwtException | MalformedJwtException | SignatureException e) {
+            request.setAttribute("jwt_exception", e);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            PrintWriter out = response.getWriter();
+            out.print("{\"success\": false, \"message\": \"Access Denied\", \"result\": \"" + e.getMessage() + "\", \"statusCode\": \"401\"}");
+            out.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("jwt_exception", e);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            PrintWriter out = response.getWriter();
+            out.print("{\"success\": false, \"message\": \"Access Denied\", \"result\": \"Unexpected error. Please login again!\", \"statusCode\": \"401\"}");
+            out.flush();
+        }
     }
 }

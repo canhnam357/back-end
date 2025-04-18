@@ -14,6 +14,8 @@ public interface BookService {
 
     ResponseEntity<GenericResponse> getByIdNotDeleted(String bookId);
 
+    ResponseEntity<GenericResponse> getNewArrivalsBook(int page, int size); // get Book such newArrival = true and isDeleted = false
+
     ResponseEntity<GenericResponse> create(CreateBook createBook);
 
     ResponseEntity<GenericResponse> upload(MultipartFile file, String bookId);

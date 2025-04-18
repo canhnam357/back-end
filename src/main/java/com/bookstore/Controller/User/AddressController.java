@@ -2,6 +2,7 @@ package com.bookstore.Controller.User;
 
 import com.bookstore.DTO.CreateAddress;
 import com.bookstore.DTO.GenericResponse;
+import com.bookstore.DTO.PatchUpdateAddress;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.AddressService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,4 +45,14 @@ public class AddressController {
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         return addressService.delete(addressId, userId);
     }
+
+    @PatchMapping("")
+    public ResponseEntity<GenericResponse> update(@RequestHeader("Authorization") String authorizationHeader,
+                                                  @RequestBody PatchUpdateAddress address) {
+        String token = authorizationHeader.substring(7);
+        String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        System.err.println(userId);
+        return addressService.update(address, userId);
+    }
+
 }

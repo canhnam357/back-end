@@ -67,6 +67,9 @@ public class WebSecurityConfig {
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic((basic)-> basic
                         .authenticationEntryPoint(myBasicAuthenticationEntryPoint))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(myBasicAuthenticationEntryPoint)
+                )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .cors(httpSecurityCorsConfigurer ->

@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.elasticsearch.annotations.Document;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -20,6 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "book")
+//@Document(indexName = "book")
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -91,6 +93,9 @@ public class Book {
     private List<Image> images;
 
     private String urlThumbnail;
+
+    @Column(columnDefinition = "boolean default false")
+    private boolean newArrival;
 
     public void addImage(Image image) {
         images.add(image);

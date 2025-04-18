@@ -2,6 +2,7 @@ package com.bookstore.Service.Impl;
 
 import com.bookstore.DTO.CreateAddress;
 import com.bookstore.DTO.GenericResponse;
+import com.bookstore.DTO.PatchUpdateAddress;
 import com.bookstore.Entity.Address;
 import com.bookstore.Entity.Author;
 import com.bookstore.Repository.AddressRepository;
@@ -104,6 +105,61 @@ public class AddressServiceImpl implements AddressService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Delete Address failed!!!")
+                            .result("")
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build()
+            );
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> update(PatchUpdateAddress address, String userId) {
+        try {
+            Optional<Address> _address = addressRepository.findByAddressIdAndUserUserId(address.getAddressId(), userId);
+            if (_address.isEmpty()) {
+                return ResponseEntity.status(404).body(
+                        GenericResponse.builder()
+                                .message("Address Not Found!!!")
+                                .result("")
+                                .statusCode(HttpStatus.NOT_FOUND.value())
+                                .success(false)
+                                .build()
+                );
+            }
+
+            System.out.println("UPDATED ADDRESS");
+            System.out.println(address.getPhoneNumber() != null);
+            if (address.getFullName() != null) {
+                _address.get().setFullName(address.getFullName());
+            }
+
+            if (address.getPhoneNumber() != null) {
+                _address.get().setPhoneNumber(address.getPhoneNumber());
+            }
+
+            if (address.getAddressInformation() != null) {
+                _address.get().setAddressInformation(address.getAddressInformation());
+            }
+
+            if (address.getOtherDetail() != null) {
+                _address.get().setOtherDetail(address.getOtherDetail());
+            }
+
+            addressRepository.save(_address.get());
+
+            return ResponseEntity.status(204).body(
+                    GenericResponse.builder()
+                            .message("Updated Address Successfully!")
+                            .result("")
+                            .statusCode(HttpStatus.NO_CONTENT.value())
+                            .success(true)
+                            .build()
+            );
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(
+                    GenericResponse.builder()
+                            .message("Updated Address failed!!!")
                             .result("")
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)

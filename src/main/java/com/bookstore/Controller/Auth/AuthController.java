@@ -1,9 +1,6 @@
 package com.bookstore.Controller.Auth;
 
-import com.bookstore.DTO.GenericResponse;
-import com.bookstore.DTO.Login;
-import com.bookstore.DTO.RegisterRequest;
-import com.bookstore.DTO.VerifyDTO;
+import com.bookstore.DTO.*;
 import com.bookstore.Entity.RefreshToken;
 import com.bookstore.Entity.User;
 import com.bookstore.Exception.UserNotFoundException;
@@ -72,6 +69,14 @@ public class AuthController {
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
+        if (optionalUser.isPresent() && !optionalUser.get().isActive()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Your account is not active!")
+                    .result(null)
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDTO.getEmail(),
                         loginDTO.getPassword()));
@@ -88,6 +93,7 @@ public class AuthController {
         Map<String, String> tokenMap = new HashMap<>();
         tokenMap.put("accessToken", accessToken);
         tokenMap.put("refreshToken", token);
+        tokenMap.put("username", userService.getUserName(loginDTO.getEmail()));
 
         if (optionalUser.isPresent()) {
             optionalUser.get().setLastLoginAt(new Date());
@@ -171,6 +177,25 @@ public class AuthController {
     @PostMapping(value = "/verify")
     public ResponseEntity<GenericResponse> confirmRegistration(@RequestBody VerifyDTO verifyDTO){
         return userService.validateVerificationAccount(verifyDTO.getOtp());
+    }
+
+    @PostMapping("/verify-admin")
+    public ResponseEntity<GenericResponse> confirmRegistration(@RequestBody VerifyAdminDTO verifyAdminDTO){
+        String token = verifyAdminDTO.getAccessToken();
+        System.err.println(token);
+        try {
+            String userId = jwtTokenProvider.getUserIdFromJwt(token);
+            return userService.verifyAdmin(userId);
+        } catch (Exception ex) {
+            System.err.println("BAD AccessToken");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(GenericResponse.builder()
+                            .success(false)
+                            .message("Bad AccessToken!")
+                            .result("")
+                            .statusCode(HttpStatus.UNAUTHORIZED.value())
+                            .build());
+        }
     }
 
 }
