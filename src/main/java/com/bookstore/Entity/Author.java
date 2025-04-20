@@ -1,5 +1,6 @@
 package com.bookstore.Entity;
 
+import com.bookstore.Utils.Normalized;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,8 @@ public class Author {
     private String authorId;
 
     private String authorName;
+
+    private String nameNormalized;
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

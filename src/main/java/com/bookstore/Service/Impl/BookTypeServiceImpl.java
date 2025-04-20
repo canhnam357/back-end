@@ -1,6 +1,6 @@
 package com.bookstore.Service.Impl;
 
-import com.bookstore.DTO.CreateBookType;
+import com.bookstore.DTO.Admin_Req_Create_BookType;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Entity.Author;
 import com.bookstore.Entity.BookType;
@@ -19,7 +19,7 @@ public class BookTypeServiceImpl implements BookTypeService {
     private BookTypeRepository bookTypeRepository;
 
     @Override
-    public ResponseEntity<GenericResponse> create(CreateBookType createBookType) {
+    public ResponseEntity<GenericResponse> create(Admin_Req_Create_BookType createBookType) {
         try {
             BookType bookType = new BookType();
             bookType.setBookTypeName(createBookType.getBookTypeName());

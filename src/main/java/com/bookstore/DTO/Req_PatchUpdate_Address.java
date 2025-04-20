@@ -9,17 +9,17 @@ import lombok.Setter;
 @Getter
 @Setter
 
-public class PatchUpdateAddress {
+public class Req_PatchUpdate_Address {
 
-    String addressId;
+    private String addressId;
 
-    String fullName;
+    private String fullName;
 
     // checked?
-    String phoneNumber;
+    private String phoneNumber;
 
-    String addressInformation;
+    private String addressInformation;
 
     // Optional
-    String otherDetail;
+    private String otherDetail;
 }

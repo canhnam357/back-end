@@ -9,7 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Admin_UpdateUserDTO {
-    String active;
-    String verified;
+public class Admin_Req_Create_Publisher {
+    private String publisherName;
 }

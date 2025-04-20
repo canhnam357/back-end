@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateAuthor {
-    String authorName;
+public class Admin_Req_Create_Distributor {
+    private String distributorName;
 }

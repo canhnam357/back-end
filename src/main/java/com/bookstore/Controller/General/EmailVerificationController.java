@@ -1,6 +1,6 @@
 package com.bookstore.Controller.General;
 
-import com.bookstore.DTO.EmailVerificationRequest;
+import com.bookstore.DTO.Req_Verify_Email;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.EmailVerificationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ public class EmailVerificationController {
     private EmailVerificationService emailVerificationService;
 
     @PostMapping("/sendOTP")
-    public ResponseEntity<GenericResponse> sendOtp(@RequestBody EmailVerificationRequest emailVerificationRequest) {
+    public ResponseEntity<GenericResponse> sendOtp(@RequestBody Req_Verify_Email emailVerificationRequest) {
         try {
             emailVerificationService.sendOtp(emailVerificationRequest.getEmail());
             return ResponseEntity.ok()

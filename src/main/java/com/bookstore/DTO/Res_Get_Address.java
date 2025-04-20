@@ -9,7 +9,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmailVerificationRequest {
-    String email;
+public class Res_Get_Address {
+    private String addressId;
+    private String fullName;
+    private String phoneNumber;
+    private String addressInformation;
 }
-

@@ -9,9 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddressResponse {
-    String addressId;
-    String fullName;
-    String phoneNumber;
-    String addressInformation;
+public class Req_Verify_Email {
+    private String email;
 }
+

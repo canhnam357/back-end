@@ -10,18 +10,18 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateAddress {
+public class Req_Create_Address {
     @NotNull
-    String fullName;
+    private String fullName;
 
     // checked?
     @NotNull
-    String phoneNumber;
+    private String phoneNumber;
 
     @NotNull
-    String addressInformation;
+    private String addressInformation;
 
     // Optional
-    String otherDetail;
+    private String otherDetail;
 
 }

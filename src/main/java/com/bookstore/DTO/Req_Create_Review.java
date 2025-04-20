@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VerifyAdminDTO {
-    String accessToken;
+public class Req_Create_Review {
+    private String content;
 }

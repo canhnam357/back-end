@@ -1,6 +1,6 @@
 package com.bookstore.Service.Impl;
 
-import com.bookstore.DTO.AddToCart;
+import com.bookstore.DTO.Req_Add_Cart;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Entity.Book;
 import com.bookstore.Entity.CartItem;
@@ -55,7 +55,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> addToCart(AddToCart addToCart, String userId) {
+    public ResponseEntity<GenericResponse> addToCart(Req_Add_Cart addToCart, String userId) {
         try {
             Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(addToCart.getBookId(), userId);
             CartItem _cartItem;

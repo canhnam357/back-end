@@ -1,7 +1,7 @@
 package com.bookstore.Controller.User;
 
 import com.bookstore.DTO.GenericResponse;
-import com.bookstore.DTO.OrderDTO;
+import com.bookstore.DTO.Req_Create_Order;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class OrderController {
 
     @PostMapping("")
     public ResponseEntity<GenericResponse> createOrder(@RequestHeader("Authorization") String authorizationHeader,
-                                                     @RequestBody OrderDTO orderDTO) {
+                                                     @RequestBody Req_Create_Order orderDTO) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println("create order " + userId);

@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImageDTO {
-    String url;
+public class Admin_Req_Create_Author {
+    private String authorName;
 }

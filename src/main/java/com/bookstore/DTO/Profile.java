@@ -12,12 +12,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Profile {
-    String fullName;
-    String phoneNumber;
-    String email;
-    List<AddressResponse> addressList;
+    private String fullName;
+    private String phoneNumber;
+    private String email;
+    private List<Res_Get_Address> addressList;
 
-    public void addAddress(AddressResponse addressResponse) {
-        addressList.add(addressResponse);
+    public void addAddress(Res_Get_Address resGetAddress) {
+        addressList.add(resGetAddress);
     }
 }

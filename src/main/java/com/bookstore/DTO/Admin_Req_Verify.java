@@ -1,7 +1,5 @@
 package com.bookstore.DTO;
 
-
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,9 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddToCart {
-    String bookId;
-
-    @Positive(message = "Quantity must greater than 0")
-    int quantity;
+public class Admin_Req_Verify {
+    private String accessToken;
 }

@@ -1,6 +1,6 @@
 package com.bookstore.Controller.Admin;
 
-import com.bookstore.DTO.Admin_UpdateUserDTO;
+import com.bookstore.DTO.Admin_Req_Update_UserStatus;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ public class Admin_UserController {
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<GenericResponse> updateUserStatus(@PathVariable String userId, @RequestBody Admin_UpdateUserDTO adminUpdateUserDTO) {
+    public ResponseEntity<GenericResponse> updateUserStatus(@PathVariable String userId, @RequestBody Admin_Req_Update_UserStatus adminUpdateUserDTO) {
         return userService.updateUserStatus(userId, adminUpdateUserDTO);
     }
 }

@@ -63,6 +63,8 @@ public class JwtTokenProvider {
         return claims.get("user_id", String.class);
     }
 
+
+
     public String getUserIdFromRefreshToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -71,6 +73,28 @@ public class JwtTokenProvider {
                 .getBody();
         return claims.getSubject();
     }
+
+    public boolean _validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token); // Sẽ ném lỗi nếu token không hợp lệ
+            return true;
+        } catch (ExpiredJwtException ex) {
+            System.out.println("Token đã hết hạn: " + ex.getMessage());
+        } catch (UnsupportedJwtException ex) {
+            System.out.println("Token không được hỗ trợ: " + ex.getMessage());
+        } catch (MalformedJwtException ex) {
+            System.out.println("Token sai định dạng: " + ex.getMessage());
+        } catch (SignatureException ex) {
+            System.out.println("Chữ ký token không hợp lệ: " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.out.println("⚠Token trống hoặc null: " + ex.getMessage());
+        }
+        return false;
+    }
+
 
     public boolean validateToken(String authToken) throws JwtException {
         // Không bắt lỗi ở đây, để JwtAuthenticationFilter xử lý

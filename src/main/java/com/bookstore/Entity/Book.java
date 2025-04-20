@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.elasticsearch.annotations.Document;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -21,7 +20,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "book")
-//@Document(indexName = "book")
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -66,8 +64,8 @@ public class Book {
     private Publisher publisher;
 
     @ManyToOne
-    @JoinColumn(name = "contributorId", nullable = false)
-    private Contributor contributor;
+    @JoinColumn(name = "distributorId", nullable = false)
+    private Distributor distributor;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

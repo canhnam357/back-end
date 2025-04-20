@@ -1,6 +1,6 @@
 package com.bookstore.Service.Impl;
 
-import com.bookstore.DTO.CreateCategory;
+import com.bookstore.DTO.Admin_Req_Create_Category;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Entity.Author;
 import com.bookstore.Entity.Category;
@@ -23,7 +23,7 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     @Override
-    public ResponseEntity<GenericResponse> create(CreateCategory createCategory) {
+    public ResponseEntity<GenericResponse> create(Admin_Req_Create_Category createCategory) {
         try {
             Category category = new Category();
             category.setCategoryName(createCategory.getCategoryName());

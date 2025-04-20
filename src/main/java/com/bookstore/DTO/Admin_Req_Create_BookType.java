@@ -5,10 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateCategory {
-    String categoryName;
+public class Admin_Req_Create_BookType {
+    private String bookTypeName;
 }

@@ -13,33 +13,33 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateBook {
-    String bookName;
+public class Admin_Req_Create_Book {
+    private String bookName;
 
     @PositiveOrZero(message = "inStock must be greater than or equal 0")
-    int inStock;
+    private int inStock;
 
     @Positive(message = "Price must be greater than 0")
     @Column(precision = 12, scale = 3)
-    BigDecimal price;
+    private BigDecimal price;
 
     @Column(columnDefinition = "MEDIUMTEXT")
-    String description;
+    private String description;
 
     @Positive(message = "Number of page must be greater than 0")
-    int numberOfPage;
+    private int numberOfPage;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    Date publishedDate;
+    private Date publishedDate;
 
     @Positive(message = "Weight must be greater than 0")
-    int weight;
+    private int weight;
 
-    String authorId;
+    private String authorId;
 
-    String publisherId;
+    private String publisherId;
 
-    String contributorId;
+    private String distributorId;
 
-    String bookTypeId;
+    private String bookTypeId;
 }

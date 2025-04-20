@@ -1,6 +1,6 @@
 package com.bookstore.Controller.Admin;
 
-import com.bookstore.DTO.CreateBook;
+import com.bookstore.DTO.Admin_Req_Create_Book;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.BookService;
 import com.bookstore.Service.CloudinaryService;
@@ -22,7 +22,7 @@ public class Admin_BookController {
     private CloudinaryService cloudinaryService;
 
     @PostMapping("/create")
-    public ResponseEntity<GenericResponse> createBook (@RequestBody CreateBook createBook)  {
+    public ResponseEntity<GenericResponse> createBook (@RequestBody Admin_Req_Create_Book createBook)  {
         return bookService.create(createBook);
     }
 
@@ -33,7 +33,17 @@ public class Admin_BookController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<GenericResponse> uploadImage(@RequestParam("image") MultipartFile file,@RequestParam("bookId") String bookId){
-        return bookService.upload(file, bookId);
+    public ResponseEntity<GenericResponse> uploadImage(@RequestParam("image") MultipartFile file,
+                                                       @RequestParam("bookId") String bookId,
+                                                       @RequestParam(value = "isThumbnail", defaultValue = "0", required = false) int isThumbnail){
+        return bookService.upload(file, bookId, isThumbnail);
+    }
+
+    @GetMapping("/author_books/{authorId}")
+    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
+                                                   @RequestParam(defaultValue = "10") int size,
+                                                   @PathVariable String authorId) {
+        System.err.println(authorId);
+        return bookService.adminGetBooksOfAuthor(page, size, authorId);
     }
 }

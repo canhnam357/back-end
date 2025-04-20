@@ -42,130 +42,29 @@ public class AuthController {
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
     private UserService userService;
 
     @Autowired
     private RefreshTokenService refreshTokenService;
 
-    @Autowired
-    private TemplateEngine templateEngine;
 
 
     @PostMapping("/login")
     @Transactional
-    public ResponseEntity<?> login(@Valid @RequestBody Login loginDTO) {
-
-        if (userService.findByEmail(loginDTO.getEmail()).isEmpty())
-            throw new UserNotFoundException("Account does not exist");
-        Optional<User> optionalUser = userService.findByEmail(loginDTO.getEmail());
-        if (optionalUser.isPresent() && !optionalUser.get().isVerified()) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .success(false)
-                    .message("Your account is not verified!")
-                    .result(null)
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build());
-        }
-        if (optionalUser.isPresent() && !optionalUser.get().isActive()) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .success(false)
-                    .message("Your account is not active!")
-                    .result(null)
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build());
-        }
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginDTO.getEmail(),
-                        loginDTO.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        UserDetail userDetail = (UserDetail) authentication.getPrincipal();
-        String accessToken = jwtTokenProvider.generateAccessToken(userDetail);
-        RefreshToken refreshToken = new RefreshToken();
-        String token = jwtTokenProvider.generateRefreshToken(userDetail);
-        refreshToken.setToken(token);
-        refreshToken.setUser(userDetail.getUser());
-        //invalid all refreshToken before
-        refreshTokenService.revokeRefreshToken(userDetail.getUserId());
-        refreshTokenService.save(refreshToken);
-        Map<String, String> tokenMap = new HashMap<>();
-        tokenMap.put("accessToken", accessToken);
-        tokenMap.put("refreshToken", token);
-        tokenMap.put("username", userService.getUserName(loginDTO.getEmail()));
-
-        if (optionalUser.isPresent()) {
-            optionalUser.get().setLastLoginAt(new Date());
-            userService.save(optionalUser.get());
-        }
-        return ResponseEntity.ok().body(GenericResponse.builder()
-                .success(true)
-                .message("Login successfully!")
-                .result(tokenMap)
-                .statusCode(HttpStatus.OK.value())
-                .build());
+    public ResponseEntity<GenericResponse> login(@Valid @RequestBody Login loginDTO) {
+        return userService.login(loginDTO);
     }
 
 
     @PostMapping("/register")
-    public ResponseEntity<GenericResponse> registerProcess(
-            @RequestBody @Valid RegisterRequest registerRequest,
-            BindingResult bindingResult) {
-
-        if (bindingResult.hasErrors()) {
-            String errorMessage = Objects.requireNonNull(
-                    bindingResult.getFieldError()).getDefaultMessage();
-
-            return ResponseEntity.status(500)
-                    .body(new GenericResponse(
-                            false,
-                            errorMessage,
-                            null,
-                            HttpStatus.INTERNAL_SERVER_ERROR.value()
-                    ));
-        }
-        return userService.customerRegister(registerRequest);
+    public ResponseEntity<GenericResponse> registerProcess(@RequestBody @Valid Register registerRequest) {
+        return userService.register(registerRequest);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authorizationHeader,
+    public ResponseEntity<GenericResponse> logout(@RequestHeader("Authorization") String authorizationHeader,
                                     @RequestParam("refreshToken") String refreshToken) {
-        String accessToken = authorizationHeader.substring(7);
-        if (jwtTokenProvider.getUserIdFromJwt(accessToken).equals(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken))) {
-            return refreshTokenService.logout(refreshToken);
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(GenericResponse.builder()
-                        .success(false)
-                        .message("Logout failed!")
-                        .result("Please login before logout!")
-                        .statusCode(HttpStatus.UNAUTHORIZED.value())
-                        .build());
-    }
-
-    @PostMapping("/logout-all")
-    public ResponseEntity<?> logoutAll(@RequestHeader("Authorization") String authorizationHeader,
-                                       @RequestParam("refreshToken") String refreshToken) {
-        String accessToken = authorizationHeader.substring(7);
-        if (jwtTokenProvider.getUserIdFromJwt(accessToken).equals(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken))) {
-            String userId = jwtTokenProvider.getUserIdFromRefreshToken(refreshToken);
-            refreshTokenService.revokeRefreshToken(userId);
-            SecurityContextHolder.clearContext();
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .success(true)
-                    .message("Logout successfully!")
-                    .result("")
-                    .statusCode(HttpStatus.OK.value())
-                    .build());
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(GenericResponse.builder()
-                        .success(false)
-                        .message("Logout failed!")
-                        .result("Please login before logout!")
-                        .statusCode(HttpStatus.UNAUTHORIZED.value())
-                        .build());
+        return userService.logout(authorizationHeader, refreshToken);
     }
 
 //    @PostMapping("/refresh-access-token")
@@ -174,28 +73,21 @@ public class AuthController {
 //        return refreshTokenService.refreshAccessToken(refreshToken);
 //    }
 
-    @PostMapping(value = "/verify")
-    public ResponseEntity<GenericResponse> confirmRegistration(@RequestBody VerifyDTO verifyDTO){
-        return userService.validateVerificationAccount(verifyDTO.getOtp());
+    @PostMapping(value = "/verify-otp")
+    public ResponseEntity<GenericResponse> confirmRegistration(@RequestParam(defaultValue = "") String email,
+                                                               @RequestParam(defaultValue = "") String otp){
+        return userService.validateVerificationAccount(email, otp);
     }
 
     @PostMapping("/verify-admin")
-    public ResponseEntity<GenericResponse> confirmRegistration(@RequestBody VerifyAdminDTO verifyAdminDTO){
-        String token = verifyAdminDTO.getAccessToken();
-        System.err.println(token);
-        try {
-            String userId = jwtTokenProvider.getUserIdFromJwt(token);
-            return userService.verifyAdmin(userId);
-        } catch (Exception ex) {
-            System.err.println("BAD AccessToken");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(GenericResponse.builder()
-                            .success(false)
-                            .message("Bad AccessToken!")
-                            .result("")
-                            .statusCode(HttpStatus.UNAUTHORIZED.value())
-                            .build());
-        }
+    public ResponseEntity<GenericResponse> verifyAdmin(@RequestBody Admin_Req_Verify verifyAdminDTO){
+        return userService.verifyAdmin(verifyAdminDTO);
+    }
+
+
+    @PostMapping("/verify")
+    public ResponseEntity<GenericResponse> verify(@RequestBody Req_Verify reqVerify){
+        return userService.verify(reqVerify);
     }
 
 }

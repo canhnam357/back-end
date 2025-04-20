@@ -1,6 +1,6 @@
 package com.bookstore.Controller.Admin;
 
-import com.bookstore.DTO.CreateCategory;
+import com.bookstore.DTO.Admin_Req_Create_Category;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class Admin_CategoryController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<GenericResponse> createCategory (@RequestBody CreateCategory createCategory)  {
+    public ResponseEntity<GenericResponse> createCategory (@RequestBody Admin_Req_Create_Category createCategory)  {
         return categoryService.create(createCategory);
     }
 }

@@ -11,7 +11,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateQuantity {
-    String bookId;
-    int quantity;
+public class Req_Add_Cart {
+    private String bookId;
+
+    @Positive(message = "Quantity must greater than 0")
+    private int quantity;
 }
+
+// Req_Add_Cart

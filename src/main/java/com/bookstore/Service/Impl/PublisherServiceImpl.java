@@ -1,6 +1,6 @@
 package com.bookstore.Service.Impl;
 
-import com.bookstore.DTO.CreatePublisher;
+import com.bookstore.DTO.Admin_Req_Create_Publisher;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Entity.Author;
 import com.bookstore.Entity.Publisher;
@@ -19,7 +19,7 @@ public class PublisherServiceImpl implements PublisherService {
     private PublisherRepository publisherRepository;
 
     @Override
-    public ResponseEntity<GenericResponse> create(CreatePublisher createPublisher) {
+    public ResponseEntity<GenericResponse> create(Admin_Req_Create_Publisher createPublisher) {
         try {
             Publisher publisher = new Publisher();
             publisher.setPublisherName(createPublisher.getPublisherName());

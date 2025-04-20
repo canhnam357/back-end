@@ -1,6 +1,6 @@
 package com.bookstore.Controller.Admin;
 
-import com.bookstore.DTO.CreateBookType;
+import com.bookstore.DTO.Admin_Req_Create_BookType;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.BookTypeService;
 import com.bookstore.Service.CloudinaryService;
@@ -26,7 +26,7 @@ public class Admin_BookTypeController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<GenericResponse> createAuthor (@RequestBody CreateBookType createBookType)  {
+    public ResponseEntity<GenericResponse> createAuthor (@RequestBody Admin_Req_Create_BookType createBookType)  {
         return bookTypeService.create(createBookType);
     }
 }

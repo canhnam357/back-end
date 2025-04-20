@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreatePublisher {
-    String publisherName;
+public class Req_Verify {
+    private String token;
 }

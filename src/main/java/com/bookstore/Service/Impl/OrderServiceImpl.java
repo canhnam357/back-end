@@ -3,7 +3,7 @@ package com.bookstore.Service.Impl;
 import com.bookstore.Constant.OrderStatus;
 import com.bookstore.Constant.PaymentMethod;
 import com.bookstore.DTO.GenericResponse;
-import com.bookstore.DTO.OrderDTO;
+import com.bookstore.DTO.Req_Create_Order;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
 import com.bookstore.Service.OrderService;
@@ -40,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public ResponseEntity<GenericResponse> createOrder(OrderDTO orderDTO, String userId) {
+    public ResponseEntity<GenericResponse> createOrder(Req_Create_Order orderDTO, String userId) {
         try {
             int number_of_cart_item = cartItemRepository.countByCartUserUserId(userId);
             if (number_of_cart_item == 0) {

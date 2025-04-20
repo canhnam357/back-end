@@ -1,7 +1,5 @@
 package com.bookstore.DTO;
 
-
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChangeQuantity {
-    String bookId;
-    int quantity;
+public class Req_Verify_OTP {
+    private String otp;
 }

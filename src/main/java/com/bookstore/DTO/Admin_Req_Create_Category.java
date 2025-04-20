@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateContributor {
-    String contributorName;
+public class Admin_Req_Create_Category {
+    private String categoryName;
 }

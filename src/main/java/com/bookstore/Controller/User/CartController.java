@@ -1,10 +1,11 @@
 package com.bookstore.Controller.User;
 
 
-import com.bookstore.DTO.AddToCart;
-import com.bookstore.DTO.ChangeQuantity;
+import com.bookstore.DTO.Req_Add_Cart;
+import com.bookstore.DTO.Req_Update_QuantityOfCartItem;
 import com.bookstore.DTO.GenericResponse;
-import com.bookstore.DTO.UpdateQuantity;
+import com.bookstore.DTO.Req_Add_Cart;
+import com.bookstore.DTO.Req_Change_QuantityOfCartItem;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class CartController {
 
     @PostMapping("/add-to-cart")
     public ResponseEntity<GenericResponse> addToCart(@RequestHeader("Authorization") String authorizationHeader,
-                                                     @RequestBody AddToCart addToCart) {
+                                                     @RequestBody Req_Add_Cart addToCart) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println("add to cart" + userId);
@@ -51,7 +52,7 @@ public class CartController {
 
     @PostMapping("/change-quantity") // for +1 /-1 button
     public ResponseEntity<GenericResponse> changeQuantity(@RequestHeader("Authorization") String authorizationHeader,
-                                                     @RequestBody ChangeQuantity changeQuantity) {
+                                                     @RequestBody Req_Update_QuantityOfCartItem changeQuantity) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println("Change quantity " + userId + " bookId " + changeQuantity.getBookId());
@@ -60,7 +61,7 @@ public class CartController {
 
     @PostMapping("/update-quantity") // for quantity - text box
     public ResponseEntity<GenericResponse> updateQuantity(@RequestHeader("Authorization") String authorizationHeader,
-                                                          @RequestBody UpdateQuantity updateQuantity) {
+                                                          @RequestBody Req_Change_QuantityOfCartItem updateQuantity) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println("Update quantity " + userId + " bookId " + updateQuantity.getBookId());

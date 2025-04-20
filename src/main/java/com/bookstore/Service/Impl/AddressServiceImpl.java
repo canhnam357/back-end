@@ -1,8 +1,8 @@
 package com.bookstore.Service.Impl;
 
-import com.bookstore.DTO.CreateAddress;
+import com.bookstore.DTO.Req_Create_Address;
 import com.bookstore.DTO.GenericResponse;
-import com.bookstore.DTO.PatchUpdateAddress;
+import com.bookstore.DTO.Req_PatchUpdate_Address;
 import com.bookstore.Entity.Address;
 import com.bookstore.Entity.Author;
 import com.bookstore.Repository.AddressRepository;
@@ -50,7 +50,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> create(CreateAddress createAddress, String userId) {
+    public ResponseEntity<GenericResponse> create(Req_Create_Address createAddress, String userId) {
         try {
             Address address = new Address();
             address.setFullName(createAddress.getFullName());
@@ -114,7 +114,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> update(PatchUpdateAddress address, String userId) {
+    public ResponseEntity<GenericResponse> update(Req_PatchUpdate_Address address, String userId) {
         try {
             Optional<Address> _address = addressRepository.findByAddressIdAndUserUserId(address.getAddressId(), userId);
             if (_address.isEmpty()) {

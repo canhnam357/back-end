@@ -14,15 +14,15 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "contributor")
-public class Contributor {
+@Table(name = "distributor")
+public class Distributor  {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String contributorId;
+    private String distributorId;
 
-    private String contributorName;
+    private String distributorName;
 
-    @OneToMany(mappedBy = "contributor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "distributor", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Book> books;
 }

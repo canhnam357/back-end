@@ -1,8 +1,8 @@
 package com.bookstore.Controller.User;
 
-import com.bookstore.DTO.CreateAddress;
+import com.bookstore.DTO.Req_Create_Address;
 import com.bookstore.DTO.GenericResponse;
-import com.bookstore.DTO.PatchUpdateAddress;
+import com.bookstore.DTO.Req_PatchUpdate_Address;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.AddressService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class AddressController {
 
     @PostMapping("")
     public ResponseEntity<GenericResponse> create(@RequestHeader("Authorization") String authorizationHeader,
-                                                  @RequestBody CreateAddress createAddress) {
+                                                  @RequestBody Req_Create_Address createAddress) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println(userId);
@@ -48,7 +48,7 @@ public class AddressController {
 
     @PatchMapping("")
     public ResponseEntity<GenericResponse> update(@RequestHeader("Authorization") String authorizationHeader,
-                                                  @RequestBody PatchUpdateAddress address) {
+                                                  @RequestBody Req_PatchUpdate_Address address) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println(userId);

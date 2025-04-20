@@ -1,6 +1,6 @@
 package com.bookstore.Controller.Admin;
 
-import com.bookstore.DTO.CreatePublisher;
+import com.bookstore.DTO.Admin_Req_Create_Publisher;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.PublisherService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class Admin_PublisherController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<GenericResponse> createPublisher (@RequestBody CreatePublisher createPublisher)  {
+    public ResponseEntity<GenericResponse> createPublisher (@RequestBody Admin_Req_Create_Publisher createPublisher)  {
         return publisherService.create(createPublisher);
     }
 }
