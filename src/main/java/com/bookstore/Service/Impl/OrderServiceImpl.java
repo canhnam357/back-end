@@ -47,7 +47,7 @@ public class OrderServiceImpl implements OrderService {
                 return ResponseEntity.badRequest().body(
                         GenericResponse.builder()
                                 .message("Cart is empty or User not exists!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.BAD_REQUEST.value())
                                 .success(false)
                                 .build()
@@ -62,7 +62,7 @@ public class OrderServiceImpl implements OrderService {
                 return ResponseEntity.badRequest().body(
                         GenericResponse.builder()
                                 .message("Payment Method Invalid!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.BAD_REQUEST.value())
                                 .success(false)
                                 .build()
@@ -74,7 +74,7 @@ public class OrderServiceImpl implements OrderService {
                 return ResponseEntity.badRequest().body(
                         GenericResponse.builder()
                                 .message("Not found Address!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.BAD_REQUEST.value())
                                 .success(false)
                                 .build()
@@ -106,7 +106,7 @@ public class OrderServiceImpl implements OrderService {
             return ResponseEntity.badRequest().body(
                     GenericResponse.builder()
                             .message("Create Order failed!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.BAD_REQUEST.value())
                             .success(false)
                             .build()
@@ -130,7 +130,7 @@ public class OrderServiceImpl implements OrderService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get All Orders failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()

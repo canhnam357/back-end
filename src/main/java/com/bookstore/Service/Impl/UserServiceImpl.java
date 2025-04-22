@@ -87,7 +87,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                         .body(GenericResponse.builder()
                                 .success(false)
                                 .message("User is not ADMIN!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.UNAUTHORIZED.value())
                                 .build());
             }
@@ -95,7 +95,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                     .body(GenericResponse.builder()
                             .success(false)
                             .message("Wrong token!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.UNAUTHORIZED.value())
                             .build());
         } catch (Exception ex) {
@@ -103,7 +103,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                     .body(GenericResponse.builder()
                             .success(false)
                             .message("User is not ADMIN or wrong token!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.UNAUTHORIZED.value())
                             .build());
         }
@@ -132,7 +132,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                         .body(GenericResponse.builder()
                                 .success(false)
                                 .message("User is not admin or not active or not verified!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.UNAUTHORIZED.value())
                                 .build());
             }
@@ -140,7 +140,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                     .body(GenericResponse.builder()
                             .success(false)
                             .message("Wrong token!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.UNAUTHORIZED.value())
                             .build());
         } catch (Exception ex) {
@@ -148,7 +148,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                     .body(GenericResponse.builder()
                             .success(false)
                             .message("Wrong token!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.UNAUTHORIZED.value())
                             .build());
         }
@@ -202,7 +202,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get all user failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -218,7 +218,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 return ResponseEntity.status(404).body(
                         GenericResponse.builder()
                                 .message("Not found user")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.NOT_FOUND.value())
                                 .success(false)
                                 .build()
@@ -228,7 +228,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 return ResponseEntity.badRequest().body(
                         GenericResponse.builder()
                                 .message("isActive and isVerified must not null!!!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.BAD_REQUEST.value())
                                 .success(false)
                                 .build()
@@ -243,7 +243,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             return ResponseEntity.ok().body(
                     GenericResponse.builder()
                             .message("Update status user success!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
                             .build()
@@ -252,7 +252,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Update status user failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -433,7 +433,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 return ResponseEntity.status(404).body(
                         GenericResponse.builder()
                                 .message("Get Book Failed!!!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.NOT_FOUND.value())
                                 .success(false)
                                 .build()
@@ -464,7 +464,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get Profile User failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -481,7 +481,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             return ResponseEntity.badRequest().body(
                     GenericResponse.builder()
                             .message("Invalid token, please check the token again!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.BAD_REQUEST.value())
                             .success(false)
                             .build()
@@ -494,7 +494,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
         return ResponseEntity.ok().body(
                 GenericResponse.builder()
                         .message("Account verification successful, please login!")
-                        .result("")
+                        .result(null)
                         .statusCode(HttpStatus.OK.value())
                         .success(true)
                         .build()

@@ -21,7 +21,7 @@ public class Admin_BookController {
     @Autowired
     private CloudinaryService cloudinaryService;
 
-    @PostMapping("/create")
+    @PostMapping("")
     public ResponseEntity<GenericResponse> createBook (@RequestBody Admin_Req_Create_Book createBook)  {
         return bookService.create(createBook);
     }
@@ -40,7 +40,7 @@ public class Admin_BookController {
     }
 
     @GetMapping("/author_books/{authorId}")
-    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
+    public ResponseEntity<GenericResponse> getAllBookOfAuthor (@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @PathVariable String authorId) {
         System.err.println(authorId);

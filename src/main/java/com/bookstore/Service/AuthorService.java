@@ -13,4 +13,8 @@ public interface AuthorService {
     ResponseEntity<GenericResponse> search(int page, int size, String keyword);
 
     ResponseEntity<GenericResponse> update(String authorId, Admin_Req_Update_Author updateAuthor);
+
+    ResponseEntity<GenericResponse> delete(String authorId);
+
+    ResponseEntity<GenericResponse> getAllNotPageable(String keyword);
 }

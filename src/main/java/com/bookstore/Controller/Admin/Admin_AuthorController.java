@@ -36,4 +36,9 @@ public class Admin_AuthorController {
         return authorService.update(authorId, updateAuthor);
     }
 
+    @DeleteMapping("/{authorId}")
+    public ResponseEntity<GenericResponse> deleteAuthor (@PathVariable String authorId) {
+        return authorService.delete(authorId);
+    }
+
 }

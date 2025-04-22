@@ -39,7 +39,7 @@ public class CategoryServiceImpl implements CategoryService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Create Category failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -63,7 +63,7 @@ public class CategoryServiceImpl implements CategoryService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get All Category failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()

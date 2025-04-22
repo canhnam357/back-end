@@ -22,7 +22,9 @@ public class Distributor  {
 
     private String distributorName;
 
-    @OneToMany(mappedBy = "distributor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private String nameNormalized;
+
+    @OneToMany(mappedBy = "distributor")
     @JsonIgnore
     private List<Book> books;
 }

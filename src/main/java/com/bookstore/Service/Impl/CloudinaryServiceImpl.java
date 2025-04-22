@@ -35,7 +35,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             return ResponseEntity.badRequest().body(
                     GenericResponse.builder()
                             .message("Upload failed!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.BAD_REQUEST.value())
                             .success(false)
                             .build()

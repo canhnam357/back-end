@@ -67,11 +67,10 @@ public class AuthController {
         return userService.logout(authorizationHeader, refreshToken);
     }
 
-//    @PostMapping("/refresh-access-token")
-//    public ResponseEntity<?> refreshAccessToken(@RequestBody TokenRequest tokenRequest) {
-//        String refreshToken = tokenRequest.getRefreshToken();
-//        return refreshTokenService.refreshAccessToken(refreshToken);
-//    }
+    @PostMapping("/refresh-access-token")
+    public ResponseEntity<?> refreshAccessToken(@RequestBody Req_Verify reqVerify) {
+        return refreshTokenService.refreshAccessToken(reqVerify);
+    }
 
     @PostMapping(value = "/verify-otp")
     public ResponseEntity<GenericResponse> confirmRegistration(@RequestParam(defaultValue = "") String email,

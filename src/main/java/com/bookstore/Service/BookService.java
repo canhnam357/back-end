@@ -6,11 +6,13 @@ import com.bookstore.Entity.Book;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+
 public interface BookService {
 
     ResponseEntity<GenericResponse> getAll(int page, int size);
 
-    ResponseEntity<GenericResponse> getAllBookNotDeleted(int page, int size);
+    ResponseEntity<GenericResponse> getAllBookNotDeleted(int page, int size, BigDecimal leftBound, BigDecimal rightBound, String authorId, String publisherId, String distributorId, String bookName, String sort);
 
     ResponseEntity<GenericResponse> getByIdNotDeleted(String bookId);
 
@@ -21,4 +23,6 @@ public interface BookService {
     ResponseEntity<GenericResponse> upload(MultipartFile file, String bookId, int isThumbnail);
 
     ResponseEntity<GenericResponse> adminGetBooksOfAuthor(int page, int size, String authorId);
+
+    ResponseEntity<GenericResponse> getPriceRange();
 }

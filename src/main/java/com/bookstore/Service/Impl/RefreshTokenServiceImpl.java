@@ -1,6 +1,7 @@
 package com.bookstore.Service.Impl;
 
 import com.bookstore.DTO.GenericResponse;
+import com.bookstore.DTO.Req_Verify;
 import com.bookstore.Entity.RefreshToken;
 import com.bookstore.Entity.User;
 import com.bookstore.Repository.RefreshTokenRepository;
@@ -37,32 +38,32 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> refreshAccessToken(String refreshToken){
+    public ResponseEntity<GenericResponse> refreshAccessToken(Req_Verify reqVerify){
         try{
-            String userId = jwtTokenProvider.getUserIdFromRefreshToken(refreshToken);
+            String userId = jwtTokenProvider.getUserIdFromRefreshToken(reqVerify.getToken());
             Optional<User> optionalUser = userRepository.findById(userId);
-            if(optionalUser.isPresent()&&optionalUser.get().isActive()){
-                //List<RefreshToken> refreshTokens = refreshTokenRepository.findAllByUser_UserIdAndExpiredIsFalseAndRevokedIsFalse(userId);
+            if(optionalUser.isPresent() && optionalUser.get().isActive() && optionalUser.get().isVerified()){
                 Optional<RefreshToken> token = refreshTokenRepository.findByUser_UserIdAndExpiredIsFalseAndRevokedIsFalse(userId);
                 if(token.isPresent() && jwtTokenProvider.validateToken(token.get().getToken())){
-                    if(!token.get().getToken().equals(refreshToken)){
+                    if(!token.get().getToken().equals(reqVerify.getToken())){
                         return ResponseEntity.status(404)
                                 .body(GenericResponse.builder()
                                         .success(false)
                                         .message("RefreshToken is not present. Please login again!")
-                                        .result("")
+                                        .result(null)
                                         .statusCode(HttpStatus.NOT_FOUND.value())
                                         .build());
                     }
-                    UserDetail userDetail = (UserDetail) userDetailService.loadUserByUserId(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken));
+                    UserDetail userDetail = (UserDetail) userDetailService.loadUserByUserId(jwtTokenProvider.getUserIdFromRefreshToken(reqVerify.getToken()));
                     String accessToken = jwtTokenProvider.generateAccessToken(userDetail);
                     Map<String, String> resultMap = new HashMap<>();
                     resultMap.put("accessToken", accessToken);
-                    resultMap.put("refreshToken", refreshToken);
+                    resultMap.put("refreshToken", reqVerify.getToken());
+                    resultMap.put("username", optionalUser.get().getFullName());
                     return ResponseEntity.status(200)
                             .body(GenericResponse.builder()
                                     .success(true)
-                                    .message("")
+                                    .message(null)
                                     .result(resultMap)
                                     .statusCode(HttpStatus.OK.value())
                                     .build());
@@ -72,7 +73,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     .body(GenericResponse.builder()
                             .success(false)
                             .message("Unauthorized. Please login again!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.UNAUTHORIZED.value())
                             .build());
         } catch (Exception e) {
@@ -80,7 +81,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     .body(GenericResponse.builder()
                             .success(false)
                             .message(e.getMessage())
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .build());
         }
@@ -121,7 +122,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                             .body(GenericResponse.builder()
                                     .success(true)
                                     .message("Logout successfully!")
-                                    .result("")
+                                    .result(null)
                                     .statusCode(HttpStatus.OK.value())
                                     .build());
                 }
@@ -129,7 +130,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                         .body(GenericResponse.builder()
                                 .success(false)
                                 .message("Logout failed!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.NOT_FOUND.value())
                                 .build());
             }
@@ -137,7 +138,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     .body(GenericResponse.builder()
                             .success(false)
                             .message("Logout failed!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.UNAUTHORIZED.value())
                             .build());
 
@@ -146,7 +147,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     .body(GenericResponse.builder()
                             .success(false)
                             .message(e.getMessage())
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .build());
         }

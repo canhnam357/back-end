@@ -42,7 +42,7 @@ public class AuthorServiceImpl implements AuthorService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Create Author failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -66,7 +66,7 @@ public class AuthorServiceImpl implements AuthorService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get All Author failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -100,12 +100,12 @@ public class AuthorServiceImpl implements AuthorService {
                             .build()
             );
         } catch (Exception ex) {
-            return ResponseEntity.ok().body(
+            return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Search Author failed!")
-                            .result("")
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
+                            .result(null)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
                             .build()
             );
         }
@@ -129,7 +129,68 @@ public class AuthorServiceImpl implements AuthorService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Update Author failed!!!")
-                            .result("")
+                            .result(null)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build()
+            );
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> delete(String authorId) {
+        try {
+            authorRepository.deleteById(authorId);
+            return ResponseEntity.status(200).body(
+                    GenericResponse.builder()
+                            .message("Delete Author successfully!")
+                            .result(null)
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build()
+            );
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(
+                    GenericResponse.builder()
+                            .message("Delete Author failed!!!")
+                            .result(null)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build()
+            );
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> getAllNotPageable(String keyword) {
+        try {
+            String s = Normalized.removeVietnameseAccents(keyword);
+            String search_word = "";
+            for (char c : s.toCharArray()) {
+                search_word += "%" + c + "%";
+            }
+
+            if (search_word.length() == 0) {
+                search_word = "%%";
+            }
+
+            System.err.println(search_word);
+
+            List<Author> authors = authorRepository.findListByNameContainingSubsequence(search_word);
+
+            return ResponseEntity.ok().body(
+                    GenericResponse.builder()
+                            .message("Search Author Successfully!")
+                            .result(authors)
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build()
+            );
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(
+                    GenericResponse.builder()
+                            .message("Search Author failed!")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()

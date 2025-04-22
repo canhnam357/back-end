@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
@@ -13,21 +15,33 @@ public class BookController {
     private BookService bookService;
 
     @GetMapping("")
-    public ResponseEntity<GenericResponse> getAllBook(@RequestParam(defaultValue = "1") int page,
-                                                      @RequestParam(defaultValue = "100") int size) {
-        System.err.println("Get all Book from general - default 100 / page");
-        return bookService.getAllBookNotDeleted(page, size);
+    public ResponseEntity<GenericResponse> getAllBook(@RequestParam(required = false) BigDecimal minPrice,
+                                                      @RequestParam(required = false) BigDecimal maxPrice,
+                                                      @RequestParam(defaultValue = "") String authorId,
+                                                      @RequestParam(defaultValue = "") String publisherId,
+                                                      @RequestParam(defaultValue = "") String distributorId,
+                                                      @RequestParam(defaultValue = "") String bookName,
+                                                      @RequestParam(required = false) String sort, // "asc" | "desc"
+                                                      @RequestParam(defaultValue = "1") int index,
+                                                      @RequestParam(defaultValue = "10") int size) {
+        System.err.println("Get all Book from general - default 10 / page");
+        return bookService.getAllBookNotDeleted(index, size, minPrice, maxPrice, authorId, publisherId, distributorId, bookName, sort);
     }
 
     @GetMapping("/new_arrivals")
     public ResponseEntity<GenericResponse> getAllBookNewArrivals(@RequestParam(defaultValue = "1") int page,
-                                                      @RequestParam(defaultValue = "100") int size) {
-        System.err.println("Get all Book from general - default 100 / page");
-        return bookService.getAllBookNotDeleted(page, size);
+                                                      @RequestParam(defaultValue = "10") int size) {
+        System.err.println("Get all Book from general - default 10 / page");
+        return bookService.getNewArrivalsBook(page, size);
     }
 
     @GetMapping("/{bookId}")
     public ResponseEntity<GenericResponse> getById(@PathVariable String bookId) {
         return bookService.getByIdNotDeleted(bookId);
+    }
+
+    @GetMapping("/price-range")
+    public ResponseEntity<GenericResponse> getPriceRange() {
+        return bookService.getPriceRange();
     }
 }

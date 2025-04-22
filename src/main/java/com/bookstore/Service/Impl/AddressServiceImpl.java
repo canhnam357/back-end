@@ -41,7 +41,7 @@ public class AddressServiceImpl implements AddressService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get All Address failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -70,7 +70,7 @@ public class AddressServiceImpl implements AddressService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Create Address failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -86,7 +86,7 @@ public class AddressServiceImpl implements AddressService {
                 return ResponseEntity.status(404).body(
                         GenericResponse.builder()
                                 .message("Address Not Found!!!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.NOT_FOUND.value())
                                 .success(false)
                                 .build()
@@ -96,7 +96,7 @@ public class AddressServiceImpl implements AddressService {
             return ResponseEntity.status(204).body(
                     GenericResponse.builder()
                             .message("Delete Address Successfully!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.NO_CONTENT.value())
                             .success(true)
                             .build()
@@ -105,7 +105,7 @@ public class AddressServiceImpl implements AddressService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Delete Address failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -121,7 +121,7 @@ public class AddressServiceImpl implements AddressService {
                 return ResponseEntity.status(404).body(
                         GenericResponse.builder()
                                 .message("Address Not Found!!!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.NOT_FOUND.value())
                                 .success(false)
                                 .build()
@@ -151,7 +151,7 @@ public class AddressServiceImpl implements AddressService {
             return ResponseEntity.status(204).body(
                     GenericResponse.builder()
                             .message("Updated Address Successfully!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.NO_CONTENT.value())
                             .success(true)
                             .build()
@@ -160,7 +160,7 @@ public class AddressServiceImpl implements AddressService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Updated Address failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()

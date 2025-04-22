@@ -18,8 +18,9 @@ public class Admin_DistributorController {
 
     @GetMapping("")
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
-                                                   @RequestParam(defaultValue = "10") int size) {
-        return distributorService.getAll(page, size);
+                                                   @RequestParam(defaultValue = "10") int size,
+                                                   @RequestParam(defaultValue = "") String keyword) {
+        return distributorService.search(page, size, keyword);
     }
 
     @PostMapping("/create")

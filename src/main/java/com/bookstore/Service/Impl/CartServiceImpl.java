@@ -46,7 +46,7 @@ public class CartServiceImpl implements CartService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get Cart failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -75,7 +75,7 @@ public class CartServiceImpl implements CartService {
                 return ResponseEntity.badRequest().body(
                         GenericResponse.builder()
                                 .message("Quantity must greater than 0!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.BAD_REQUEST.value())
                                 .success(false)
                                 .build()
@@ -93,7 +93,7 @@ public class CartServiceImpl implements CartService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Add to Cart failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -109,7 +109,7 @@ public class CartServiceImpl implements CartService {
                 return ResponseEntity.status(404).body(
                         GenericResponse.builder()
                                 .message("Not found cartItem!!!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.NOT_FOUND.value())
                                 .success(false)
                                 .build()
@@ -119,7 +119,7 @@ public class CartServiceImpl implements CartService {
             return ResponseEntity.ok().body(
                     GenericResponse.builder()
                             .message("Remove from Cart successfully!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
                             .build()
@@ -128,7 +128,7 @@ public class CartServiceImpl implements CartService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Remove from Cart failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -144,7 +144,7 @@ public class CartServiceImpl implements CartService {
                 return ResponseEntity.status(404).body(
                         GenericResponse.builder()
                                 .message("Not found cartItem!!!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.NOT_FOUND.value())
                                 .success(false)
                                 .build()
@@ -163,7 +163,7 @@ public class CartServiceImpl implements CartService {
             return ResponseEntity.ok().body(
                     GenericResponse.builder()
                             .message("Changed quantity cart-item successfully!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
                             .build()
@@ -172,7 +172,7 @@ public class CartServiceImpl implements CartService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Change quantity cart-item failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -188,7 +188,7 @@ public class CartServiceImpl implements CartService {
                 return ResponseEntity.status(404).body(
                         GenericResponse.builder()
                                 .message("Not found cartItem!!!")
-                                .result("")
+                                .result(null)
                                 .statusCode(HttpStatus.NOT_FOUND.value())
                                 .success(false)
                                 .build()
@@ -206,7 +206,7 @@ public class CartServiceImpl implements CartService {
             return ResponseEntity.ok().body(
                     GenericResponse.builder()
                             .message("Updated quantity cart-item successfully!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
                             .build()
@@ -215,7 +215,7 @@ public class CartServiceImpl implements CartService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Update quantity cart-item failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()

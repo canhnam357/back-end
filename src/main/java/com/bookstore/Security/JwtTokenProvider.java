@@ -18,7 +18,7 @@ public class JwtTokenProvider {
     @Autowired
     UserRepository userRepository;
 
-    private final Long JWT_ACCESS_EXPIRATION = 60 * 60 * 1000L; // 60 milliseconds? Bạn nên tăng lên nếu cần thực tế hơn
+    private final Long JWT_ACCESS_EXPIRATION = 60 * 60 * 1000L;
     private final Long JWT_REFRESH_EXPIRATION = 7 * 24 * 60 * 60 * 1000L; // 7 ngày
 
     private final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);

@@ -35,7 +35,7 @@ public class BookTypeServiceImpl implements BookTypeService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Create BookType failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
@@ -59,7 +59,7 @@ public class BookTypeServiceImpl implements BookTypeService {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get All BookType failed!!!")
-                            .result("")
+                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build()
