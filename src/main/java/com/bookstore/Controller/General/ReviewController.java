@@ -18,17 +18,33 @@ public class ReviewController {
     private ReviewService reviewService;
 
     @GetMapping("/{bookId}")
-    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
+    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int index,
                                                    @RequestParam(defaultValue = "10") int size,
+                                                   @RequestParam(defaultValue = "0") int rating,
                                                    @PathVariable String bookId) {
-        return reviewService.getAll(page, size, bookId);
+        return reviewService.getAll(index, size, bookId, rating);
     }
 
     @PostMapping("/{bookId}")
     public ResponseEntity<GenericResponse> addReview (@RequestHeader("Authorization") String authorizationHeader,
                                                       @PathVariable String bookId,
                                                       @RequestBody Req_Create_Review review)  {
+        System.err.println("RATING " + review.getRating());
         return reviewService.addReview(authorizationHeader, bookId, review);
+    }
+
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<GenericResponse> updateReview (@RequestHeader("Authorization") String authorizationHeader,
+                                                      @PathVariable String reviewId,
+                                                      @RequestBody Req_Create_Review review)  {
+        System.err.println("RATING " + review.getRating());
+        return reviewService.update(reviewId, authorizationHeader, review);
+    }
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<GenericResponse> deleteReview (@RequestHeader("Authorization") String authorizationHeader,
+                                                         @PathVariable String reviewId)  {
+        return reviewService.delete(reviewId, authorizationHeader);
     }
 
 }

@@ -34,6 +34,7 @@ public class Res_Get_Books {
     private String bookType;
     private String urlThumbnail;
     private List<String> images;
+    private BigDecimal rating;
 
     public void convert(Book book) {
         bookId = book.getBookId();

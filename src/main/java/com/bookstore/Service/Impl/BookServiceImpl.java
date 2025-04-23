@@ -47,6 +47,9 @@ public class BookServiceImpl implements BookService {
     @Autowired
     private Cloudinary cloudinary;
 
+    @Autowired
+    private ReviewRepository reviewRepository;
+
 
     @Override
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
@@ -104,6 +107,7 @@ public class BookServiceImpl implements BookService {
             for (Book book : books) {
                 Res_Get_Books temp = new Res_Get_Books();
                 temp.convert(book);
+                temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
                 res.add(temp);
             }
 
@@ -143,6 +147,7 @@ public class BookServiceImpl implements BookService {
             Book book = bookRepository.findByBookIdAndIsDeletedIsFalse(bookId).get();
             Res_Get_Books res = new Res_Get_Books();
             res.convert(book);
+            res.setRating(reviewRepository.findAverageRatingByBookId(bookId));
             return ResponseEntity.ok().body(
                     GenericResponse.builder()
                             .message("Get Book Successfully!")

@@ -32,6 +32,7 @@ public class AddressController {
     @PostMapping("")
     public ResponseEntity<GenericResponse> create(@RequestHeader("Authorization") String authorizationHeader,
                                                   @RequestBody Req_Create_Address createAddress) {
+        System.err.println("ORTHER DETAIL " + createAddress.getOtherDetail());
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println(userId);
@@ -52,6 +53,7 @@ public class AddressController {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println(userId);
+        System.err.println("ORTHER DETAIL " + address.getOtherDetail());
         return addressService.update(address, userId);
     }
 

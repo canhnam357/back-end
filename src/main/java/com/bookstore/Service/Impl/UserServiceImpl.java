@@ -450,6 +450,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 resGetAddress.setAddressInformation(address.getAddressInformation());
                 resGetAddress.setPhoneNumber(address.getPhoneNumber());
                 resGetAddress.setFullName(address.getFullName());
+                resGetAddress.setOtherDetail(address.getOtherDetail());
                 profile.addAddress(resGetAddress);
             }
             return ResponseEntity.ok().body(

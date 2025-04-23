@@ -4,6 +4,7 @@ import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,5 +27,17 @@ public class UserController {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         return userService.getProfile(userId);
+    }
+
+    @GetMapping("/user-id")
+    public ResponseEntity<GenericResponse> getUserId(@RequestHeader("Authorization") String authorizationHeader) {
+        String token = authorizationHeader.substring(7);
+        String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                .success(true)
+                .message("Get userId success")
+                .result(userId)
+                .statusCode(HttpStatus.OK.value())
+                .build());
     }
 }

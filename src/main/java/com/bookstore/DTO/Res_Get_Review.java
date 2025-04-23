@@ -15,8 +15,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Res_Get_Review {
+    private String reviewId;
+    private String userId;
     private String userReviewed;
     private String content;
+    private int rating;
     // format : dd-MM-yyyy HH:mm:ss
     private Date createdAt;
 

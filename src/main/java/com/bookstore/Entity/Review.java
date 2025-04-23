@@ -2,6 +2,8 @@ package com.bookstore.Entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,7 +25,7 @@ public class Review {
     private String reviewId;
 
 
-    @Size(max = 500, message = "Content cannot exceed 500 characters")
+    @Size(max = 2000, message = "Content cannot exceed 2000 characters")
     private String content;
 
     @ManyToOne
@@ -36,6 +38,10 @@ public class Review {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
     private Date createdAt;
+
+    @Min(1)
+    @Max(5)
+    private int rating;
 
     @PrePersist
     void createdAt() {
