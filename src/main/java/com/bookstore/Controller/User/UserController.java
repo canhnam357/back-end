@@ -1,16 +1,14 @@
 package com.bookstore.Controller.User;
 
 import com.bookstore.DTO.GenericResponse;
+import com.bookstore.DTO.Req_Update_Password;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'USER')")
@@ -39,5 +37,12 @@ public class UserController {
                 .result(userId)
                 .statusCode(HttpStatus.OK.value())
                 .build());
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<GenericResponse> changePassword(@RequestHeader("Authorization") String authorizationHeader, @RequestBody Req_Update_Password reqUpdatePassword) {
+        String token = authorizationHeader.substring(7);
+        String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        return userService.changePassword(userId, reqUpdatePassword);
     }
 }

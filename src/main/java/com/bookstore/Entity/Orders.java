@@ -34,9 +34,7 @@ public class Orders {
     @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderDetails;
 
-    @OneToOne(mappedBy = "order")
-    @JsonIgnore
-    private Address address;
+    private String address;
 
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)

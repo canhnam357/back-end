@@ -21,12 +21,10 @@ public class AddressController {
     private JwtTokenProvider jwtTokenProvider;
 
     @GetMapping("")
-    public ResponseEntity<GenericResponse> getAll(@RequestHeader("Authorization") String authorizationHeader,
-                                                  @RequestParam(defaultValue = "1") int page,
-                                                  @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<GenericResponse> getAll(@RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        return addressService.getAll(page, size, userId);
+        return addressService.getAll(userId);
     }
 
     @PostMapping("")
@@ -55,6 +53,13 @@ public class AddressController {
         System.err.println(userId);
         System.err.println("ORTHER DETAIL " + address.getOtherDetail());
         return addressService.update(address, userId);
+    }
+
+    @PostMapping("/set-default/{addressId}")
+    public ResponseEntity<GenericResponse> setDefault(@RequestHeader("Authorization") String authorizationHeader, @PathVariable String addressId) {
+        String token = authorizationHeader.substring(7);
+        String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        return addressService.setDefault(userId, addressId);
     }
 
 }

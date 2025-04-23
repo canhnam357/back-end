@@ -15,4 +15,6 @@ public interface DistributorService {
     ResponseEntity<GenericResponse> update(String distributorId, Admin_Req_Update_Distributor distributor);
 
     ResponseEntity<GenericResponse> getAllNotPageable(String keyword);
+
+    ResponseEntity<GenericResponse> delete(String distributorId);
 }

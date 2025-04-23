@@ -1,6 +1,7 @@
 package com.bookstore.Controller.Admin;
 
 import com.bookstore.DTO.Admin_Req_Create_Distributor;
+import com.bookstore.DTO.Admin_Req_Update_Distributor;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.DistributorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +21,23 @@ public class Admin_DistributorController {
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "") String keyword) {
+        System.out.println("ADMIN get all Distributor");
         return distributorService.search(page, size, keyword);
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<GenericResponse> createContributor (@RequestBody Admin_Req_Create_Distributor createDistributor)  {
+    @PostMapping("")
+    public ResponseEntity<GenericResponse> createDistributor (@RequestBody Admin_Req_Create_Distributor createDistributor)  {
+        System.out.println("ADMIN create Distributor");
         return distributorService.create(createDistributor);
+    }
+
+    @DeleteMapping("")
+    public ResponseEntity<GenericResponse> deleteDistributor (@RequestParam String distributorId) {
+        return distributorService.delete(distributorId);
+    }
+
+    @PutMapping("")
+    public ResponseEntity<GenericResponse> updateDistributor (@RequestParam String distributorId, @RequestBody Admin_Req_Update_Distributor distributor) {
+        return distributorService.update(distributorId, distributor);
     }
 }

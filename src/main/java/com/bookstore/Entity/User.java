@@ -39,9 +39,6 @@ public class User implements Serializable {
 
     private Date dateOfBirth;
 
-    @Nationalized
-    private String about;
-
     @Enumerated(EnumType.STRING)
     private Gender gender;
 

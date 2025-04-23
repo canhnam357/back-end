@@ -30,4 +30,6 @@ public interface UserService {
     public ResponseEntity<GenericResponse> login(Login login);
 
     public ResponseEntity<GenericResponse>  logout(String authorizationHeader, String refreshToken);
+
+    public ResponseEntity<GenericResponse> changePassword(String userId, Req_Update_Password reqUpdatePassword);
 }

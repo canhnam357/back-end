@@ -16,12 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class OrderServiceImpl implements OrderService {
     @Autowired
     private CartItemRepository cartItemRepository;
+
+    @Autowired
+    private CartRepository cartRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -33,84 +38,97 @@ public class OrderServiceImpl implements OrderService {
     private OrderItemRepository orderItemRepository;
 
     @Autowired
-    private CartRepository cartRepository;
+    private AddressRepository addressRepository;
 
     @Autowired
-    private AddressRepository addressRepository;
+    private BookRepository bookRepository;
 
     @Override
     @Transactional
     public ResponseEntity<GenericResponse> createOrder(Req_Create_Order orderDTO, String userId) {
         try {
-            int number_of_cart_item = cartItemRepository.countByCartUserUserId(userId);
-            if (number_of_cart_item == 0) {
-                return ResponseEntity.badRequest().body(
-                        GenericResponse.builder()
-                                .message("Cart is empty or User not exists!")
-                                .result(null)
-                                .statusCode(HttpStatus.BAD_REQUEST.value())
-                                .success(false)
-                                .build()
-                );
+            if (addressRepository.findByAddressId(orderDTO.getAddressId()).isEmpty()) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Not found address!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
             }
+            if (!Arrays.stream(PaymentMethod.values()).anyMatch(e -> e.name().equals(orderDTO.getPaymentMethod()))) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Payment method doesn't exists!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+            Cart cart = cartRepository.findByUserUserId(userId).get();
+
+            if (cart.getCartItems().isEmpty()) {
+                return ResponseEntity.status(400).body(GenericResponse.builder()
+                        .message("Cart is empty!!!")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .success(false)
+                        .build());
+            }
+
+            List<CartItem> cartItems = new ArrayList<>();
+            boolean bad_request = false;
+            for (CartItem cartItem : cart.getCartItems()) {
+                Book book = bookRepository.findById(cartItem.getBook().getBookId()).get();
+                if (book.getIsDeleted() || book.getInStock() == 0) {
+                    bad_request = true;
+                }
+                else
+                {
+                    if (book.getInStock() < cartItem.getQuantity()) {
+                        cartItem.setQuantity(book.getInStock());
+                    }
+                    cartItems.add(cartItem);
+                }
+            }
+
+            if (bad_request) {
+                cart.setCartItems(cartItems);
+                cartRepository.save(cart);
+                return ResponseEntity.status(400).body(GenericResponse.builder()
+                        .message("Can't order quantity more than inStock, quantity has been reset by inStock!!!")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .success(false)
+                        .build());
+            }
+
+
             Orders order = new Orders();
-            order.setUser(userRepository.findById(userId).get());
             order.setOrderStatus(OrderStatus.PENDING);
-            try {
-                order.setPaymentMethod(PaymentMethod.valueOf(orderDTO.getPaymentMethod()));
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().body(
-                        GenericResponse.builder()
-                                .message("Payment Method Invalid!")
-                                .result(null)
-                                .statusCode(HttpStatus.BAD_REQUEST.value())
-                                .success(false)
-                                .build()
-                );
-            }
-            try {
-                order.setAddress(addressRepository.findByAddressId(orderDTO.getAddressId()).get());
-            } catch (Exception e) {
-                return ResponseEntity.badRequest().body(
-                        GenericResponse.builder()
-                                .message("Not found Address!")
-                                .result(null)
-                                .statusCode(HttpStatus.BAD_REQUEST.value())
-                                .success(false)
-                                .build()
-                );
-            }
+            order.setPaymentMethod(PaymentMethod.valueOf(orderDTO.getPaymentMethod()));
+            order.setAddress(addressRepository.findByAddressId(orderDTO.getAddressId()).get().getAddressInformation());
+            order.setUser(userRepository.findById(userId).get());
             order.setTotalPrice(BigDecimal.ZERO);
-            ordersRepository.save(order);
-            List<CartItem> cartItems = cartItemRepository.findAllByCartUserUserId(userId);
-            for (CartItem cartItem : cartItems) {
-                OrderItem insert_orderItem = new OrderItem();
-                insert_orderItem.setQuantity(cartItem.getQuantity());
-                insert_orderItem.setTotalPrice(cartItem.getTotalPrice());
-                insert_orderItem.setBookName(cartItem.getBook().getBookName());
-                insert_orderItem.setOrders(ordersRepository.findById(order.getOrderId()).get());
-                insert_orderItem.setUrlThumbnail(cartItem.getBook().getUrlThumbnail());
-                order.setTotalPrice(order.getTotalPrice().add(insert_orderItem.getTotalPrice()));
-                orderItemRepository.save(insert_orderItem);
+            order = ordersRepository.save(order);
+
+            for (CartItem cartItem : cart.getCartItems()) {
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrders(order);
+                orderItem.setBookName(cartItem.getBook().getBookName());
+                orderItem.setQuantity(cartItem.getQuantity());
+                orderItem.setTotalPrice(cartItem.getTotalPrice());
+                orderItem.setUrlThumbnail(cartItem.getBook().getUrlThumbnail());
+                orderItemRepository.save(orderItem);
+                order.setTotalPrice(order.getTotalPrice().add(cartItem.getTotalPrice()));
             }
-            cartItemRepository.deleteAllByCartUserUserId(userId);
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Create Order Successfully!")
-                            .result(order)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            cart.getCartItems().clear();
+            cartRepository.save(cart);
+            return ResponseEntity.status(201).body(GenericResponse.builder()
+                    .message("Create Order successfully!!!")
+                    .statusCode(HttpStatus.CREATED.value())
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.badRequest().body(
-                    GenericResponse.builder()
-                            .message("Create Order failed!")
-                            .result(null)
-                            .statusCode(HttpStatus.BAD_REQUEST.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Create Order failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -118,23 +136,22 @@ public class OrderServiceImpl implements OrderService {
     public ResponseEntity<GenericResponse> getAll(String userId, int page, int size) {
         try {
             Page<Orders> orders = ordersRepository.findAllByOrderByOrderAtDesc(PageRequest.of(page - 1, size));
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Get All Order Successfully!")
-                            .result(orders)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            // not-completed
+            return ResponseEntity.status(200).body(GenericResponse.builder()
+                    .message("Get all Orders success!!!")
+                    .result(orders)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(false)
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(
-                    GenericResponse.builder()
-                            .message("Get All Orders failed!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get all Orders failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
+
+
+
 }

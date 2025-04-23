@@ -4,23 +4,18 @@ import com.bookstore.DTO.*;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
 import com.bookstore.Service.BookService;
-import com.bookstore.Service.CloudinaryService;
-import com.bookstore.Service.DistributorService;
 import com.bookstore.Specification.BookSpecification;
-import com.bookstore.Specification.UserSpecification;
 import com.bookstore.Utils.Normalized;
 import com.cloudinary.Cloudinary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
@@ -55,23 +50,18 @@ public class BookServiceImpl implements BookService {
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
         try {
             Page<Book> books = bookRepository.findAll(PageRequest.of(page - 1, size));
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Get All Book Successfully!")
-                            .result(books)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Get All Book Successfully!")
+                    .result(books)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(
-                    GenericResponse.builder()
-                            .message("Get All Book failed!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get All Book failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -90,6 +80,12 @@ public class BookServiceImpl implements BookService {
             List<String> publishers = Arrays.asList(publisherId.split(",", -1));
             List<String> distributors = Arrays.asList(distributorId.split(",", -1));
 
+            System.err.println("LIST AUTHOR_ID : ");
+            for (String s : authors) System.err.println(s + " ");
+            System.err.println("LIST PUBLISHER_ID : ");
+            for (String s : publishers) System.err.println(s + " ");
+            System.err.println("LIST DISTRIBUTOR_ID : ");
+            for (String s : distributors) System.err.println(s + " ");
             if (authorId.isEmpty()) {
                 authors = new ArrayList<>();
             }
@@ -112,23 +108,18 @@ public class BookServiceImpl implements BookService {
             }
 
             Page<Res_Get_Books> dtoPage = new PageImpl<>(res, books.getPageable(), books.getTotalElements());
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Get All Book Successfully!")
-                            .result(dtoPage)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Get All Book Successfully!")
+                    .result(dtoPage)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(
-                    GenericResponse.builder()
-                            .message("Get All Book failed!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get All Book failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -138,33 +129,26 @@ public class BookServiceImpl implements BookService {
             if (bookRepository.findByBookIdAndIsDeletedIsFalse(bookId).isEmpty()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Get Book Failed!!!")
-                        .result(null)
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
-                        .build()
-                );
+                        .build());
             }
             Book book = bookRepository.findByBookIdAndIsDeletedIsFalse(bookId).get();
             Res_Get_Books res = new Res_Get_Books();
             res.convert(book);
             res.setRating(reviewRepository.findAverageRatingByBookId(bookId));
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Get Book Successfully!")
-                            .result(res)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Get Book Successfully!")
+                    .result(res)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(
-                    GenericResponse.builder()
-                            .message("Get All Book failed!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get Book failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -172,23 +156,18 @@ public class BookServiceImpl implements BookService {
     public ResponseEntity<GenericResponse> getNewArrivalsBook(int page, int size) {
         try {
             Page<Book> books = bookRepository.findAllByIsDeletedIsFalseAndNewArrivalIsTrue(PageRequest.of(page - 1, size));
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Get New Arrival Book Successfully!")
-                            .result(books)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Get New Arrival Book Successfully!")
+                    .result(books)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(
-                    GenericResponse.builder()
-                            .message("Get New Arrival Book failed!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get New Arrival Book failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -208,23 +187,18 @@ public class BookServiceImpl implements BookService {
             book.setDistributor(distributorRepository.findById(createBook.getDistributorId()).get());
             book.setBookType(bookTypeRepository.findById(createBook.getBookTypeId()).get());
             book.setNameNormalized(Normalized.removeVietnameseAccents(createBook.getBookName()));
-            return ResponseEntity.status(201).body(
-                    GenericResponse.builder()
-                            .message("Create Book successfully!")
-                            .result(bookRepository.save(book))
-                            .statusCode(HttpStatus.CREATED.value())
-                            .success(true)
-                            .build()
-            );
+            bookRepository.save(book);
+            return ResponseEntity.status(201).body(GenericResponse.builder()
+                    .message("Create Book successfully!")
+                    .statusCode(HttpStatus.CREATED.value())
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(
-                    GenericResponse.builder()
-                            .message("Create Book failed!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Create Book failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -243,23 +217,17 @@ public class BookServiceImpl implements BookService {
             }
             book.get().setNameNormalized(Normalized.removeVietnameseAccents(book.get().getBookName()));
             bookRepository.save(book.get());
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Upload Successfully!")
-                            .result(data)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Upload Successfully!")
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
         } catch (IOException io) {
-            return ResponseEntity.badRequest().body(
-                    GenericResponse.builder()
-                            .message("Upload failed!")
-                            .result(null)
-                            .statusCode(HttpStatus.BAD_REQUEST.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.badRequest().body(GenericResponse.builder()
+                    .message("Upload failed!")
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -293,17 +261,14 @@ public class BookServiceImpl implements BookService {
                             .result(dtoPage)
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
-                            .build()
-            );
+                            .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get Books of author failed!")
-                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
-                            .build()
-            );
+                            .build());
         }
     }
 
@@ -316,17 +281,94 @@ public class BookServiceImpl implements BookService {
                             .result(bookRepository.findAllDistinctPricesOrderByAsc())
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
-                            .build()
-            );
+                            .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(
                     GenericResponse.builder()
                             .message("Get Price range failed!")
-                            .result(null)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
-                            .build()
-            );
+                            .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> delete(String bookId) {
+        try {
+            Optional<Book> book = bookRepository.findById(bookId);
+            if (book.isEmpty()) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Not found book!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+            if (book.get().getIsDeleted() == true) {
+                return ResponseEntity.status(200).body(GenericResponse.builder()
+                        .message("Book already deleted.!")
+                        .statusCode(HttpStatus.OK.value())
+                        .success(false)
+                        .build());
+            }
+            book.get().setIsDeleted(true);
+            return ResponseEntity.status(200).body(GenericResponse.builder()
+                    .message("Delete Book success.!")
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Delete book failed!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> update(String bookId, Admin_Req_Update_Book bookDto) {
+        try {
+            Optional<Book> book = bookRepository.findById(bookId);
+            if (book.isEmpty()) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Not found book!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build()
+                );
+            }
+            Book ele = book.get();
+            ele.setBookName(bookDto.getBookName());
+            ele.setInStock(bookDto.getInStock());
+            ele.setPrice(bookDto.getPrice());
+            ele.setDescription(bookDto.getDescription());
+            ele.setNumberOfPage(bookDto.getNumberOfPage());
+            ele.setPublishedDate(bookDto.getPublishedDate());
+            ele.setWeight(bookDto.getWeight());
+            ele.setAuthor(authorRepository.findById(bookDto.getAuthorId()).get());
+            ele.setPublisher(publisherRepository.findById(bookDto.getPublisherId()).get());
+            ele.setDistributor(distributorRepository.findById(bookDto.getDistributorId()).get());
+            ele.setBookType(bookTypeRepository.findById(bookDto.getBookTypeId()).get());
+            ele.setUrlThumbnail(bookDto.getUrlThumbnail());
+            List<Image> images = new ArrayList<>();
+            for (Image image : ele.getImages()) {
+                if (bookDto.getImages().contains(image.getImageId())) {
+                    images.add(image);
+                }
+            }
+            ele.setImages(images);
+            bookRepository.save(ele);
+            return ResponseEntity.status(200).body(GenericResponse.builder()
+                    .message("Update book successfully!")
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Update book failed!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 }

@@ -3,6 +3,7 @@ package com.bookstore.Utils;
 public class Normalized {
     public static String removeVietnameseAccents(String str) {
         if (str == null) return null;
+
         String[] vietnameseChars = {
                 "àáảãạăằắẳẵặâầấẩẫậ",
                 "èéẻẽẹêềếểễệ",
@@ -20,6 +21,14 @@ public class Normalized {
                 result = result.replace(c, replacements[i].charAt(0));
             }
         }
-        return result;
+        String search_word = "";
+        for (char c : result.toCharArray()) {
+            search_word += "%" + c + "%";
+        }
+
+        if (search_word.length() == 0) {
+            search_word = "%%";
+        }
+        return search_word;
     }
 }

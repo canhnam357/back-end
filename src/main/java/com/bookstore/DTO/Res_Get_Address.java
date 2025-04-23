@@ -15,4 +15,5 @@ public class Res_Get_Address {
     private String phoneNumber;
     private String addressInformation;
     private String otherDetail;
+    private boolean isDefault;
 }

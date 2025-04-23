@@ -1,6 +1,7 @@
 package com.bookstore.Service;
 
 import com.bookstore.DTO.Admin_Req_Create_Book;
+import com.bookstore.DTO.Admin_Req_Update_Book;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Entity.Book;
 import org.springframework.http.ResponseEntity;
@@ -25,4 +26,8 @@ public interface BookService {
     ResponseEntity<GenericResponse> adminGetBooksOfAuthor(int page, int size, String authorId);
 
     ResponseEntity<GenericResponse> getPriceRange();
+
+    ResponseEntity<GenericResponse> delete(String bookId);
+
+    ResponseEntity<GenericResponse> update(String bookId, Admin_Req_Update_Book bookDto);
 }

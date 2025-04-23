@@ -1,6 +1,5 @@
 package com.bookstore.Service.Impl;
 
-import com.bookstore.DTO.Admin_Res_Get_Users;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_Create_Review;
 import com.bookstore.DTO.Res_Get_Review;
@@ -53,16 +52,15 @@ public class ReviewServiceImpl implements ReviewService {
             System.err.println("CONTENT " + review.getContent());
             new_review.setContent(review.getContent());
             new_review.setRating(review.getRating());
+            reviewRepository.save(new_review);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Add review successfully!!!")
-                    .result(reviewRepository.save(new_review))
                     .statusCode(HttpStatus.CREATED.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Add review failed!!! " + ex.getMessage())
-                    .result(null)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -111,7 +109,6 @@ public class ReviewServiceImpl implements ReviewService {
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Get all review failed!!!")
-                    .result(null)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -134,28 +131,24 @@ public class ReviewServiceImpl implements ReviewService {
                     reviewRepository.save(review_.get());
                     return ResponseEntity.ok().body(GenericResponse.builder()
                             .message("Update review success !!!")
-                            .result(null)
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
                             .build());
                 }
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Not found review !!!")
-                        .result(null)
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Not found user !!!")
-                    .result(null)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Update review failed!!!")
-                    .result(null)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -174,28 +167,24 @@ public class ReviewServiceImpl implements ReviewService {
                     reviewRepository.deleteById(reviewId);
                     return ResponseEntity.ok().body(GenericResponse.builder()
                             .message("Delete review success !!!")
-                            .result(null)
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
                             .build());
                 }
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Not found review !!!")
-                        .result(null)
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Not found user !!!")
-                    .result(null)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Delete review failed!!!")
-                    .result(null)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

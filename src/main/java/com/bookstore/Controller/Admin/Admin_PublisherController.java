@@ -20,16 +20,19 @@ public class Admin_PublisherController {
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "") String keyword) {
+        System.out.println("ADMIN get all Publisher");
         return publisherService.search(page, size, keyword);
     }
 
     @PostMapping("/create")
     public ResponseEntity<GenericResponse> createPublisher (@RequestBody Admin_Req_Create_Publisher createPublisher)  {
+        System.out.println("ADMIN create Publisher");
         return publisherService.create(createPublisher);
     }
 
     @DeleteMapping("")
-    public ResponseEntity<GenericResponse> delete(@RequestParam String publisherId) {
+    public ResponseEntity<GenericResponse> deletePublisher (@RequestParam String publisherId) {
+        System.out.println("ADMIN delete Publisher");
         return publisherService.delete(publisherId);
     }
 }

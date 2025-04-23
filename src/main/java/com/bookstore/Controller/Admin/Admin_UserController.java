@@ -22,11 +22,13 @@ public class Admin_UserController {
                                                    @RequestParam(defaultValue = "2") int isActive,
                                                    @RequestParam(defaultValue = "2") int isVerified,
                                                    @RequestParam(defaultValue = "") String email) {
+        System.out.println("ADMIN get all Users");
         return userService.getAll(page, size, isActive, isVerified, email);
     }
 
     @PutMapping("/{userId}")
     public ResponseEntity<GenericResponse> updateUserStatus(@PathVariable String userId, @RequestBody Admin_Req_Update_UserStatus adminUpdateUserDTO) {
+        System.out.println("ADMIN update User status (active, verified)");
         return userService.updateUserStatus(userId, adminUpdateUserDTO);
     }
 }

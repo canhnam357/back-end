@@ -1,10 +1,11 @@
 package com.bookstore.Constant;
 
 public enum OrderStatus {
-    PENDING,
-    REJECTED,
-    IN_PREPARATION,
-    DELIVERING,
-    DELIVERED,
-    CANCELLED
+    PENDING, // USER
+    REJECTED, // EMPLOYEE
+    IN_PREPARATION, // EMPLOYEE
+    READY_TO_SHIP, // EMPLOYEE
+    DELIVERING, // SHIPPER
+    DELIVERED, // SHIPPER
+    CANCELLED // USER
 }

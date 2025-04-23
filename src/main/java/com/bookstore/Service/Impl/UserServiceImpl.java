@@ -2,7 +2,6 @@ package com.bookstore.Service.Impl;
 
 import com.bookstore.DTO.*;
 import com.bookstore.Entity.*;
-import com.bookstore.Exception.UserNotFoundException;
 import com.bookstore.Repository.*;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Security.UserDetail;
@@ -74,38 +73,30 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 System.err.println("ROLE " + user.getRole().getName());
                 if (user.getRole().getName().equals("ADMIN")) {
                     System.err.println("ADMIN");
-                    return ResponseEntity.ok(
-                            GenericResponse.builder()
-                                    .success(true)
-                                    .message("Verify admin Success")
-                                    .result(user.getFullName())
-                                    .statusCode(200)
-                                    .build()
-                    );
+                    return ResponseEntity.ok(GenericResponse.builder()
+                            .success(true)
+                            .message("Verify admin Success")
+                            .result(user.getFullName())
+                            .statusCode(200)
+                            .build());
                 }
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(GenericResponse.builder()
-                                .success(false)
-                                .message("User is not ADMIN!")
-                                .result(null)
-                                .statusCode(HttpStatus.UNAUTHORIZED.value())
-                                .build());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                        .success(false)
+                        .message("User is not ADMIN!")
+                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                        .build());
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(GenericResponse.builder()
-                            .success(false)
-                            .message("Wrong token!")
-                            .result(null)
-                            .statusCode(HttpStatus.UNAUTHORIZED.value())
-                            .build());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Wrong token!")
+                    .statusCode(HttpStatus.UNAUTHORIZED.value())
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(GenericResponse.builder()
-                            .success(false)
-                            .message("User is not ADMIN or wrong token!")
-                            .result(null)
-                            .statusCode(HttpStatus.UNAUTHORIZED.value())
-                            .build());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                    .success(false)
+                    .message("User is not ADMIN or wrong token!")
+                    .statusCode(HttpStatus.UNAUTHORIZED.value())
+                    .build());
         }
     }
 
@@ -119,38 +110,30 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 System.err.println("ROLE " + user.getRole().getName());
                 if (user.getRole().getName().equals("ADMIN") || (user.isVerified() && user.isActive())) {
                     System.err.println("VERIFIED");
-                    return ResponseEntity.ok(
-                            GenericResponse.builder()
-                                    .success(true)
-                                    .message("Verify Success")
-                                    .result(user.getFullName())
-                                    .statusCode(200)
-                                    .build()
-                    );
+                    return ResponseEntity.ok(GenericResponse.builder()
+                            .success(true)
+                            .message("Verify Success")
+                            .result(user.getFullName())
+                            .statusCode(200)
+                            .build());
                 }
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(GenericResponse.builder()
-                                .success(false)
-                                .message("User is not admin or not active or not verified!")
-                                .result(null)
-                                .statusCode(HttpStatus.UNAUTHORIZED.value())
-                                .build());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                        .success(false)
+                        .message("User is not admin or not active or not verified!")
+                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                        .build());
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(GenericResponse.builder()
-                            .success(false)
-                            .message("Wrong token!")
-                            .result(null)
-                            .statusCode(HttpStatus.UNAUTHORIZED.value())
-                            .build());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Wrong token!")
+                    .statusCode(HttpStatus.UNAUTHORIZED.value())
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(GenericResponse.builder()
-                            .success(false)
-                            .message("Wrong token!")
-                            .result(null)
-                            .statusCode(HttpStatus.UNAUTHORIZED.value())
-                            .build());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Wrong token!")
+                    .statusCode(HttpStatus.UNAUTHORIZED.value())
+                    .build());
         }
     }
 
@@ -190,23 +173,18 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
 
             Page<Admin_Res_Get_Users> dtoPage = new PageImpl<>(res, userList.getPageable(), userList.getTotalElements());
 
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Get All Users Successfully!")
-                            .result(dtoPage)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Get All Users Successfully!")
+                    .result(dtoPage)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    GenericResponse.builder()
-                            .message("Get all user failed!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get all user failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -215,24 +193,18 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
         try {
             Optional<User> user = userRepository.findById(userId);
             if (user.isEmpty()) {
-                return ResponseEntity.status(404).body(
-                        GenericResponse.builder()
-                                .message("Not found user")
-                                .result(null)
-                                .statusCode(HttpStatus.NOT_FOUND.value())
-                                .success(false)
-                                .build()
-                );
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Not found user")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
             }
             if (adminUpdateUserDTO.getActive() == null || adminUpdateUserDTO.getVerified() == null) {
-                return ResponseEntity.badRequest().body(
-                        GenericResponse.builder()
-                                .message("isActive and isVerified must not null!!!")
-                                .result(null)
-                                .statusCode(HttpStatus.BAD_REQUEST.value())
-                                .success(false)
-                                .build()
-                );
+                return ResponseEntity.badRequest().body(GenericResponse.builder()
+                        .message("isActive and isVerified must not null!!!")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .success(false)
+                        .build());
             }
             System.out.println(Boolean.parseBoolean(adminUpdateUserDTO.getActive()));
             System.out.println(Boolean.parseBoolean(adminUpdateUserDTO.getVerified()));
@@ -240,23 +212,17 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             _user.setActive(Boolean.parseBoolean(adminUpdateUserDTO.getActive()));
             _user.setVerified(Boolean.parseBoolean(adminUpdateUserDTO.getVerified()));
             userRepository.save(_user);
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Update status user success!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Update status user success!!!")
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(
-                    GenericResponse.builder()
-                            .message("Update status user failed!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Update status user failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -266,7 +232,6 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             if (userRepository.findByEmail(login.getEmail()).isEmpty()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Email does not exists!")
-                        .result(null)
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -276,7 +241,6 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                         .success(false)
                         .message("Your account is not verified!")
-                        .result(null)
                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .build());
             }
@@ -284,7 +248,6 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                         .success(false)
                         .message("Your account is not active!")
-                        .result(null)
                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .build());
             }
@@ -321,7 +284,6 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Login failed!")
-                    .result(null)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -342,14 +304,12 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
                     .message("Logout failed!, Please login before logout!")
-                    .result(null)
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Logout failed!")
-                    .result(null)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -362,7 +322,6 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
                         .success(false)
                         .message("Password must be between 8 and 32 characters long")
-                        .result(null)
                         .statusCode(HttpStatus.BAD_REQUEST.value())
                         .build());
             }
@@ -372,7 +331,6 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 return ResponseEntity.status(409).body(GenericResponse.builder()
                         .success(true)
                         .message("Email already in used!")
-                        .result(null)
                         .statusCode(HttpStatus.CONFLICT.value())
                         .build());
             }
@@ -387,7 +345,6 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 return ResponseEntity.status(409).body(GenericResponse.builder()
                         .success(true)
                         .message("Password and confirm password do not match")
-                        .result(null)
                         .statusCode(HttpStatus.CONFLICT.value())
                         .build());
             }
@@ -412,13 +369,11 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             return ResponseEntity.ok(GenericResponse.builder()
                     .success(true)
                     .message("Register Success , please check mail and verify OTP!")
-                    .result(null)
                     .statusCode(200)
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Register failed!")
-                    .result(null)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -430,20 +385,16 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
         try {
             Optional<User> user = userRepository.findByUserIdAndIsActiveIsTrue(userId);
             if (!user.isPresent()) {
-                return ResponseEntity.status(404).body(
-                        GenericResponse.builder()
-                                .message("Get Book Failed!!!")
-                                .result(null)
-                                .statusCode(HttpStatus.NOT_FOUND.value())
-                                .success(false)
-                                .build()
-                );
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("User not found!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
             }
             Profile profile = new Profile();
             profile.setEmail(user.get().getEmail());
             profile.setPhoneNumber(user.get().getPhoneNumber());
             profile.setFullName(user.get().getFullName());
-            profile.setAddressList(new ArrayList<>());
             for (Address address : user.get().getAddresses()) {
                 Res_Get_Address resGetAddress = new Res_Get_Address();
                 resGetAddress.setAddressId(address.getAddressId());
@@ -451,25 +402,19 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                 resGetAddress.setPhoneNumber(address.getPhoneNumber());
                 resGetAddress.setFullName(address.getFullName());
                 resGetAddress.setOtherDetail(address.getOtherDetail());
-                profile.addAddress(resGetAddress);
             }
-            return ResponseEntity.ok().body(
-                    GenericResponse.builder()
-                            .message("Get Profile User Successfully!")
-                            .result(profile)
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build()
-            );
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Get Profile User Successfully!")
+                    .result(profile)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    GenericResponse.builder()
-                            .message("Get Profile User failed!!!")
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get Profile User failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
         }
     }
 
@@ -479,31 +424,72 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
         System.err.println("OTP : " + otp);
         Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(otp, email);
         if (!emailVerification.isPresent()) {
-            return ResponseEntity.badRequest().body(
-                    GenericResponse.builder()
-                            .message("Invalid token, please check the token again!")
-                            .result(null)
-                            .statusCode(HttpStatus.BAD_REQUEST.value())
-                            .success(false)
-                            .build()
-            );
+            return ResponseEntity.badRequest().body(GenericResponse.builder()
+                    .message("Invalid token, please check the token again!")
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .success(false)
+                    .build());
         }
         User user = userRepository.findByEmail(emailVerification.get().getEmail()).get();
         user.setVerified(true);
         user.setActive(true);
         userRepository.save(user);
-        return ResponseEntity.ok().body(
-                GenericResponse.builder()
-                        .message("Account verification successful, please login!")
-                        .result(null)
-                        .statusCode(HttpStatus.OK.value())
-                        .success(true)
-                        .build()
-        );
+        return ResponseEntity.ok().body(GenericResponse.builder()
+                .message("Account verification successful, please login!")
+                .statusCode(HttpStatus.OK.value())
+                .success(true)
+                .build());
     }
 
     @Override
     public <S extends User> S save(S entity) {
         return userRepository.save(entity);
     }
+
+    public ResponseEntity<GenericResponse> changePassword(String userId, Req_Update_Password reqUpdatePassword) {
+        try {
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .success(false)
+                        .message("User not found!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .build());
+            }
+
+            if (reqUpdatePassword.getNewPassword().length() < 8 || reqUpdatePassword.getNewPassword().length() > 32) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Password must be between 8 and 32 characters long")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .build());
+            }
+
+            User user = userOptional.get();
+
+            if (!passwordEncoder.matches(reqUpdatePassword.getPassword(), user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Current password is incorrect!")
+                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                        .build());
+            }
+
+            user.setPassword(passwordEncoder.encode(reqUpdatePassword.getNewPassword()));
+            userRepository.save(user);
+
+            return ResponseEntity.ok(GenericResponse.builder()
+                    .success(true)
+                    .message("Password changed successfully!")
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Change password failed!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
+    }
+
 }

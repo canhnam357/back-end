@@ -46,13 +46,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 Optional<RefreshToken> token = refreshTokenRepository.findByUser_UserIdAndExpiredIsFalseAndRevokedIsFalse(userId);
                 if(token.isPresent() && jwtTokenProvider.validateToken(token.get().getToken())){
                     if(!token.get().getToken().equals(reqVerify.getToken())){
-                        return ResponseEntity.status(404)
-                                .body(GenericResponse.builder()
-                                        .success(false)
-                                        .message("RefreshToken is not present. Please login again!")
-                                        .result(null)
-                                        .statusCode(HttpStatus.NOT_FOUND.value())
-                                        .build());
+                        return ResponseEntity.status(404).body(GenericResponse.builder()
+                                .success(false)
+                                .message("RefreshToken is not present. Please login again!")
+                                .statusCode(HttpStatus.NOT_FOUND.value())
+                                .build());
                     }
                     UserDetail userDetail = (UserDetail) userDetailService.loadUserByUserId(jwtTokenProvider.getUserIdFromRefreshToken(reqVerify.getToken()));
                     String accessToken = jwtTokenProvider.generateAccessToken(userDetail);
@@ -60,30 +58,24 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     resultMap.put("accessToken", accessToken);
                     resultMap.put("refreshToken", reqVerify.getToken());
                     resultMap.put("username", optionalUser.get().getFullName());
-                    return ResponseEntity.status(200)
-                            .body(GenericResponse.builder()
-                                    .success(true)
-                                    .message(null)
-                                    .result(resultMap)
-                                    .statusCode(HttpStatus.OK.value())
-                                    .build());
+                    return ResponseEntity.status(200).body(GenericResponse.builder()
+                            .success(true)
+                            .result(resultMap)
+                            .statusCode(HttpStatus.OK.value())
+                            .build());
                 }
             }
-            return ResponseEntity.status(401)
-                    .body(GenericResponse.builder()
-                            .success(false)
-                            .message("Unauthorized. Please login again!")
-                            .result(null)
-                            .statusCode(HttpStatus.UNAUTHORIZED.value())
-                            .build());
+            return ResponseEntity.status(401).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Unauthorized. Please login again!")
+                    .statusCode(HttpStatus.UNAUTHORIZED.value())
+                    .build());
         } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(GenericResponse.builder()
-                            .success(false)
-                            .message(e.getMessage())
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .build());
+            return ResponseEntity.status(500).body(GenericResponse.builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
         }
     }
 
@@ -118,38 +110,30 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     refreshTokenRepository.save(optionalRefreshToken.get());
                     SecurityContextHolder.clearContext();
 
-                    return ResponseEntity.status(HttpStatus.OK)
-                            .body(GenericResponse.builder()
-                                    .success(true)
-                                    .message("Logout successfully!")
-                                    .result(null)
-                                    .statusCode(HttpStatus.OK.value())
-                                    .build());
-                }
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(GenericResponse.builder()
-                                .success(false)
-                                .message("Logout failed!")
-                                .result(null)
-                                .statusCode(HttpStatus.NOT_FOUND.value())
-                                .build());
-            }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(GenericResponse.builder()
-                            .success(false)
-                            .message("Logout failed!")
-                            .result(null)
-                            .statusCode(HttpStatus.UNAUTHORIZED.value())
+                    return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                            .success(true)
+                            .message("Logout successfully!")
+                            .statusCode(HttpStatus.OK.value())
                             .build());
+                }
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Logout failed!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .build());
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Logout failed!")
+                    .statusCode(HttpStatus.UNAUTHORIZED.value())
+                    .build());
 
         }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(GenericResponse.builder()
-                            .success(false)
-                            .message(e.getMessage())
-                            .result(null)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .build());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
         }
     }
 }

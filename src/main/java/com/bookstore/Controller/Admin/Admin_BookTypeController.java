@@ -1,18 +1,17 @@
 package com.bookstore.Controller.Admin;
 
 import com.bookstore.DTO.Admin_Req_Create_BookType;
+import com.bookstore.DTO.Admin_Req_Update_BookType;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.BookTypeService;
-import com.bookstore.Service.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @PreAuthorize("hasRole('ADMIN')")
-@RequestMapping("/api/admin/booktypes")
+@RequestMapping("/api/admin/book-types")
 public class Admin_BookTypeController {
 
     @Autowired
@@ -22,11 +21,23 @@ public class Admin_BookTypeController {
     @GetMapping("")
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size) {
+        System.out.println("ADMIN get all BookType");
         return bookTypeService.getAll(page, size);
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<GenericResponse> createAuthor (@RequestBody Admin_Req_Create_BookType createBookType)  {
+    @PostMapping("")
+    public ResponseEntity<GenericResponse> createBookType (@RequestBody Admin_Req_Create_BookType createBookType)  {
+        System.out.println("ADMIN create BookType");
         return bookTypeService.create(createBookType);
+    }
+
+    @DeleteMapping("")
+    public ResponseEntity<GenericResponse> deleteBookType (@RequestParam String bookTypeId) {
+        return bookTypeService.delete(bookTypeId);
+    }
+
+    @PutMapping("")
+    public ResponseEntity<GenericResponse> updateBookType (@RequestParam String bookTypeId, @RequestBody Admin_Req_Update_BookType bookType) {
+        return bookTypeService.update(bookTypeId, bookType);
     }
 }
