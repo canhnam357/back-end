@@ -12,4 +12,5 @@ public class GenericResponse {
     private String message;
     private Object result;
     private int statusCode;
+    private String redirectUrl;
 }

@@ -15,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -45,11 +46,19 @@ public class BookServiceImpl implements BookService {
     @Autowired
     private ReviewRepository reviewRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ImageRepository imageRepository;
+
 
     @Override
-    public ResponseEntity<GenericResponse> getAll(int page, int size) {
+    public ResponseEntity<GenericResponse> getAll(int page, int size, String keyword) {
         try {
-            Page<Book> books = bookRepository.findAll(PageRequest.of(page - 1, size));
+
+            String search_word = Normalized.removeVietnameseAccents(keyword);
+            Page<Book> books = bookRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .message("Get All Book Successfully!")
                     .result(books)
@@ -66,7 +75,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> getAllBookNotDeleted(int page, int size, BigDecimal leftBound, BigDecimal rightBound, String authorId, String publisherId, String distributorId, String bookName, String sort) {
+    public ResponseEntity<GenericResponse> getAllBookNotDeleted(int page, int size, BigDecimal leftBound, BigDecimal rightBound, String authorId, String publisherId, String distributorId, String bookName, String sort, String categoryIds) {
         try {
             String pattern = "";
             for (char c : bookName.toCharArray()) {
@@ -79,6 +88,7 @@ public class BookServiceImpl implements BookService {
             List<String> authors = Arrays.asList(authorId.split(",", -1));
             List<String> publishers = Arrays.asList(publisherId.split(",", -1));
             List<String> distributors = Arrays.asList(distributorId.split(",", -1));
+            List<String> categories = Arrays.asList(categoryIds.split(",", -1));
 
             System.err.println("LIST AUTHOR_ID : ");
             for (String s : authors) System.err.println(s + " ");
@@ -96,7 +106,11 @@ public class BookServiceImpl implements BookService {
                 distributors = new ArrayList<>();
             }
 
-            Specification<Book> spec = BookSpecification.withFilters(leftBound, rightBound, authors, publishers, distributors, pattern, sort);
+            if (categoryIds.isEmpty()) {
+                categories = new ArrayList<>();
+            }
+
+            Specification<Book> spec = BookSpecification.withFilters(leftBound, rightBound, authors, publishers, distributors, pattern, sort, categories);
 
             Page<Book> books = bookRepository.findAll(spec, PageRequest.of(page - 1, size));
             List<Res_Get_Books> res = new ArrayList<>();
@@ -172,9 +186,19 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Book createBook) {
         try {
             Book book = new Book();
+            List<Category> categories = categoryRepository.findAllById(createBook.getCategoriesId());
+            book.setCategories(categories);
+
+            for (Category category : categories) {
+                if (category.getBooks() == null) {
+                    category.setBooks(new ArrayList<>());
+                }
+                category.getBooks().add(book);
+            }
             book.setBookName(createBook.getBookName());
             book.setInStock(createBook.getInStock());
             book.setPrice(createBook.getPrice());
@@ -186,7 +210,7 @@ public class BookServiceImpl implements BookService {
             book.setPublisher(publisherRepository.findById(createBook.getPublisherId()).get());
             book.setDistributor(distributorRepository.findById(createBook.getDistributorId()).get());
             book.setBookType(bookTypeRepository.findById(createBook.getBookTypeId()).get());
-            book.setNameNormalized(Normalized.removeVietnameseAccents(createBook.getBookName()));
+            book.setNameNormalized(Normalized.remove(createBook.getBookName()));
             bookRepository.save(book);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Book successfully!")
@@ -215,7 +239,7 @@ public class BookServiceImpl implements BookService {
             if (book.get().getUrlThumbnail() == null || isThumbnail == 1) {
                 book.get().setUrlThumbnail(url);
             }
-            book.get().setNameNormalized(Normalized.removeVietnameseAccents(book.get().getBookName()));
+            book.get().setNameNormalized(Normalized.remove(book.get().getBookName()));
             bookRepository.save(book.get());
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .message("Upload Successfully!")
@@ -334,10 +358,32 @@ public class BookServiceImpl implements BookService {
                         .message("Not found book!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
-                        .build()
-                );
+                        .build());
             }
+
             Book ele = book.get();
+
+            // Step 1: Clear existing categories from the book and update the Category side
+            for (Category category : ele.getCategories()) {
+                category.getBooks().remove(ele); // Remove the book from the category's book list
+            }
+            ele.getCategories().clear(); // Clear all categories from the book
+
+            // Step 2: Fetch new categories and update relationships
+            List<Category> newCategories = categoryRepository.findAllById(bookDto.getCategoriesId());
+            ele.setCategories(newCategories); // Set the new category list
+
+            // Step 3: Update the Category side of the relationship
+            for (Category category : newCategories) {
+                if (category.getBooks() == null) {
+                    category.setBooks(new ArrayList<>());
+                }
+                if (!category.getBooks().contains(ele)) {
+                    category.getBooks().add(ele); // Add the book to the category's book list
+                }
+            }
+
+            // Update other book fields
             ele.setBookName(bookDto.getBookName());
             ele.setInStock(bookDto.getInStock());
             ele.setPrice(bookDto.getPrice());
@@ -345,19 +391,18 @@ public class BookServiceImpl implements BookService {
             ele.setNumberOfPage(bookDto.getNumberOfPage());
             ele.setPublishedDate(bookDto.getPublishedDate());
             ele.setWeight(bookDto.getWeight());
-            ele.setAuthor(authorRepository.findById(bookDto.getAuthorId()).get());
-            ele.setPublisher(publisherRepository.findById(bookDto.getPublisherId()).get());
-            ele.setDistributor(distributorRepository.findById(bookDto.getDistributorId()).get());
-            ele.setBookType(bookTypeRepository.findById(bookDto.getBookTypeId()).get());
+            ele.setAuthor(authorRepository.findById(bookDto.getAuthorId()).orElse(null));
+            ele.setPublisher(publisherRepository.findById(bookDto.getPublisherId()).orElse(null));
+            ele.setDistributor(distributorRepository.findById(bookDto.getDistributorId()).orElse(null));
+            ele.setBookType(bookTypeRepository.findById(bookDto.getBookTypeId()).orElse(null));
             ele.setUrlThumbnail(bookDto.getUrlThumbnail());
-            List<Image> images = new ArrayList<>();
-            for (Image image : ele.getImages()) {
-                if (bookDto.getImages().contains(image.getImageId())) {
-                    images.add(image);
-                }
-            }
-            ele.setImages(images);
+
+            // Update images
+            ele.getImages().removeIf(image -> !bookDto.getImages().contains(image.getUrl()));
+
+            // Save the updated book
             bookRepository.save(ele);
+
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update book successfully!")
                     .statusCode(HttpStatus.OK.value())

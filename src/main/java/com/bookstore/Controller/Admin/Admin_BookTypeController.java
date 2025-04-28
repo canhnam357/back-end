@@ -18,26 +18,26 @@ public class Admin_BookTypeController {
     private BookTypeService bookTypeService;
 
 
-    @GetMapping("")
+    @GetMapping("") // OK
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size) {
         System.out.println("ADMIN get all BookType");
         return bookTypeService.getAll(page, size);
     }
 
-    @PostMapping("")
+    @PostMapping("") // OK
     public ResponseEntity<GenericResponse> createBookType (@RequestBody Admin_Req_Create_BookType createBookType)  {
         System.out.println("ADMIN create BookType");
         return bookTypeService.create(createBookType);
     }
 
-    @DeleteMapping("")
-    public ResponseEntity<GenericResponse> deleteBookType (@RequestParam String bookTypeId) {
-        return bookTypeService.delete(bookTypeId);
-    }
+//    @DeleteMapping("")
+//    public ResponseEntity<GenericResponse> deleteBookType (@RequestParam String bookTypeId) {
+//        return bookTypeService.delete(bookTypeId);
+//    }
 
-    @PutMapping("")
-    public ResponseEntity<GenericResponse> updateBookType (@RequestParam String bookTypeId, @RequestBody Admin_Req_Update_BookType bookType) {
+    @PutMapping("/{bookTypeId}")
+    public ResponseEntity<GenericResponse> updateBookType (@PathVariable String bookTypeId, @RequestBody Admin_Req_Update_BookType bookType) {
         return bookTypeService.update(bookTypeId, bookType);
     }
 }

@@ -11,9 +11,9 @@ import java.math.BigDecimal;
 
 public interface BookService {
 
-    ResponseEntity<GenericResponse> getAll(int page, int size);
+    ResponseEntity<GenericResponse> getAll(int page, int size, String keyword);
 
-    ResponseEntity<GenericResponse> getAllBookNotDeleted(int page, int size, BigDecimal leftBound, BigDecimal rightBound, String authorId, String publisherId, String distributorId, String bookName, String sort);
+    ResponseEntity<GenericResponse> getAllBookNotDeleted(int page, int size, BigDecimal leftBound, BigDecimal rightBound, String authorId, String publisherId, String distributorId, String bookName, String sort, String categoryIds);
 
     ResponseEntity<GenericResponse> getByIdNotDeleted(String bookId);
 

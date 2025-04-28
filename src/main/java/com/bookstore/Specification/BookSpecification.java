@@ -1,6 +1,7 @@
 package com.bookstore.Specification;
 
 import com.bookstore.Entity.Book;
+import jakarta.persistence.criteria.Join;
 import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Predicate;
 
@@ -17,7 +18,8 @@ public class BookSpecification {
             List<String> publisherIds,
             List<String> distributorIds,
             String bookName,
-            String sort
+            String sort,
+            List<String> categoryIds
     ) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -49,6 +51,13 @@ public class BookSpecification {
             // Lọc theo tên sách (không phân biệt hoa thường)
             if (bookName != null && !bookName.trim().isEmpty()) {
                 predicates.add(cb.like(cb.lower(root.get("nameNormalized")), "%" + bookName.toLowerCase() + "%"));
+            }
+
+            if (categoryIds != null && !categoryIds.isEmpty()) {
+                Join<Object, Object> categoriesJoin = root.join("categories"); // JOIN categories
+                predicates.add(categoriesJoin.get("categoryId").in(categoryIds)); // WHERE categoryId IN (....)
+                query.groupBy(root.get("bookId")); // GROUP BY bookId
+                query.having(cb.equal(cb.countDistinct(categoriesJoin.get("categoryId")), categoryIds.size())); // HAVING COUNT(DISTINCT categoryId) = categoryIds.size()
             }
 
             predicates.add(cb.equal(root.get("isDeleted"), false));

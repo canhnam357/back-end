@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -36,6 +37,8 @@ public class Admin_Req_Create_Book {
     private int weight;
 
     private String authorId;
+
+    private List<String> categoriesId;
 
     private String publisherId;
 

@@ -1,6 +1,7 @@
 package com.bookstore.DTO;
 
 import com.bookstore.Entity.Book;
+import com.bookstore.Entity.Category;
 import com.bookstore.Entity.Image;
 import com.bookstore.Entity.Review;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -29,6 +30,7 @@ public class Res_Get_Books {
     private Date publishedDate;
     private int weight;
     private String authorName;
+    private List<String> categories;
     private String publisherName;
     private String distributorName;
     private String bookType;
@@ -49,6 +51,11 @@ public class Res_Get_Books {
         authorName = null;
         if (book.getAuthor() != null) {
             authorName = book.getAuthor().getAuthorName();
+        }
+
+        categories = new ArrayList<>();
+        for (Category category : book.getCategories()) {
+            categories.add(category.getCategoryName());
         }
 
         publisherName = null;

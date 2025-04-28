@@ -2,6 +2,7 @@ package com.bookstore.Entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -85,7 +86,7 @@ public class Book {
     private List<Voucher> vouchers;
 
     @ManyToMany(mappedBy = "books")
-    @JsonIgnore
+    @JsonManagedReference
     private List<Category> categories;
 
     @ManyToOne

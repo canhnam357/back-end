@@ -1,6 +1,7 @@
 package com.bookstore.Repository;
 
 import com.bookstore.Entity.Book;
+import com.bookstore.Entity.Distributor;
 import com.bookstore.Entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,4 +25,9 @@ public interface BookRepository extends JpaRepository<Book, String>, JpaSpecific
 
     @Query("SELECT DISTINCT b.price FROM Book b WHERE b.isDeleted = false ORDER BY b.price ASC")
     List<BigDecimal> findAllDistinctPricesOrderByAsc();
+
+    @Query("SELECT a FROM Book a WHERE " +
+            "(:keywords IS NULL OR " +
+            "LOWER(a.nameNormalized) LIKE LOWER(:keywords)) ORDER BY a.createdAt DESC")
+    Page<Book> findByNameContainingSubsequence(Pageable pageable, String keywords);
 }

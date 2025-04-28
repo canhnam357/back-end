@@ -20,6 +20,8 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String orderDetailId;
 
+    private String bookId;
+
     private String bookName;
 
     private int quantity;

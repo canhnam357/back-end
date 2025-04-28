@@ -17,25 +17,25 @@ public class Admin_CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @GetMapping("")
-    public ResponseEntity<GenericResponse> getAll () {
+    @GetMapping("") //OK
+    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "") String keyword) {
         System.out.println("ADMIN get all Category");
-        return categoryService.getAll();
+        return categoryService.getAllNotPageable(keyword);
     }
 
-    @PostMapping("")
+    @PostMapping("") //OK
     public ResponseEntity<GenericResponse> createCategory (@RequestBody Admin_Req_Create_Category createCategory)  {
         System.out.println("ADMIN create Category");
         return categoryService.create(createCategory);
     }
 
-    @DeleteMapping("")
+    @DeleteMapping("") // delete? not
     public ResponseEntity<GenericResponse> deleteCategory (@RequestParam String categoryId) {
         return categoryService.delete(categoryId);
     }
 
-    @PutMapping("")
-    public ResponseEntity<GenericResponse> updateCategory (@RequestParam String categoryId, @RequestBody Admin_Req_Update_Category category) {
+    @PutMapping("/{categoryId}") // OK
+    public ResponseEntity<GenericResponse> updateCategory (@PathVariable String categoryId, @RequestBody Admin_Req_Update_Category category) {
         return categoryService.update(categoryId, category);
     }
 }

@@ -1,5 +1,6 @@
 package com.bookstore.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,12 +23,14 @@ public class Category {
 
     private String categoryName;
 
+    private String nameNormalized;
+
     @ManyToMany
     @JoinTable(
             name = "categoryBook",
             joinColumns = @JoinColumn(name = "categoryId"),
             inverseJoinColumns = @JoinColumn(name = "bookId")
     )
-    @JsonIgnore
+    @JsonBackReference
     private List<Book> books;
 }

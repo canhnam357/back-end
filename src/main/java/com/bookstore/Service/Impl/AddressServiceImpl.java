@@ -61,6 +61,9 @@ public class AddressServiceImpl implements AddressService {
             address.setAddressInformation(createAddress.getAddressInformation());
             address.setOtherDetail(createAddress.getOtherDetail());
             address.setUser(userRepository.findById(userId).get());
+            if (addressRepository.countByUserUserId(userId) == 0) {
+                address.setIsDefault(true);
+            }
             addressRepository.save(address);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Address successfully!")
@@ -103,9 +106,9 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> update(Req_PatchUpdate_Address address, String userId) {
+    public ResponseEntity<GenericResponse> update(Req_PatchUpdate_Address address, String userId, String addressId) {
         try {
-            Optional<Address> _address = addressRepository.findByAddressIdAndUserUserId(address.getAddressId(), userId);
+            Optional<Address> _address = addressRepository.findByAddressIdAndUserUserId(addressId, userId);
             if (_address.isEmpty()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Address Not Found!!!")

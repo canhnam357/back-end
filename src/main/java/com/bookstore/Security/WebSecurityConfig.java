@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authorization.method.AuthorizeReturnObject;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,17 +31,20 @@ public class WebSecurityConfig {
     @Autowired
     private UserDetailService userDetailService;
 
+
     @Autowired
     private MyBasicAuthenticationEntryPoint myBasicAuthenticationEntryPoint;
+
+
+    @Autowired
+    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Bean
     public JwtAuthenticationFilter JwtAuthenticationFilter() {
         return new JwtAuthenticationFilter();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -52,7 +56,7 @@ public class WebSecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider(){
         final DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        authenticationProvider.setPasswordEncoder(passwordEncoder);
         authenticationProvider.setUserDetailsService(userDetailService);
         return authenticationProvider;
     }
@@ -62,36 +66,50 @@ public class WebSecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/logout",
+                                         "/api/auth/callback/google",
+                                         "/api/auth/**",
+                                         "/",
+                                         "/card",
+                                         "payment-return",
+                                        "/api/authors/**", "/api/books/**", "/api/categories/**", "/api/distributors/**", "/api/publishers/**", "/api/reviews/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .httpBasic((basic)-> basic
-                        .authenticationEntryPoint(myBasicAuthenticationEntryPoint))
+                .sessionManagement(sess -> sess
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .httpBasic(basic -> basic
+                        .authenticationEntryPoint(myBasicAuthenticationEntryPoint)
+                )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(myBasicAuthenticationEntryPoint)
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .cors(httpSecurityCorsConfigurer ->
-                        httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()
+                .cors(cors -> cors
+                        .configurationSource(corsConfigurationSource())
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(auth -> auth
+                                .baseUri("/api/auth/oauth2/authorization")
                         )
+                        .redirectionEndpoint(redir -> redir
+                                .baseUri("/api/auth/callback/*")
+                        )
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
                 );
-//                .rememberMe(Customizer.withDefaults());
+
         return http.build();
     }
 
 
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedMethods(List.of("HEAD",
-                "GET", "POST", "PUT", "DELETE", "PATCH"));
-        // setAllowCredentials(true) is important, otherwise:
-        // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
-        // configuration.setAllowCredentials(true);
-        // setAllowedHeaders is important! Without it, OPTIONS preflight request
-        // will fail with 403 Invalid CORS request
+        configuration.setAllowedOrigins(List.of("http://localhost:3006", "http://localhost:3000")); // Chỉ định rõ origin
+        configuration.setAllowedMethods(List.of("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
+        configuration.setAllowCredentials(true); // Bật credentials
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

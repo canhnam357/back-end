@@ -1,5 +1,6 @@
 package com.bookstore.Service.Impl;
 
+import com.bookstore.Constant.Gender;
 import com.bookstore.DTO.*;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
@@ -8,8 +9,12 @@ import com.bookstore.Security.UserDetail;
 import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Service.RefreshTokenService;
 import com.bookstore.Service.RoleService;
+import com.bookstore.Service.UserService;
 import com.bookstore.Specification.UserSpecification;
+import com.bookstore.Utils.Normalized;
+import com.cloudinary.Cloudinary;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -22,11 +27,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
 
 @Service
-public class UserServiceImpl implements com.bookstore.Service.UserService {
+public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
@@ -50,10 +57,14 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
+    @Lazy
     private AuthenticationManager authenticationManager;
 
     @Autowired
     private RefreshTokenService refreshTokenService;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
@@ -101,9 +112,9 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> verify(Req_Verify reqVerify) {
+    public ResponseEntity<GenericResponse> verify(String authorizationHeader) {
         try {
-            String token = reqVerify.getToken();
+            String token = authorizationHeader.substring(7);
             if (jwtTokenProvider._validateToken(token)) {
                 String userId = jwtTokenProvider.getUserIdFromJwt(token);
                 User user = userRepository.findById(userId).get();
@@ -238,17 +249,17 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             }
             User user = userRepository.findByEmail(login.getEmail()).get();
             if (!user.isVerified()) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
                         .message("Your account is not verified!")
-                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
             if (!user.isActive()) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
                         .message("Your account is not active!")
-                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
 
@@ -395,14 +406,9 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             profile.setEmail(user.get().getEmail());
             profile.setPhoneNumber(user.get().getPhoneNumber());
             profile.setFullName(user.get().getFullName());
-            for (Address address : user.get().getAddresses()) {
-                Res_Get_Address resGetAddress = new Res_Get_Address();
-                resGetAddress.setAddressId(address.getAddressId());
-                resGetAddress.setAddressInformation(address.getAddressInformation());
-                resGetAddress.setPhoneNumber(address.getPhoneNumber());
-                resGetAddress.setFullName(address.getFullName());
-                resGetAddress.setOtherDetail(address.getOtherDetail());
-            }
+            profile.setAvatar(user.get().getAvatar());
+            profile.setGender(user.get().getGender().name());
+            profile.setDateOfBirth(user.get().getDateOfBirth());
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .message("Get Profile User Successfully!")
                     .result(profile)
@@ -430,6 +436,7 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                     .success(false)
                     .build());
         }
+        emailVerificationRepository.delete(emailVerification.get());
         User user = userRepository.findByEmail(emailVerification.get().getEmail()).get();
         user.setVerified(true);
         user.setActive(true);
@@ -465,6 +472,8 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                         .build());
             }
 
+
+
             User user = userOptional.get();
 
             if (!passwordEncoder.matches(reqUpdatePassword.getPassword(), user.getPassword())) {
@@ -474,6 +483,18 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
                         .statusCode(HttpStatus.UNAUTHORIZED.value())
                         .build());
             }
+
+            Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(reqUpdatePassword.getOtp(), user.getEmail());
+
+            if (emailVerification.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Wrong OTP!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .build());
+            }
+
+            emailVerificationRepository.delete(emailVerification.get());
 
             user.setPassword(passwordEncoder.encode(reqUpdatePassword.getNewPassword()));
             userRepository.save(user);
@@ -487,6 +508,144 @@ public class UserServiceImpl implements com.bookstore.Service.UserService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Change password failed!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> changeAvatar(MultipartFile file, String userId) {
+        try {
+            Map data = this.cloudinary.uploader().upload(file.getBytes(), Map.of());
+            String url = (String) data.get("url");
+            Optional<User> user = userRepository.findById(userId);
+            System.err.println(url);
+            user.get().setAvatar(url);
+            userRepository.save(user.get());
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Change avatar Successfully!")
+                    .statusCode(HttpStatus.OK.value())
+                    .result(url)
+                    .success(true)
+                    .build());
+        } catch (IOException io) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Change avatar failed!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> changeProfile(String userId, Req_Update_Profile profile) {
+        try {
+            if (userRepository.findById(userId).isEmpty()) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Not found user!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+
+            User user = userRepository.findById(userId).get();
+            user.setFullName(profile.getFullName());
+            user.setPhoneNumber(profile.getPhoneNumber());
+            user.setGender(Gender.valueOf(profile.getGender()));
+            user.setDateOfBirth(profile.getDateOfBirth());
+            userRepository.save(user);
+            return ResponseEntity.status(200).body(GenericResponse.builder()
+                    .message("Change profile successfully!")
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
+
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Change profile failed!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
+
+    @Override
+    public User findOrCreateUser(String email, String fullName) {
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isPresent()) return user.get();
+        User new_user = new User();
+        new_user.setFullName(Normalized.removeVietnameseAccents(fullName));
+        new_user.setEmail(email);
+        new_user.setUserId(UUID.randomUUID().toString().split("-")[0]);
+        new_user.setRole(roleService.findByName("USER"));
+        new_user.setVerified(true);
+        new_user.setActive(true);
+        new_user.setLastLoginAt(new Date());
+        Cart cart = new Cart();
+        cart = cartRepository.save(cart);
+
+        new_user.setCart(cart);
+
+        new_user = userRepository.save(new_user);
+
+        return new_user;
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> resetPassword(Req_Reset_Password password) {
+        try {
+            Optional<User> userOptional = userRepository.findByEmail(password.getEmail());
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .success(false)
+                        .message("User not found!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .build());
+            }
+
+            if (password.getNewPassword().length() < 8 || password.getNewPassword().length() > 32) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Password must be between 8 and 32 characters long")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .build());
+            }
+
+            if (!password.getNewPassword().equals(password.getConfirmPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                        .success(false)
+                        .message("New Password and Confirm New Password must same.")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .build());
+            }
+
+
+            User user = userOptional.get();
+
+            Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(password.getOtp(), user.getEmail());
+
+            if (emailVerification.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Wrong OTP!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .build());
+            }
+
+            emailVerificationRepository.delete(emailVerification.get());
+
+            user.setPassword(passwordEncoder.encode(password.getNewPassword()));
+            userRepository.save(user);
+
+            return ResponseEntity.ok(GenericResponse.builder()
+                    .success(true)
+                    .message("Password reset successfully!")
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Reset password failed!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }

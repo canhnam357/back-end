@@ -25,7 +25,7 @@ public class AuthorServiceImpl implements AuthorService {
         try {
             Author author = new Author();
             author.setAuthorName(createAuthor.getAuthorName());
-            author.setNameNormalized(Normalized.removeVietnameseAccents(createAuthor.getAuthorName()));
+            author.setNameNormalized(Normalized.remove(createAuthor.getAuthorName()));
             authorRepository.save(author);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Author successfully!")
@@ -85,9 +85,18 @@ public class AuthorServiceImpl implements AuthorService {
     @Override
     public ResponseEntity<GenericResponse> update(String authorId, Admin_Req_Update_Author updateAuthor) {
         try {
+
+            if (authorRepository.findById(authorId).isEmpty()) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Not found author!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+
             Author author = authorRepository.findById(authorId).get();
             author.setAuthorName(updateAuthor.getAuthorName());
-            author.setNameNormalized(Normalized.removeVietnameseAccents(updateAuthor.getAuthorName()));
+            author.setNameNormalized(Normalized.remove(updateAuthor.getAuthorName()));
             authorRepository.save(author);
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update Author successfully!")

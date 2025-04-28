@@ -26,7 +26,7 @@ public class DistributorServiceImpl implements DistributorService {
         try {
             Distributor distributor = new Distributor();
             distributor.setDistributorName(createDistributor.getDistributorName());
-            distributor.setNameNormalized(Normalized.removeVietnameseAccents(createDistributor.getDistributorName()));
+            distributor.setNameNormalized(Normalized.remove(createDistributor.getDistributorName()));
             distributorRepository.save(distributor);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Distributor successfully!")
@@ -88,7 +88,7 @@ public class DistributorServiceImpl implements DistributorService {
         try {
             Distributor _distributor = distributorRepository.findById(distributorId).get();
             _distributor.setDistributorName(distributor.getDistributorName());
-            _distributor.setNameNormalized(Normalized.removeVietnameseAccents(distributor.getDistributorName()));
+            _distributor.setNameNormalized(Normalized.remove(distributor.getDistributorName()));
             distributorRepository.save(_distributor);
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update Distributor successfully!")

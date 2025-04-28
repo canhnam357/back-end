@@ -12,7 +12,7 @@ public interface AddressService {
 
     ResponseEntity<GenericResponse> delete(String addressId, String userId);
 
-    ResponseEntity<GenericResponse> update(Req_PatchUpdate_Address address, String userId);
+    ResponseEntity<GenericResponse> update(Req_PatchUpdate_Address address, String userId, String addressId);
 
     ResponseEntity<GenericResponse> setDefault(String userId, String addressId);
 }

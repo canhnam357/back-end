@@ -10,6 +10,5 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Admin_Req_Update_Distributor {
-    private String distributorId;
     private String distributorName;
 }

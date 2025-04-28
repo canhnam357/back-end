@@ -18,7 +18,7 @@ public class Admin_AuthorController {
     @Autowired
     private AuthorService authorService;
 
-    @GetMapping("")
+    @GetMapping("") // OK
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "") String keyword) {
@@ -26,19 +26,19 @@ public class Admin_AuthorController {
         return authorService.search(page, size, keyword);
     }
 
-    @PostMapping("")
+    @PostMapping("") // OK
     public ResponseEntity<GenericResponse> createAuthor (@RequestBody Admin_Req_Create_Author createAuthor)  {
         System.out.println("ADMIN Create Author");
         return authorService.create(createAuthor);
     }
 
-    @PutMapping("/{authorId}")
+    @PutMapping("/{authorId}") // OK
     public ResponseEntity<GenericResponse> updateAuthor (@PathVariable String authorId, @RequestBody Admin_Req_Update_Author updateAuthor)  {
         System.out.println("ADMIN update Author");
         return authorService.update(authorId, updateAuthor);
     }
 
-    @DeleteMapping("/{authorId}")
+    @DeleteMapping("/{authorId}") // OK
     public ResponseEntity<GenericResponse> deleteAuthor (@PathVariable String authorId) {
         System.out.println("ADMIN delete Author");
         return authorService.delete(authorId);

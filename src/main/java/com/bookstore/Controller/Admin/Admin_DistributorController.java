@@ -17,7 +17,7 @@ public class Admin_DistributorController {
     @Autowired
     private DistributorService distributorService;
 
-    @GetMapping("")
+    @GetMapping("") // OK
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "") String keyword) {
@@ -25,19 +25,19 @@ public class Admin_DistributorController {
         return distributorService.search(page, size, keyword);
     }
 
-    @PostMapping("")
+    @PostMapping("") // OK
     public ResponseEntity<GenericResponse> createDistributor (@RequestBody Admin_Req_Create_Distributor createDistributor)  {
         System.out.println("ADMIN create Distributor");
         return distributorService.create(createDistributor);
     }
 
-    @DeleteMapping("")
+    @DeleteMapping("") // not used
     public ResponseEntity<GenericResponse> deleteDistributor (@RequestParam String distributorId) {
         return distributorService.delete(distributorId);
     }
 
-    @PutMapping("")
-    public ResponseEntity<GenericResponse> updateDistributor (@RequestParam String distributorId, @RequestBody Admin_Req_Update_Distributor distributor) {
+    @PutMapping("/{distributorId}") // OK
+    public ResponseEntity<GenericResponse> updateDistributor (@PathVariable String distributorId, @RequestBody Admin_Req_Update_Distributor distributor) {
         return distributorService.update(distributorId, distributor);
     }
 }

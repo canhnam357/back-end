@@ -10,6 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Req_Update_Password {
+    private String otp;
     private String password;
     private String newPassword;
 }

@@ -18,20 +18,21 @@ public class Admin_BookController {
     @Autowired
     private BookService bookService;
 
-    @PostMapping("")
+    @PostMapping("") // OK
     public ResponseEntity<GenericResponse> createBook (@RequestBody Admin_Req_Create_Book createBook)  {
         System.out.println("ADMIN create Book");
         return bookService.create(createBook);
     }
 
-    @GetMapping("")
+    @GetMapping("") // OK
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
-                                                   @RequestParam(defaultValue = "10") int size) {
-        System.out.println("ADMIN get all Book");
-        return bookService.getAll(page, size);
+                                                   @RequestParam(defaultValue = "10") int size,
+                                                   @RequestParam(defaultValue = "") String keyword) {
+        System.out.println("ADMIN get all Book, keyword = " + keyword);
+        return bookService.getAll(page, size, keyword);
     }
 
-    @PostMapping("/upload")
+    @PostMapping("/upload") // OK
     public ResponseEntity<GenericResponse> uploadImage(@RequestParam("image") MultipartFile file,
                                                        @RequestParam("bookId") String bookId,
                                                        @RequestParam(value = "isThumbnail", defaultValue = "0", required = false) int isThumbnail){
@@ -39,20 +40,20 @@ public class Admin_BookController {
         return bookService.upload(file, bookId, isThumbnail);
     }
 
-    @GetMapping("/author_books/{authorId}")
+    @GetMapping("/author_books/{authorId}") // OK
     public ResponseEntity<GenericResponse> getAllBooksOfAuthor (@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @PathVariable String authorId) {
         System.out.println("ADMIN get all Books of Author");
         return bookService.adminGetBooksOfAuthor(page, size, authorId);
     }
+    // DELETE use updateBook?
+//    @DeleteMapping("/{bookId}")
+//    public ResponseEntity<GenericResponse> deleteBook (@PathVariable String bookId) {
+//        return bookService.delete(bookId);
+//    }
 
-    @DeleteMapping("/{bookId}")
-    public ResponseEntity<GenericResponse> deleteBook (@PathVariable String bookId) {
-        return bookService.delete(bookId);
-    }
-
-    @PutMapping("/{bookId}")
+    @PutMapping("/{bookId}") // OK
     public ResponseEntity<GenericResponse> updateBook (@PathVariable String bookId, @RequestBody Admin_Req_Update_Book book) {
         return bookService.update(bookId, book);
     }

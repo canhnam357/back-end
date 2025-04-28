@@ -11,8 +11,6 @@ import lombok.Setter;
 
 public class Req_PatchUpdate_Address {
 
-    private String addressId;
-
     private String fullName;
 
     // checked?

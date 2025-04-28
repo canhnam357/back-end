@@ -2,14 +2,19 @@ package com.bookstore.Service.Impl;
 
 import com.bookstore.Constant.OrderStatus;
 import com.bookstore.Constant.PaymentMethod;
+import com.bookstore.Constant.PaymentStatus;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_Create_Order;
+import com.bookstore.DTO.Res_Get_Order;
+import com.bookstore.DTO.Res_Get_OrderDetail;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
+import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.OrderService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,10 +48,24 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @Override
     @Transactional
-    public ResponseEntity<GenericResponse> createOrder(Req_Create_Order orderDTO, String userId) {
+    public ResponseEntity<GenericResponse> createOrder(Req_Create_Order orderDTO, String authorizationHeader) {
         try {
+            String token = authorizationHeader.substring(7);
+            String userId = jwtTokenProvider.getUserIdFromJwt(token);
+
+            if (userRepository.findByUserIdAndIsActiveIsTrue(userId).isEmpty()) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("User not found or not active!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+
             if (addressRepository.findByAddressId(orderDTO.getAddressId()).isEmpty()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Not found address!!!")
@@ -101,7 +120,9 @@ public class OrderServiceImpl implements OrderService {
             Orders order = new Orders();
             order.setOrderStatus(OrderStatus.PENDING);
             order.setPaymentMethod(PaymentMethod.valueOf(orderDTO.getPaymentMethod()));
+            order.setPaymentStatus(PaymentStatus.PENDING);
             order.setAddress(addressRepository.findByAddressId(orderDTO.getAddressId()).get().getAddressInformation());
+            order.setPhoneNumber(addressRepository.findByAddressId(orderDTO.getAddressId()).get().getPhoneNumber());
             order.setUser(userRepository.findById(userId).get());
             order.setTotalPrice(BigDecimal.ZERO);
             order = ordersRepository.save(order);
@@ -109,10 +130,13 @@ public class OrderServiceImpl implements OrderService {
             for (CartItem cartItem : cart.getCartItems()) {
                 OrderItem orderItem = new OrderItem();
                 orderItem.setOrders(order);
+                orderItem.setBookId(cartItem.getBook().getBookId());
                 orderItem.setBookName(cartItem.getBook().getBookName());
                 orderItem.setQuantity(cartItem.getQuantity());
                 orderItem.setTotalPrice(cartItem.getTotalPrice());
                 orderItem.setUrlThumbnail(cartItem.getBook().getUrlThumbnail());
+                Book book = bookRepository.findById(cartItem.getBook().getBookId()).get();
+                book.setInStock(book.getInStock() - cartItem.getQuantity());
                 orderItemRepository.save(orderItem);
                 order.setTotalPrice(order.getTotalPrice().add(cartItem.getTotalPrice()));
             }
@@ -120,6 +144,7 @@ public class OrderServiceImpl implements OrderService {
             cartRepository.save(cart);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Order successfully!!!")
+                    .result(order.getOrderId())
                     .statusCode(HttpStatus.CREATED.value())
                     .success(true)
                     .build());
@@ -133,15 +158,38 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> getAll(String userId, int page, int size) {
+    public ResponseEntity<GenericResponse> getAllOfUser(String userId, String orderStatus, int page, int size) {
         try {
-            Page<Orders> orders = ordersRepository.findAllByOrderByOrderAtDesc(PageRequest.of(page - 1, size));
-            // not-completed
+            Page<Orders> orders;
+            if (Arrays.stream(OrderStatus.values()).anyMatch(e -> e.name().equals(orderStatus))) {
+                orders = ordersRepository.findAllByUserUserIdAndOrderStatusOrderByOrderAtDesc(userId, OrderStatus.valueOf(orderStatus), PageRequest.of(page - 1, size));
+            }
+            else {
+                orders = ordersRepository.findAllByUserUserIdOrderByOrderAtDesc(userId, PageRequest.of(page - 1, size));
+            }
+
+            List<Res_Get_Order> res = new ArrayList<>();
+            for (Orders order : orders) {
+                res.add(new Res_Get_Order(
+                        order.getOrderId(),
+                        order.getOrderStatus().name(),
+                        order.getPaymentMethod().name(),
+                        order.getPaymentStatus().name(),
+                        order.getAddress(),
+                        order.getPhoneNumber(),
+                        order.getOrderAt(),
+                        order.getTotalPrice()
+                ));
+            }
+
+            Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
+
+
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Get all Orders success!!!")
-                    .result(orders)
+                    .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
-                    .success(false)
+                    .success(true)
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
@@ -152,6 +200,95 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    @Override
+    public ResponseEntity<GenericResponse> orderDetail(String userId, String orderId) {
+        try {
+            User user = userRepository.findById(userId).get();
+
+            if (ordersRepository.findById(orderId).isEmpty()) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Not found Order!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+
+            Orders order = ordersRepository.findById(orderId).get();
+
+            if (userId != order.getUser().getUserId() && !user.getRole().getName().equals("ADMIN") && !user.getRole().getName().equals("EMPLOYEE")) {
+                return ResponseEntity.status(400).body(GenericResponse.builder()
+                        .message("User doesn't have permission to see this Order!!!")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .success(false)
+                        .build());
+            }
+
+            List<Res_Get_OrderDetail> res = new ArrayList<>();
+            for (OrderItem ele : order.getOrderDetails()) {
+                res.add(new Res_Get_OrderDetail(
+                        ele.getOrderDetailId(),
+                        ele.getBookName(),
+                        ele.getQuantity(),
+                        ele.getTotalPrice(),
+                        ele.getUrlThumbnail()
+                ));
+            }
+
+            return ResponseEntity.status(200).body(GenericResponse.builder()
+                    .message("Get Order Detail successfully!!!")
+                    .statusCode(HttpStatus.OK.value())
+                    .result(res)
+                    .success(true)
+                    .build());
+
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get Order Detail failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> getAll(String orderStatus, int index, int size) {
+        try {
+            Page<Orders> orders;
+            if (Arrays.stream(OrderStatus.values()).anyMatch(e -> e.name().equals(orderStatus))) {
+                orders = ordersRepository.findByOrderStatusOrderByOrderAtDesc(OrderStatus.valueOf(orderStatus), PageRequest.of(index - 1, size));
+            }
+            else {
+                orders = ordersRepository.findAllByOrderByOrderAtDesc(PageRequest.of(index - 1, size));
+            }
+
+            List<Res_Get_Order> res = new ArrayList<>();
+            for (Orders order : orders) {
+                res.add(new Res_Get_Order(
+                        order.getOrderId(),
+                        order.getOrderStatus().name(),
+                        order.getPaymentMethod().name(),
+                        order.getPaymentStatus().name(),
+                        order.getAddress(),
+                        order.getPhoneNumber(),
+                        order.getOrderAt(),
+                        order.getTotalPrice()
+                ));
+            }
+            Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
+            return ResponseEntity.status(200).body(GenericResponse.builder()
+                    .message("Get All Order successfully!!!")
+                    .statusCode(HttpStatus.OK.value())
+                    .result(dtoPage)
+                    .success(true)
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get All Order failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
 
 
 }

@@ -7,18 +7,18 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Req_Get_Order {
+public class Res_Get_Order {
     private String orderId;
     private String orderStatus;
     private String paymentMethod;
-    private List<Req_Get_OrderItem> orderItems;
+    private String paymentStatus;
     private String address;
+    private String phoneNumber;
     private Date orderAt;
     private BigDecimal totalPrice;
 }

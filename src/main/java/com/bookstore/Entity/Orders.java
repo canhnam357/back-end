@@ -2,6 +2,7 @@ package com.bookstore.Entity;
 
 import com.bookstore.Constant.OrderStatus;
 import com.bookstore.Constant.PaymentMethod;
+import com.bookstore.Constant.PaymentStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -31,10 +32,15 @@ public class Orders {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
     @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderDetails;
 
     private String address;
+
+    private String phoneNumber;
 
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
@@ -45,6 +51,12 @@ public class Orders {
 
     @Column(precision = 12, scale = 3)
     private BigDecimal totalPrice;
+
+    @OneToMany(mappedBy = "order")
+    @JsonIgnore
+    private List<OrderStatusHistory> statusHistories;
+
+    private Date expireDatePayment;
 
     @PrePersist
     void createdAt() {

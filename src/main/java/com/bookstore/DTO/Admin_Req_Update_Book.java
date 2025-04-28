@@ -41,6 +41,8 @@ public class Admin_Req_Update_Book {
 
     private String authorId;
 
+    private List<String> categoriesId;
+
     private String publisherId;
 
     private String distributorId;

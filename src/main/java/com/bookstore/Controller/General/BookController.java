@@ -18,6 +18,7 @@ public class BookController {
     public ResponseEntity<GenericResponse> getAllBook(@RequestParam(required = false) BigDecimal minPrice,
                                                       @RequestParam(required = false) BigDecimal maxPrice,
                                                       @RequestParam(defaultValue = "") String authorId,
+                                                      @RequestParam(defaultValue = "") String categoryId,
                                                       @RequestParam(defaultValue = "") String publisherId,
                                                       @RequestParam(defaultValue = "") String distributorId,
                                                       @RequestParam(defaultValue = "") String bookName,
@@ -25,7 +26,7 @@ public class BookController {
                                                       @RequestParam(defaultValue = "1") int index,
                                                       @RequestParam(defaultValue = "10") int size) {
         System.err.println("Get all Book from general - default 10 / page");
-        return bookService.getAllBookNotDeleted(index, size, minPrice, maxPrice, authorId, publisherId, distributorId, bookName, sort);
+        return bookService.getAllBookNotDeleted(index, size, minPrice, maxPrice, authorId, publisherId, distributorId, bookName, sort, categoryId);
     }
 
     @GetMapping("/new_arrivals")

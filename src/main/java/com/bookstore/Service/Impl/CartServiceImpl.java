@@ -4,6 +4,7 @@ import com.bookstore.DTO.Req_Add_Cart;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_Get_Cart;
 import com.bookstore.DTO.Req_Get_CartItem;
+import com.bookstore.Entity.Cart;
 import com.bookstore.Entity.CartItem;
 import com.bookstore.Repository.BookRepository;
 import com.bookstore.Repository.CartItemRepository;
@@ -34,10 +35,38 @@ public class CartServiceImpl implements CartService {
     @Override
     public ResponseEntity<GenericResponse> getCart(String userId) {
         try {
+            // Lấy Cart theo userId
+            Cart cart = cartRepository.findByUserUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
+
+            // Lấy danh sách CartItem hiện tại
             List<CartItem> cartItems = cartItemRepository.findAllByCartUserUserId(userId);
             List<Req_Get_CartItem> cartItemList = new ArrayList<>();
+            List<CartItem> newCartItems = new ArrayList<>();
             BigDecimal totalPrice = BigDecimal.ZERO;
+
+            // Xử lý từng CartItem
             for (CartItem cartItem : cartItems) {
+                // Kiểm tra và cập nhật quantity nếu vượt quá inStock
+                if (cartItem.getQuantity() > cartItem.getBook().getInStock()) {
+                    cartItem.setQuantity(cartItem.getBook().getInStock());
+                }
+
+                // Bỏ qua CartItem có quantity == 0
+                if (cartItem.getQuantity() == 0) {
+                    continue;
+                }
+
+                // Tính lại totalPrice cho CartItem
+                cartItem.reCalTotalPrice();
+
+                // Liên kết CartItem với Cart
+                cartItem.setCart(cart);
+
+                // Thêm vào danh sách mới
+                newCartItems.add(cartItem);
+
+                // Tạo Req_Get_CartItem để trả về response
                 cartItemList.add(new Req_Get_CartItem(
                         cartItem.getBook().getBookId(),
                         cartItem.getBook().getBookName(),
@@ -46,12 +75,22 @@ public class CartServiceImpl implements CartService {
                         cartItem.getQuantity(),
                         cartItem.getTotalPrice()
                 ));
+
+                // Cộng dồn totalPrice
                 totalPrice = totalPrice.add(cartItem.getTotalPrice());
             }
 
-            Req_Get_Cart res = new Req_Get_Cart(
-                    cartItemList, totalPrice
-            );
+            // Xóa các CartItem cũ trong Cart (Hibernate sẽ xóa bản ghi nhờ orphanRemoval = true)
+            cart.getCartItems().clear();
+
+            // Thêm danh sách CartItem mới vào Cart
+            cart.getCartItems().addAll(newCartItems);
+
+            // Lưu Cart vào cơ sở dữ liệu
+            cartRepository.save(cart);
+
+            // Tạo response
+            Req_Get_Cart res = new Req_Get_Cart(cartItemList, totalPrice);
 
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .message("Get Cart Successfully!")
@@ -61,7 +100,7 @@ public class CartServiceImpl implements CartService {
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get Cart failed!!!")
+                    .message("Get Cart failed: " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -92,6 +131,15 @@ public class CartServiceImpl implements CartService {
                         .success(false)
                         .build());
             }
+
+            if (_cartItem.getQuantity() > _cartItem.getBook().getInStock()) {
+                return ResponseEntity.badRequest().body(GenericResponse.builder()
+                        .message("Quantity less than or equal inStock!")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .success(false)
+                        .build());
+            }
+
             cartItemRepository.save(_cartItem);
             return getCart(userId);
         } catch (Exception ex) {
@@ -142,7 +190,7 @@ public class CartServiceImpl implements CartService {
             }
             else
             {
-                cartItem.get().setQuantity(cartItem.get().getQuantity() + quantity);
+                cartItem.get().setQuantity(Math.min(cartItem.get().getQuantity() + quantity, cartItem.get().getBook().getInStock()));
                 cartItem.get().reCalTotalPrice();
                 cartItemRepository.save(cartItem.get());
             }
@@ -169,12 +217,12 @@ public class CartServiceImpl implements CartService {
                         .build());
             }
 
-            if (quantity <= 0) {
+            if (quantity <= 0 || cartItem.get().getBook().getInStock() == 0) {
                 cartItemRepository.delete(cartItem.get());
             }
             else
             {
-                cartItem.get().setQuantity(quantity);
+                cartItem.get().setQuantity(Math.min(quantity, cartItem.get().getBook().getInStock()));
                 cartItem.get().reCalTotalPrice();
                 cartItemRepository.save(cartItem.get());
             }

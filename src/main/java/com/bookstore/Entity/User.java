@@ -3,6 +3,7 @@ package com.bookstore.Entity;
 
 import com.bookstore.Constant.Gender;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -37,10 +38,11 @@ public class User implements Serializable {
 
     private String avatar;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
     private Date dateOfBirth;
 
     @Enumerated(EnumType.STRING)
-    private Gender gender;
+    private Gender gender = Gender.OTHER;
 
     @Column(columnDefinition = "boolean default true")
     private boolean isActive;
@@ -74,6 +76,10 @@ public class User implements Serializable {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Review> reviews;
+
+    @OneToMany(mappedBy = "changedBy")
+    @JsonIgnore
+    private List<OrderStatusHistory> changedOrders;
 
     @PrePersist
     void createdAt() { this.createdAt = new Date();}

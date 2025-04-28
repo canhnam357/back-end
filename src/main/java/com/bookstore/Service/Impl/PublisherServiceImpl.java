@@ -26,7 +26,7 @@ public class PublisherServiceImpl implements PublisherService {
         try {
             Publisher publisher = new Publisher();
             publisher.setPublisherName(createPublisher.getPublisherName());
-            publisher.setNameNormalized(Normalized.removeVietnameseAccents(createPublisher.getPublisherName()));
+            publisher.setNameNormalized(Normalized.remove(createPublisher.getPublisherName()));
             publisherRepository.save(publisher);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Publisher successfully!")
@@ -88,10 +88,10 @@ public class PublisherServiceImpl implements PublisherService {
         try {
             Publisher _publisher = publisherRepository.findById(publisherId).get();
             _publisher.setPublisherName(publisher.getPublisherName());
-            _publisher.setNameNormalized(Normalized.removeVietnameseAccents(publisher.getPublisherName()));
+            _publisher.setNameNormalized(Normalized.remove(publisher.getPublisherName()));
+            publisherRepository.save(_publisher);
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update Publisher successfully!")
-                    .result(publisherRepository.save(_publisher))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());

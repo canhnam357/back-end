@@ -45,14 +45,15 @@ public class AddressController {
         return addressService.delete(addressId, userId);
     }
 
-    @PatchMapping("")
+    @PatchMapping("/{addressId}")
     public ResponseEntity<GenericResponse> update(@RequestHeader("Authorization") String authorizationHeader,
-                                                  @RequestBody Req_PatchUpdate_Address address) {
+                                                  @RequestBody Req_PatchUpdate_Address address,
+                                                  @PathVariable String addressId) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println(userId);
         System.err.println("ORTHER DETAIL " + address.getOtherDetail());
-        return addressService.update(address, userId);
+        return addressService.update(address, userId, addressId);
     }
 
     @PostMapping("/set-default/{addressId}")
