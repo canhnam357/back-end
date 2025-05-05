@@ -3,6 +3,7 @@ package com.bookstore.Entity;
 import com.bookstore.Constant.OrderStatus;
 import com.bookstore.Constant.PaymentMethod;
 import com.bookstore.Constant.PaymentStatus;
+import com.bookstore.Constant.RefundStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -36,7 +38,7 @@ public class Orders {
     private PaymentStatus paymentStatus;
 
     @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderDetails;
+    private List<OrderItem> orderDetails = new ArrayList<>();
 
     private String address;
 
@@ -54,12 +56,29 @@ public class Orders {
 
     @OneToMany(mappedBy = "order")
     @JsonIgnore
-    private List<OrderStatusHistory> statusHistories;
+    private List<OrderStatusHistory> statusHistories = new ArrayList<>();
 
     private Date expireDatePayment;
+
+    @Enumerated(EnumType.STRING)
+    private RefundStatus refundStatus;
+
+    private int refundTimesRemain = 3;
+
+    private Date lastCallRefund;
+
+    private Date refundAt;
+
+    private String transactionNo;
+
+    private String transactionDate;
+
+    private String TxnRef;
 
     @PrePersist
     void createdAt() {
         this.orderAt = new Date();
     }
+
+
 }

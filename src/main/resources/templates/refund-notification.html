@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Refund Notification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      max-width: 250px;
+    }
+
+    .refund-details {
+      margin-bottom: 20px;
+    }
+
+    .products-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .products-table th, .products-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .products-table th {
+      background-color: #f2f2f2;
+    }
+
+    .total {
+      text-align: right;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Book Store</h1>
+  </div>
+  <div class="refund-details">
+    <p><strong>Order ID:</strong> <span th:text="${orderId}"></span></p>
+    <p><strong>Order Date:</strong> <span th:text="${orderAt}"></span></p>
+    <p><strong>Reason for Refund:</strong> <span th:text="${refundReason}"></span></p>
+    <p><strong>Estimated Refund Time:</strong> <span th:text="${estimatedRefundTime}"></span></p>
+  </div>
+  <table class="products-table">
+    <thead>
+    <tr>
+      <th>Image</th>
+      <th>Name</th>
+      <th>Quantity</th>
+      <th>Total Price</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="orderDetail : ${orderDetails}">
+      <td><img th:src="${orderDetail.urlThumbnail}" alt="Product Image" width="50"></td>
+      <td th:text="${orderDetail.bookName}"></td>
+      <td th:text="${orderDetail.quantity}"></td>
+      <td th:text="${orderDetail.totalPrice}"></td>
+    </tr>
+    </tbody>
+  </table>
+  <div class="total">
+    <p><strong>Total Order Value:</strong> <span th:text="${totalOrderValue}"></span></p>
+  </div>
+  <div class="footer">
+    <p>We apologize for any inconvenience caused. If you have any questions, please contact our support team.</p>
+    <p>© 2025 BookShop. All rights reserved.</p>
+  </div>
+</div>
+</body>
+</html>

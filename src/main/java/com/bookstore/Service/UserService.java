@@ -16,7 +16,7 @@ public interface UserService {
 
     <S extends User> S save(S entity);
 
-    ResponseEntity<GenericResponse> validateVerificationAccount(String email, String otp);
+    ResponseEntity<GenericResponse> validateVerificationAccount(Req_Verify_OTPRegister register);
 
     public String getUserName(String email);
 

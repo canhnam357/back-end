@@ -9,8 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Admin_Req_Update_UserStatus {
-    private String active;
-    private String verified;
-    private String role;
+public class Req_Verify_OTPRegister {
+    private String email;
+    private String otp;
 }

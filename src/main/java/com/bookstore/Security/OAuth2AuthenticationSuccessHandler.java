@@ -4,6 +4,7 @@ import com.bookstore.Entity.RefreshToken;
 import com.bookstore.Entity.User;
 import com.bookstore.Service.RefreshTokenService;
 import com.bookstore.Service.UserService;
+import com.bookstore.Utils.Normalized;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -60,7 +61,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // Redirect về front-end với token
         String redirectUrl = userUrl + "/callback?accessToken=" + accessToken +
                 "&refreshToken=" + refreshToken.getToken() +
-                "&username=" + user.getFullName();
+                "&username=" + Normalized.remove(user.getFullName());
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

@@ -20,5 +20,6 @@ public class Admin_Res_Get_Users {
     private Date dateOfBirth;
     private String gender;
     private boolean isActive;
-    private  boolean isVerified;
+    private boolean isVerified;
+    private String role;
 }

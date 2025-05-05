@@ -26,10 +26,10 @@ public class AuthorServiceImpl implements AuthorService {
             Author author = new Author();
             author.setAuthorName(createAuthor.getAuthorName());
             author.setNameNormalized(Normalized.remove(createAuthor.getAuthorName()));
-            authorRepository.save(author);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Author successfully!")
                     .statusCode(HttpStatus.CREATED.value())
+                    .result(authorRepository.save(author))
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -97,10 +97,10 @@ public class AuthorServiceImpl implements AuthorService {
             Author author = authorRepository.findById(authorId).get();
             author.setAuthorName(updateAuthor.getAuthorName());
             author.setNameNormalized(Normalized.remove(updateAuthor.getAuthorName()));
-            authorRepository.save(author);
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update Author successfully!")
                     .statusCode(HttpStatus.OK.value())
+                    .result(authorRepository.save(author))
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -115,10 +115,17 @@ public class AuthorServiceImpl implements AuthorService {
     @Override
     public ResponseEntity<GenericResponse> delete(String authorId) {
         try {
+            if (authorRepository.findById(authorId).isEmpty()) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Not found author!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
             authorRepository.deleteById(authorId);
-            return ResponseEntity.status(200).body(GenericResponse.builder()
+            return ResponseEntity.status(204).body(GenericResponse.builder()
                     .message("Delete Author successfully!")
-                    .statusCode(HttpStatus.OK.value())
+                    .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {

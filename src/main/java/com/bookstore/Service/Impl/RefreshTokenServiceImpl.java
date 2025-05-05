@@ -46,10 +46,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 Optional<RefreshToken> token = refreshTokenRepository.findByUser_UserIdAndExpiredIsFalseAndRevokedIsFalse(userId);
                 if(token.isPresent() && jwtTokenProvider.validateToken(token.get().getToken())){
                     if(!token.get().getToken().equals(reqVerify.getToken())){
-                        return ResponseEntity.status(404).body(GenericResponse.builder()
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                                 .success(false)
                                 .message("RefreshToken is not present. Please login again!")
-                                .statusCode(HttpStatus.NOT_FOUND.value())
+                                .statusCode(HttpStatus.UNAUTHORIZED.value())
                                 .build());
                     }
                     UserDetail userDetail = (UserDetail) userDetailService.loadUserByUserId(jwtTokenProvider.getUserIdFromRefreshToken(reqVerify.getToken()));

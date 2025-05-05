@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface BookService {
 
@@ -17,11 +18,10 @@ public interface BookService {
 
     ResponseEntity<GenericResponse> getByIdNotDeleted(String bookId);
 
-    ResponseEntity<GenericResponse> getNewArrivalsBook(int page, int size); // get Book such newArrival = true and isDeleted = false
+    ResponseEntity<GenericResponse> getNewArrivalsBook(); // get Book such newArrival = true and isDeleted = false
 
     ResponseEntity<GenericResponse> create(Admin_Req_Create_Book createBook);
 
-    ResponseEntity<GenericResponse> upload(MultipartFile file, String bookId, int isThumbnail);
 
     ResponseEntity<GenericResponse> adminGetBooksOfAuthor(int page, int size, String authorId);
 

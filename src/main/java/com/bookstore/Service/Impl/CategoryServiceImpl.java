@@ -29,10 +29,10 @@ public class CategoryServiceImpl implements CategoryService {
             Category category = new Category();
             category.setCategoryName(createCategory.getCategoryName());
             category.setNameNormalized(Normalized.remove(category.getCategoryName()));
-            categoryRepository.save(category);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Category successfully!")
                     .statusCode(HttpStatus.CREATED.value())
+                    .result(categoryRepository.save(category))
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -102,10 +102,10 @@ public class CategoryServiceImpl implements CategoryService {
             }
             ele.get().setCategoryName(category.getCategoryName());
             ele.get().setNameNormalized(Normalized.remove(category.getCategoryName()));
-            categoryRepository.save(ele.get());
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update category successfully!!!")
                     .statusCode(HttpStatus.OK.value())
+                    .result(categoryRepository.save(ele.get()))
                     .success(true)
                     .build());
         } catch (Exception ex) {

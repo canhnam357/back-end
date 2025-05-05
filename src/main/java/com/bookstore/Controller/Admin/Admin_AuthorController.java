@@ -19,11 +19,11 @@ public class Admin_AuthorController {
     private AuthorService authorService;
 
     @GetMapping("") // OK
-    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
+    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int index,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "") String keyword) {
         System.out.println("ADMIN get All authors , keyword = " + "\"" + keyword + "\"");
-        return authorService.search(page, size, keyword);
+        return authorService.search(index, size, keyword);
     }
 
     @PostMapping("") // OK

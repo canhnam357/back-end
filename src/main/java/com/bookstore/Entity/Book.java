@@ -14,6 +14,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -61,36 +62,40 @@ public class Book {
     @ManyToOne
     @JoinColumn(name = "authorId", nullable = true)
     @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JsonIgnore
     private Author author;
 
     @ManyToOne
     @JoinColumn(name = "publisherId", nullable = true)
     @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JsonIgnore
     private Publisher publisher;
 
     @ManyToOne
     @JoinColumn(name = "distributorId", nullable = true)
     @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JsonIgnore
     private Distributor distributor;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<CartItem> cartItem;
+    private List<CartItem> cartItem = new ArrayList<>();
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<Review> reviews;
+    private List<Review> reviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<Voucher> vouchers;
+    private List<Voucher> vouchers = new ArrayList<>();
 
     @ManyToMany(mappedBy = "books")
     @JsonManagedReference
-    private List<Category> categories;
+    private List<Category> categories = new ArrayList<>();;
 
     @ManyToOne
     @JoinColumn(name = "bookTypeId", nullable = false)
+    @JsonIgnore
     private BookType bookType;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -99,12 +104,16 @@ public class Book {
     private String urlThumbnail;
 
     @Column(columnDefinition = "boolean default false")
-    private boolean newArrival;
+    private Boolean newArrival;
 
     private String nameNormalized;
 
     public void addImage(Image image) {
+        if (images == null) {
+            images = new ArrayList<>();
+        }
         images.add(image);
+        image.setBook(this); // Đảm bảo thiết lập quan hệ hai chiều
     }
 
     @PrePersist
@@ -130,6 +139,21 @@ public class Book {
     public String getPublisherName() {
         if (publisher == null) return null;
         return publisher.getPublisherName();
+    }
+
+    public String getAuthorId() {
+        if (author == null) return null;
+        return author.getAuthorId();
+    }
+
+    public String getDistributorId() {
+        if (distributor == null) return null;
+        return distributor.getDistributorId();
+    }
+
+    public String getPublisherId() {
+        if (publisher == null) return null;
+        return publisher.getPublisherId();
     }
 
 }

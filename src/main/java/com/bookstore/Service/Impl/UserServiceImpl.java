@@ -178,7 +178,8 @@ public class UserServiceImpl implements UserService {
                         user.getDateOfBirth(),
                         gender,
                         user.isActive(),
-                        user.isVerified()
+                        user.isVerified(),
+                        user.getRole().getName()
                 ));
             }
 
@@ -217,11 +218,21 @@ public class UserServiceImpl implements UserService {
                         .success(false)
                         .build());
             }
+
+            if (adminUpdateUserDTO.getRole() == null || roleService.findByName(adminUpdateUserDTO.getRole()).isEmpty()) {
+                return ResponseEntity.status(404).body(GenericResponse.builder()
+                        .message("Not found role")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+
             System.out.println(Boolean.parseBoolean(adminUpdateUserDTO.getActive()));
             System.out.println(Boolean.parseBoolean(adminUpdateUserDTO.getVerified()));
             User _user = user.get();
             _user.setActive(Boolean.parseBoolean(adminUpdateUserDTO.getActive()));
             _user.setVerified(Boolean.parseBoolean(adminUpdateUserDTO.getVerified()));
+            _user.setRole(roleService.findByName(adminUpdateUserDTO.getRole()).get());
             userRepository.save(_user);
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .message("Update status user success!!!")
@@ -300,15 +311,16 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+
     @Override
     public ResponseEntity<GenericResponse> logout(String authorizationHeader, String refreshToken) {
         try {
             String accessToken = authorizationHeader.substring(7);
             if (jwtTokenProvider.getUserIdFromJwt(accessToken).equals(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken))) {
+                refreshTokenService.logout(refreshToken);
                 return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                         .success(true)
                         .message("Logout success!")
-                        .result(refreshTokenService.logout(refreshToken))
                         .statusCode(HttpStatus.OK.value())
                         .build());
             }
@@ -330,10 +342,10 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<GenericResponse> register(Register registerRequest) {
         try {
             if (registerRequest.getPassword().length() < 8 || registerRequest.getPassword().length() > 32) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("Password must be between 8 and 32 characters long")
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
@@ -353,10 +365,10 @@ public class UserServiceImpl implements UserService {
             }
 
             if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
-                return ResponseEntity.status(409).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(true)
                         .message("Password and confirm password do not match")
-                        .statusCode(HttpStatus.CONFLICT.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
@@ -366,14 +378,14 @@ public class UserServiceImpl implements UserService {
             new_user.setUserId(UUID.randomUUID().toString().split("-")[0]);
             new_user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
             new_user.setPhoneNumber(registerRequest.getPhoneNumber());
-            new_user.setRole(roleService.findByName("USER"));
+            new_user.setRole(roleService.findByName("USER").get());
 
             Cart cart = new Cart();
-            cart = cartRepository.save(cart);
 
             new_user.setCart(cart);
 
             userRepository.save(new_user);
+
 
             emailVerificationService.sendOtp(registerRequest.getEmail());
 
@@ -384,7 +396,7 @@ public class UserServiceImpl implements UserService {
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Register failed!")
+                    .message(ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -396,9 +408,9 @@ public class UserServiceImpl implements UserService {
         try {
             Optional<User> user = userRepository.findByUserIdAndIsActiveIsTrue(userId);
             if (!user.isPresent()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("User not found!!!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
+                        .message("User is not active!!!")
+                        .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
             }
@@ -425,27 +437,43 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> validateVerificationAccount(String email, String otp) {
-        System.err.println("EMAIL : " + email);
-        System.err.println("OTP : " + otp);
-        Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(otp, email);
-        if (!emailVerification.isPresent()) {
-            return ResponseEntity.badRequest().body(GenericResponse.builder()
-                    .message("Invalid token, please check the token again!")
-                    .statusCode(HttpStatus.BAD_REQUEST.value())
+    public ResponseEntity<GenericResponse> validateVerificationAccount(Req_Verify_OTPRegister register) {
+        try {
+            String email = register.getEmail();
+            String otp = register.getOtp();
+            if (email == null) {
+                email = "";
+            }
+            if (otp == null) {
+                otp = "";
+            }
+            System.err.println("EMAIL : " + email);
+            System.err.println("OTP : " + otp);
+            Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(otp, email);
+            if (!emailVerification.isPresent()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                        .message("Invalid token, please check the token again!")
+                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                        .success(false)
+                        .build());
+            }
+            emailVerificationRepository.delete(emailVerification.get());
+            User user = userRepository.findByEmail(emailVerification.get().getEmail()).get();
+            user.setVerified(true);
+            user.setActive(true);
+            userRepository.save(user);
+            return ResponseEntity.ok().body(GenericResponse.builder()
+                    .message("Account verification successful, please login!")
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Account verification failed!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
         }
-        emailVerificationRepository.delete(emailVerification.get());
-        User user = userRepository.findByEmail(emailVerification.get().getEmail()).get();
-        user.setVerified(true);
-        user.setActive(true);
-        userRepository.save(user);
-        return ResponseEntity.ok().body(GenericResponse.builder()
-                .message("Account verification successful, please login!")
-                .statusCode(HttpStatus.OK.value())
-                .success(true)
-                .build());
     }
 
     @Override
@@ -465,10 +493,10 @@ public class UserServiceImpl implements UserService {
             }
 
             if (reqUpdatePassword.getNewPassword().length() < 8 || reqUpdatePassword.getNewPassword().length() > 32) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("Password must be between 8 and 32 characters long")
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
@@ -477,20 +505,28 @@ public class UserServiceImpl implements UserService {
             User user = userOptional.get();
 
             if (!passwordEncoder.matches(reqUpdatePassword.getPassword(), user.getPassword())) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
                         .message("Current password is incorrect!")
-                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                        .statusCode(HttpStatus.FORBIDDEN.value())
+                        .build());
+            }
+
+            if (reqUpdatePassword.getPassword().equals(reqUpdatePassword.getNewPassword())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Current password and new password are the same!")
+                        .statusCode(HttpStatus.CONFLICT.value())
                         .build());
             }
 
             Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(reqUpdatePassword.getOtp(), user.getEmail());
 
             if (emailVerification.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
                         .success(false)
                         .message("Wrong OTP!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
                         .build());
             }
 
@@ -553,9 +589,17 @@ public class UserServiceImpl implements UserService {
             user.setPhoneNumber(profile.getPhoneNumber());
             user.setGender(Gender.valueOf(profile.getGender()));
             user.setDateOfBirth(profile.getDateOfBirth());
-            userRepository.save(user);
+            user = userRepository.save(user);
+            Profile res = new Profile();
+            res.setFullName(user.getFullName());
+            res.setPhoneNumber(user.getPhoneNumber());
+            res.setEmail(user.getEmail());
+            res.setAvatar(user.getAvatar());
+            res.setGender(user.getGender().toString());
+            res.setDateOfBirth(user.getDateOfBirth());
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Change profile successfully!")
+                    .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
@@ -574,10 +618,10 @@ public class UserServiceImpl implements UserService {
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isPresent()) return user.get();
         User new_user = new User();
-        new_user.setFullName(Normalized.removeVietnameseAccents(fullName));
+        new_user.setFullName(fullName);
         new_user.setEmail(email);
         new_user.setUserId(UUID.randomUUID().toString().split("-")[0]);
-        new_user.setRole(roleService.findByName("USER"));
+        new_user.setRole(roleService.findByName("USER").get());
         new_user.setVerified(true);
         new_user.setActive(true);
         new_user.setLastLoginAt(new Date());
@@ -604,18 +648,19 @@ public class UserServiceImpl implements UserService {
             }
 
             if (password.getNewPassword().length() < 8 || password.getNewPassword().length() > 32) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("Password must be between 8 and 32 characters long")
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
+
             if (!password.getNewPassword().equals(password.getConfirmPassword())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("New Password and Confirm New Password must same.")
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
@@ -625,10 +670,10 @@ public class UserServiceImpl implements UserService {
             Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(password.getOtp(), user.getEmail());
 
             if (emailVerification.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                         .success(false)
                         .message("Wrong OTP!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .statusCode(HttpStatus.UNAUTHORIZED.value())
                         .build());
             }
 

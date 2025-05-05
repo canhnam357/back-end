@@ -52,10 +52,18 @@ public class ReviewServiceImpl implements ReviewService {
             System.err.println("CONTENT " + review.getContent());
             new_review.setContent(review.getContent());
             new_review.setRating(review.getRating());
-            reviewRepository.save(new_review);
+            Review temp = reviewRepository.save(new_review);
+            Res_Get_Review res = new Res_Get_Review();
+            res.setReviewId(temp.getReviewId());
+            res.setUserId(temp.getUser().getUserId());
+            res.setUserReviewed(temp.getUser().getFullName());
+            res.setContent(temp.getContent());
+            res.setRating(temp.getRating());
+            res.setCreatedAt(temp.getCreatedAt());
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Add review successfully!!!")
                     .statusCode(HttpStatus.CREATED.value())
+                    .result(res)
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -128,10 +136,18 @@ public class ReviewServiceImpl implements ReviewService {
                 if (user_.isPresent() && user_.get().getUserId() == userId) {
                     review_.get().setRating(review.getRating());
                     review_.get().setContent(review.getContent());
-                    reviewRepository.save(review_.get());
+                    Review temp = reviewRepository.save(review_.get());
+                    Res_Get_Review res = new Res_Get_Review();
+                    res.setReviewId(temp.getReviewId());
+                    res.setUserId(temp.getUser().getUserId());
+                    res.setUserReviewed(temp.getUser().getFullName());
+                    res.setContent(temp.getContent());
+                    res.setRating(temp.getRating());
+                    res.setCreatedAt(temp.getCreatedAt());
                     return ResponseEntity.ok().body(GenericResponse.builder()
                             .message("Update review success !!!")
                             .statusCode(HttpStatus.OK.value())
+                            .result(res)
                             .success(true)
                             .build());
                 }
@@ -141,9 +157,9 @@ public class ReviewServiceImpl implements ReviewService {
                         .success(false)
                         .build());
             }
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .message("Not found user !!!")
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .success(false)
                     .build());
         } catch (Exception ex) {
@@ -177,9 +193,9 @@ public class ReviewServiceImpl implements ReviewService {
                         .success(false)
                         .build());
             }
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .message("Not found user !!!")
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .success(false)
                     .build());
         } catch (Exception ex) {

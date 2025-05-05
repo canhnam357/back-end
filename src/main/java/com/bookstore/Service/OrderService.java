@@ -13,4 +13,6 @@ public interface OrderService {
 
     ResponseEntity<GenericResponse> getAll(String orderStatus, int index, int size);
 
+    ResponseEntity<GenericResponse> getAllForShipper(String orderStatus, int index, int size);
+
 }

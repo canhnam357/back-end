@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class Res_Get_OrderDetail {
     private String orderDetailId;
+    private String bookId;
     private String bookName;
     private int quantity;
     private BigDecimal totalPrice;

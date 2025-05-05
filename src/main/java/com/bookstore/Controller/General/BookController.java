@@ -30,10 +30,8 @@ public class BookController {
     }
 
     @GetMapping("/new_arrivals")
-    public ResponseEntity<GenericResponse> getAllBookNewArrivals(@RequestParam(defaultValue = "1") int page,
-                                                      @RequestParam(defaultValue = "10") int size) {
-        System.err.println("Get all Book from general - default 10 / page");
-        return bookService.getNewArrivalsBook(page, size);
+    public ResponseEntity<GenericResponse> getAllBookNewArrivals() {
+        return bookService.getNewArrivalsBook();
     }
 
     @GetMapping("/{bookId}")

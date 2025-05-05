@@ -18,11 +18,11 @@ public class Admin_PublisherController {
     private PublisherService publisherService;
 
     @GetMapping("") // OK
-    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
+    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int index,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "") String keyword) {
         System.out.println("ADMIN get all Publisher");
-        return publisherService.search(page, size, keyword);
+        return publisherService.search(index, size, keyword);
     }
 
     @PostMapping("") // OK

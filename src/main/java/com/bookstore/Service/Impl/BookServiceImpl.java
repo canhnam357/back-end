@@ -59,9 +59,16 @@ public class BookServiceImpl implements BookService {
 
             String search_word = Normalized.removeVietnameseAccents(keyword);
             Page<Book> books = bookRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
+            List<Admin_Res_Get_Book> res = new ArrayList<>();
+            for (Book book : books) {
+                Admin_Res_Get_Book ele = new Admin_Res_Get_Book();
+                ele.convert(book);
+                res.add(ele);
+            }
+            Page<Admin_Res_Get_Book> dtoPage = new PageImpl<>(res, books.getPageable(), books.getTotalElements());
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .message("Get All Book Successfully!")
-                    .result(books)
+                    .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
@@ -167,12 +174,19 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> getNewArrivalsBook(int page, int size) {
+    public ResponseEntity<GenericResponse> getNewArrivalsBook() {
         try {
-            Page<Book> books = bookRepository.findAllByIsDeletedIsFalseAndNewArrivalIsTrue(PageRequest.of(page - 1, size));
+            List<Book> books = bookRepository.findAllByIsDeletedIsFalseAndNewArrivalIsTrue();
+            List<Res_Get_Books> res = new ArrayList<>();
+            for (Book book : books) {
+                Res_Get_Books temp = new Res_Get_Books();
+                temp.convert(book);
+                temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
+                res.add(temp);
+            }
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .message("Get New Arrival Book Successfully!")
-                    .result(books)
+                    .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
@@ -186,70 +200,140 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    @Transactional
-    public ResponseEntity<GenericResponse> create(Admin_Req_Create_Book createBook) {
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<GenericResponse> create(Admin_Req_Create_Book book) {
         try {
-            Book book = new Book();
-            List<Category> categories = categoryRepository.findAllById(createBook.getCategoriesId());
-            book.setCategories(categories);
+            System.err.println(book.getBookTypeId());
+            System.err.println(book.getBookName());
+            System.err.println(book.getPublishedDate().toString());
+
+            // Validate input
+            if (book.getBookName() == null || book.getBookName().isBlank()) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Book name must have at least 1 character not space!!!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
+            }
+            if (authorRepository.findById(book.getAuthorId()).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Author must not null!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+            if (publisherRepository.findById(book.getPublisherId()).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Publisher must not null!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+            if (distributorRepository.findById(book.getDistributorId()).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Distributor must not null!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+            if (bookTypeRepository.findById(book.getBookTypeId()).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Book type must not null!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+
+            // Tạo Book
+            Book res = new Book();
+            List<Category> categories = categoryRepository.findAllById(book.getCategoriesId());
+            res.setCategories(categories);
 
             for (Category category : categories) {
-                if (category.getBooks() == null) {
-                    category.setBooks(new ArrayList<>());
-                }
-                category.getBooks().add(book);
+                category.getBooks().add(res);
             }
-            book.setBookName(createBook.getBookName());
-            book.setInStock(createBook.getInStock());
-            book.setPrice(createBook.getPrice());
-            book.setDescription(createBook.getDescription());
-            book.setNumberOfPage(createBook.getNumberOfPage());
-            book.setPublishedDate(createBook.getPublishedDate());
-            book.setWeight(createBook.getWeight());
-            book.setAuthor(authorRepository.findById(createBook.getAuthorId()).get());
-            book.setPublisher(publisherRepository.findById(createBook.getPublisherId()).get());
-            book.setDistributor(distributorRepository.findById(createBook.getDistributorId()).get());
-            book.setBookType(bookTypeRepository.findById(createBook.getBookTypeId()).get());
-            book.setNameNormalized(Normalized.remove(createBook.getBookName()));
-            bookRepository.save(book);
-            return ResponseEntity.status(201).body(GenericResponse.builder()
-                    .message("Create Book successfully!")
+            res.setBookName(book.getBookName());
+            res.setInStock(book.getInStock());
+            res.setPrice(book.getPrice());
+            res.setDescription(book.getDescription());
+            res.setNumberOfPage(book.getNumberOfPage());
+            res.setPublishedDate(book.getPublishedDate()); // Sử dụng publishedDate từ DTO
+            res.setWeight(book.getWeight());
+            res.setAuthor(authorRepository.findById(book.getAuthorId()).get());
+            res.setPublisher(publisherRepository.findById(book.getPublisherId()).get());
+            res.setDistributor(distributorRepository.findById(book.getDistributorId()).get());
+            res.setBookType(bookTypeRepository.findById(book.getBookTypeId()).get());
+            res.setNewArrival(book.getNewArrival());
+
+            // Upload ảnh
+            List<MultipartFile> images = book.getImages();
+            if (images == null) {
+                images = new ArrayList<>();
+            }
+            String bookId = res.getBookId();
+            int thumbnailIdx = book.getThumbnailIdx();
+            List<Map<String, Object>> uploadResults = new ArrayList<>();
+            List<String> uploadedUrls = new ArrayList<>();
+            boolean hasError = false;
+
+            for (int i = 0; i < images.size(); i++) {
+                MultipartFile file = images.get(i);
+                Map<String, Object> result = new HashMap<>();
+                if (file == null || file.isEmpty()) {
+                    result.put("index", i);
+                    result.put("status", "failed");
+                    result.put("error", "File is empty or null");
+                    uploadResults.add(result);
+                    hasError = true;
+                    continue;
+                }
+                try {
+                    Map data = this.cloudinary.uploader().upload(file.getBytes(), Map.of());
+                    String url = (String) data.get("url");
+                    Image image = new Image();
+                    image.setBook(res);
+                    image.setUrl(url);
+                    res.addImage(image);
+                    uploadedUrls.add(url);
+                    result.put("index", i);
+                    result.put("url", url);
+                    result.put("status", "success");
+                } catch (IOException io) {
+                    hasError = true;
+                    result.put("index", i);
+                    result.put("status", "failed");
+                    result.put("error", "Upload failed: " + io.getMessage());
+                }
+                uploadResults.add(result);
+            }
+
+            // Đặt thumbnail
+            String thumbnailUrl = res.getUrlThumbnail();
+            if (thumbnailIdx >= 0 && thumbnailIdx < uploadedUrls.size()) {
+                thumbnailUrl = uploadedUrls.get(thumbnailIdx);
+                res.setUrlThumbnail(thumbnailUrl);
+            } else if (thumbnailUrl == null && !uploadedUrls.isEmpty()) {
+                thumbnailUrl = uploadedUrls.get(0);
+                res.setUrlThumbnail(thumbnailUrl);
+            }
+
+            // Chuẩn hóa tên sách
+            res.setNameNormalized(Normalized.remove(book.getBookName()));
+
+            // Lưu Book
+            res = bookRepository.save(res);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
+                    .message("Create Book success!!!")
                     .statusCode(HttpStatus.CREATED.value())
+                    .result(res)
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            System.err.println("Error creating book" + ex);
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Create Book failed!!!")
+                    .message("Create Book failed: " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .success(false)
-                    .build());
-        }
-    }
-
-    @Override
-    public ResponseEntity<GenericResponse> upload(MultipartFile file, String bookId, int isThumbnail) {
-        try {
-            Map data = this.cloudinary.uploader().upload(file.getBytes(), Map.of());
-            String url = (String) data.get("url");
-            Optional<Book> book = bookRepository.findById(bookId);
-            Image image = new Image();
-            image.setBook(book.get());
-            image.setUrl(url);
-            book.get().addImage(image);
-            if (book.get().getUrlThumbnail() == null || isThumbnail == 1) {
-                book.get().setUrlThumbnail(url);
-            }
-            book.get().setNameNormalized(Normalized.remove(book.get().getBookName()));
-            bookRepository.save(book.get());
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Upload Successfully!")
-                    .statusCode(HttpStatus.OK.value())
-                    .success(true)
-                    .build());
-        } catch (IOException io) {
-            return ResponseEntity.badRequest().body(GenericResponse.builder()
-                    .message("Upload failed!")
-                    .statusCode(HttpStatus.BAD_REQUEST.value())
                     .success(false)
                     .build());
         }
@@ -350,10 +434,10 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> update(String bookId, Admin_Req_Update_Book bookDto) {
+    public ResponseEntity<GenericResponse> update(String bookId, Admin_Req_Update_Book book) {
         try {
-            Optional<Book> book = bookRepository.findById(bookId);
-            if (book.isEmpty()) {
+            Optional<Book> _book = bookRepository.findById(bookId);
+            if (_book.isEmpty()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Not found book!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
@@ -361,51 +445,136 @@ public class BookServiceImpl implements BookService {
                         .build());
             }
 
-            Book ele = book.get();
-
-            // Step 1: Clear existing categories from the book and update the Category side
-            for (Category category : ele.getCategories()) {
-                category.getBooks().remove(ele); // Remove the book from the category's book list
+            if (book.getBookName() == null || book.getBookName().isBlank()) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Book name must have at least 1 character not space!!!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
             }
-            ele.getCategories().clear(); // Clear all categories from the book
+            if (authorRepository.findById(book.getAuthorId()).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Author must not null!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+            if (publisherRepository.findById(book.getPublisherId()).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Publisher must not null!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+            if (distributorRepository.findById(book.getDistributorId()).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Distributor must not null!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+            if (bookTypeRepository.findById(book.getBookTypeId()).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Book type must not null!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
 
-            // Step 2: Fetch new categories and update relationships
-            List<Category> newCategories = categoryRepository.findAllById(bookDto.getCategoriesId());
-            ele.setCategories(newCategories); // Set the new category list
+            // Tạo Book
+            Book res = _book.get();
+            for (Category category : res.getCategories()) {
+                category.getBooks().remove(res); // Remove the book from the category's book list
+            }
+            res.getCategories().clear(); // Clear all categories from the book
 
-            // Step 3: Update the Category side of the relationship
+            List<Category> newCategories = categoryRepository.findAllById(book.getCategoriesId());
+            res.setCategories(newCategories); // Set the new category list
+
             for (Category category : newCategories) {
-                if (category.getBooks() == null) {
-                    category.setBooks(new ArrayList<>());
-                }
-                if (!category.getBooks().contains(ele)) {
-                    category.getBooks().add(ele); // Add the book to the category's book list
+                if (!category.getBooks().contains(res)) {
+                    category.getBooks().add(res); // Add the book to the category's book list
                 }
             }
+            res.setBookName(book.getBookName());
+            res.setInStock(book.getInStock());
+            res.setPrice(book.getPrice());
+            res.setDescription(book.getDescription());
+            res.setNumberOfPage(book.getNumberOfPage());
+            res.setPublishedDate(book.getPublishedDate()); // Sử dụng publishedDate từ DTO
+            res.setWeight(book.getWeight());
+            res.setAuthor(authorRepository.findById(book.getAuthorId()).get());
+            res.setPublisher(publisherRepository.findById(book.getPublisherId()).get());
+            res.setDistributor(distributorRepository.findById(book.getDistributorId()).get());
+            res.setBookType(bookTypeRepository.findById(book.getBookTypeId()).get());
+            res.setNewArrival(book.getNewArrival());
+            res.setIsDeleted(book.getIsDeleted());
 
-            // Update other book fields
-            ele.setBookName(bookDto.getBookName());
-            ele.setInStock(bookDto.getInStock());
-            ele.setPrice(bookDto.getPrice());
-            ele.setDescription(bookDto.getDescription());
-            ele.setNumberOfPage(bookDto.getNumberOfPage());
-            ele.setPublishedDate(bookDto.getPublishedDate());
-            ele.setWeight(bookDto.getWeight());
-            ele.setAuthor(authorRepository.findById(bookDto.getAuthorId()).orElse(null));
-            ele.setPublisher(publisherRepository.findById(bookDto.getPublisherId()).orElse(null));
-            ele.setDistributor(distributorRepository.findById(bookDto.getDistributorId()).orElse(null));
-            ele.setBookType(bookTypeRepository.findById(bookDto.getBookTypeId()).orElse(null));
-            ele.setUrlThumbnail(bookDto.getUrlThumbnail());
+            res.getImages().removeIf(image -> !book.getRemainImages().contains(image.getImageId()));
 
-            // Update images
-            ele.getImages().removeIf(image -> !bookDto.getImages().contains(image.getUrl()));
+            // Upload ảnh
+            List<MultipartFile> images = book.getImages();
+            if (images == null) {
+                images = new ArrayList<>();
+            }
+            int thumbnailIdx = book.getThumbnailIdx();
+            List<Map<String, Object>> uploadResults = new ArrayList<>();
+            List<String> uploadedUrls = new ArrayList<>();
+            boolean hasError = false;
 
-            // Save the updated book
-            bookRepository.save(ele);
+            for (int i = 0; i < images.size(); i++) {
+                MultipartFile file = images.get(i);
+                Map<String, Object> result = new HashMap<>();
+                if (file == null || file.isEmpty()) {
+                    result.put("index", i);
+                    result.put("status", "failed");
+                    result.put("error", "File is empty or null");
+                    uploadResults.add(result);
+                    hasError = true;
+                    continue;
+                }
+                try {
+                    Map data = this.cloudinary.uploader().upload(file.getBytes(), Map.of());
+                    String url = (String) data.get("url");
+                    Image image = new Image();
+                    image.setBook(res);
+                    image.setUrl(url);
+                    res.addImage(image);
+                    uploadedUrls.add(url);
+                    result.put("index", i);
+                    result.put("url", url);
+                    result.put("status", "success");
+                } catch (IOException io) {
+                    hasError = true;
+                    result.put("index", i);
+                    result.put("status", "failed");
+                    result.put("error", "Upload failed: " + io.getMessage());
+                }
+                uploadResults.add(result);
+            }
 
+            // Đặt thumbnail
+            String thumbnailUrl = res.getUrlThumbnail();
+            if (thumbnailIdx >= 0 && thumbnailIdx < res.getImages().size()) {
+                thumbnailUrl = res.getImages().get(thumbnailIdx).getUrl();
+                res.setUrlThumbnail(thumbnailUrl);
+            } else if (thumbnailUrl == null && !res.getImages().isEmpty()) {
+                thumbnailUrl = res.getImages().get(0).getUrl();
+                res.setUrlThumbnail(thumbnailUrl);
+            }
+
+            // Chuẩn hóa tên sách
+            res.setNameNormalized(Normalized.remove(book.getBookName()));
+
+            // Lưu Book
+            res = bookRepository.save(res);
+
+            Admin_Res_Get_Book result = new Admin_Res_Get_Book();
+            result.convert(res);
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update book successfully!")
                     .statusCode(HttpStatus.OK.value())
+                    .result(result)
                     .success(true)
                     .build());
         } catch (Exception ex) {

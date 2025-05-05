@@ -38,7 +38,6 @@ public class AuthController {
         return userService.login(loginDTO);
     }
 
-
     @PostMapping("/register")
     public ResponseEntity<GenericResponse> registerProcess(@RequestBody @Valid Register registerRequest) {
         return userService.register(registerRequest);
@@ -56,9 +55,8 @@ public class AuthController {
     }
 
     @PostMapping(value = "/verify-otp")
-    public ResponseEntity<GenericResponse> confirmRegistration(@RequestParam(defaultValue = "") String email,
-                                                               @RequestParam(defaultValue = "") String otp){
-        return userService.validateVerificationAccount(email, otp);
+    public ResponseEntity<GenericResponse> confirmRegistration(@RequestBody Req_Verify_OTPRegister register){
+        return userService.validateVerificationAccount(register);
     }
 
     @PostMapping("/verify-admin")

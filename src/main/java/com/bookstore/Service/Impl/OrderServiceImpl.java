@@ -3,6 +3,7 @@ package com.bookstore.Service.Impl;
 import com.bookstore.Constant.OrderStatus;
 import com.bookstore.Constant.PaymentMethod;
 import com.bookstore.Constant.PaymentStatus;
+import com.bookstore.Constant.RefundStatus;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_Create_Order;
 import com.bookstore.DTO.Res_Get_Order;
@@ -10,6 +11,7 @@ import com.bookstore.DTO.Res_Get_OrderDetail;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
 import com.bookstore.Security.JwtTokenProvider;
+import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Service.OrderService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +53,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private EmailVerificationService emailVerificationService;
+
     @Override
     @Transactional
     public ResponseEntity<GenericResponse> createOrder(Req_Create_Order orderDTO, String authorizationHeader) {
@@ -59,9 +64,9 @@ public class OrderServiceImpl implements OrderService {
             String userId = jwtTokenProvider.getUserIdFromJwt(token);
 
             if (userRepository.findByUserIdAndIsActiveIsTrue(userId).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("User not found or not active!!!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
             }
@@ -83,9 +88,9 @@ public class OrderServiceImpl implements OrderService {
             Cart cart = cartRepository.findByUserUserId(userId).get();
 
             if (cart.getCartItems().isEmpty()) {
-                return ResponseEntity.status(400).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("Cart is empty!!!")
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
             }
@@ -109,13 +114,32 @@ public class OrderServiceImpl implements OrderService {
             if (bad_request) {
                 cart.setCartItems(cartItems);
                 cartRepository.save(cart);
-                return ResponseEntity.status(400).body(GenericResponse.builder()
-                        .message("Can't order quantity more than inStock, quantity has been reset by inStock!!!")
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
+                        .message("Cart have item that quantity more than inStock, quantity has been reset by inStock!!!")
+                        .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
             }
 
+            List<CartItem> orderCartItem = new ArrayList<>();
+            List<CartItem> newCartItems = new ArrayList<>();
+
+            for (CartItem cartItem : cart.getCartItems()) {
+                if (orderDTO.getBookIds().contains(cartItem.getBook().getBookId())) {
+                    orderCartItem.add(cartItem);
+                }
+                else {
+                    newCartItems.add(cartItem);
+                }
+            }
+
+            if (orderCartItem.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Must have at least 1 book in order!!!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
+            }
 
             Orders order = new Orders();
             order.setOrderStatus(OrderStatus.PENDING);
@@ -125,9 +149,11 @@ public class OrderServiceImpl implements OrderService {
             order.setPhoneNumber(addressRepository.findByAddressId(orderDTO.getAddressId()).get().getPhoneNumber());
             order.setUser(userRepository.findById(userId).get());
             order.setTotalPrice(BigDecimal.ZERO);
+            order.setRefundStatus(RefundStatus.NONE);
             order = ordersRepository.save(order);
 
-            for (CartItem cartItem : cart.getCartItems()) {
+
+            for (CartItem cartItem : orderCartItem) {
                 OrderItem orderItem = new OrderItem();
                 orderItem.setOrders(order);
                 orderItem.setBookId(cartItem.getBook().getBookId());
@@ -138,10 +164,17 @@ public class OrderServiceImpl implements OrderService {
                 Book book = bookRepository.findById(cartItem.getBook().getBookId()).get();
                 book.setInStock(book.getInStock() - cartItem.getQuantity());
                 orderItemRepository.save(orderItem);
+                order.getOrderDetails().add(orderItem);
                 order.setTotalPrice(order.getTotalPrice().add(cartItem.getTotalPrice()));
             }
             cart.getCartItems().clear();
+
+            for (CartItem cartItem : newCartItems) {
+                cartItem.setCart(cart);
+                cart.getCartItems().add(cartItem);
+            }
             cartRepository.save(cart);
+
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Order successfully!!!")
                     .result(order.getOrderId())
@@ -178,7 +211,10 @@ public class OrderServiceImpl implements OrderService {
                         order.getAddress(),
                         order.getPhoneNumber(),
                         order.getOrderAt(),
-                        order.getTotalPrice()
+                        order.getTotalPrice(),
+                        order.getRefundStatus().name(),
+                        order.getRefundAt(),
+                        order.getRefundTimesRemain()
                 ));
             }
 
@@ -193,7 +229,7 @@ public class OrderServiceImpl implements OrderService {
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get all Orders failed!!!")
+                    .message(ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -215,10 +251,10 @@ public class OrderServiceImpl implements OrderService {
 
             Orders order = ordersRepository.findById(orderId).get();
 
-            if (userId != order.getUser().getUserId() && !user.getRole().getName().equals("ADMIN") && !user.getRole().getName().equals("EMPLOYEE")) {
-                return ResponseEntity.status(400).body(GenericResponse.builder()
+            if (userId != order.getUser().getUserId() && user.getRole().getName().equals("USER")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("User doesn't have permission to see this Order!!!")
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
             }
@@ -227,6 +263,7 @@ public class OrderServiceImpl implements OrderService {
             for (OrderItem ele : order.getOrderDetails()) {
                 res.add(new Res_Get_OrderDetail(
                         ele.getOrderDetailId(),
+                        ele.getBookId(),
                         ele.getBookName(),
                         ele.getQuantity(),
                         ele.getTotalPrice(),
@@ -255,7 +292,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             Page<Orders> orders;
             if (Arrays.stream(OrderStatus.values()).anyMatch(e -> e.name().equals(orderStatus))) {
-                orders = ordersRepository.findByOrderStatusOrderByOrderAtDesc(OrderStatus.valueOf(orderStatus), PageRequest.of(index - 1, size));
+                orders = ordersRepository.findAllByOrderStatusOrderByOrderAtDesc(OrderStatus.valueOf(orderStatus), PageRequest.of(index - 1, size));
             }
             else {
                 orders = ordersRepository.findAllByOrderByOrderAtDesc(PageRequest.of(index - 1, size));
@@ -271,7 +308,58 @@ public class OrderServiceImpl implements OrderService {
                         order.getAddress(),
                         order.getPhoneNumber(),
                         order.getOrderAt(),
-                        order.getTotalPrice()
+                        order.getTotalPrice(),
+                        order.getRefundStatus().name(),
+                        order.getRefundAt(),
+                        order.getRefundTimesRemain()
+                ));
+            }
+            Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
+            return ResponseEntity.status(200).body(GenericResponse.builder()
+                    .message("Get All Order successfully!!!")
+                    .statusCode(HttpStatus.OK.value())
+                    .result(dtoPage)
+                    .success(true)
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Get All Order failed!!!")
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> getAllForShipper(String orderStatus, int index, int size) {
+        try {
+            Page<Orders> orders;
+            List<String> list = new ArrayList<>();
+            list.add("READY_TO_SHIP");
+            list.add("DELIVERING");
+            list.add("DELIVERED");
+            if (list.contains(orderStatus)) {
+                orders = ordersRepository.findAllByOrderStatusOrderByOrderAtDesc(OrderStatus.valueOf(orderStatus), PageRequest.of(index - 1, size));
+            }
+            else {
+                List<OrderStatus> orderStatusList = List.of(OrderStatus.READY_TO_SHIP, OrderStatus.DELIVERING, OrderStatus.DELIVERED);
+                orders = ordersRepository.findAllByOrderStatusInOrderByOrderAtDesc(orderStatusList, PageRequest.of(index - 1, size));
+            }
+
+            List<Res_Get_Order> res = new ArrayList<>();
+            for (Orders order : orders) {
+                res.add(new Res_Get_Order(
+                        order.getOrderId(),
+                        order.getOrderStatus().name(),
+                        order.getPaymentMethod().name(),
+                        order.getPaymentStatus().name(),
+                        order.getAddress(),
+                        order.getPhoneNumber(),
+                        order.getOrderAt(),
+                        order.getTotalPrice(),
+                        order.getRefundStatus().name(),
+                        order.getRefundAt(),
+                        order.getRefundTimesRemain()
                 ));
             }
             Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());

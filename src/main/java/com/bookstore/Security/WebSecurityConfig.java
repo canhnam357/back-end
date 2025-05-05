@@ -66,13 +66,17 @@ public class WebSecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/login", "/api/auth/logout",
-                                         "/api/auth/callback/google",
-                                         "/api/auth/**",
-                                         "/",
-                                         "/card",
-                                         "payment-return",
-                                        "/api/authors/**", "/api/books/**", "/api/categories/**", "/api/distributors/**", "/api/publishers/**", "/api/reviews/**").permitAll()
+                        .requestMatchers("/api/auth/**",
+                                         "/payment-return",
+                                            "/api/authors/**",
+                                        "/api/books/**",
+                                "/api/categories/**",
+                                "/api/distributors/**",
+                                "/api/publishers/**",
+                                "/api/reviews/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/employee/**").hasAnyRole("ADMIN", "EMPLOYEE")
+                        .requestMatchers("/api/shipper/**").hasAnyRole("ADMIN", "SHIPPER")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess
@@ -106,7 +110,7 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3006", "http://localhost:3000")); // Chỉ định rõ origin
+        configuration.setAllowedOrigins(List.of("http://localhost:3006", "http://localhost:3000", "http://localhost:3010", "http://localhost:3020")); // Chỉ định rõ origin
         configuration.setAllowedMethods(List.of("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true); // Bật credentials

@@ -16,7 +16,7 @@ import java.util.Optional;
 public interface BookRepository extends JpaRepository<Book, String>, JpaSpecificationExecutor<Book> {
     Page<Book> findAllByIsDeletedIsFalse(Pageable pageable);
 
-    Page<Book> findAllByIsDeletedIsFalseAndNewArrivalIsTrue(Pageable pageable);
+    List<Book> findAllByIsDeletedIsFalseAndNewArrivalIsTrue();
     Page<Book> findAll(Pageable pageable);
 
     Optional<Book> findByBookIdAndIsDeletedIsFalse(String bookId);

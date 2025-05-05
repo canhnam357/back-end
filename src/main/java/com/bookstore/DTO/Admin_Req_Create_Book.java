@@ -1,12 +1,16 @@
 package com.bookstore.DTO;
 
+import com.bookstore.Entity.Book;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -30,7 +34,7 @@ public class Admin_Req_Create_Book {
     @Positive(message = "Number of page must be greater than 0")
     private int numberOfPage;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date publishedDate;
 
     @Positive(message = "Weight must be greater than 0")
@@ -38,11 +42,17 @@ public class Admin_Req_Create_Book {
 
     private String authorId;
 
-    private List<String> categoriesId;
+    private List<String> categoriesId = new ArrayList<>();
 
     private String publisherId;
 
     private String distributorId;
 
     private String bookTypeId;
+
+    private List<MultipartFile> images = new ArrayList<>();
+
+    private int thumbnailIdx = 0;
+
+    private Boolean newArrival = false;
 }

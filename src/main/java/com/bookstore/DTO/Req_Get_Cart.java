@@ -14,5 +14,4 @@ import java.util.List;
 @AllArgsConstructor
 public class Req_Get_Cart {
     private List<Req_Get_CartItem> cartItemList;
-    private BigDecimal totalPrice;
 }

@@ -56,7 +56,7 @@ public class AddressController {
         return addressService.update(address, userId, addressId);
     }
 
-    @PostMapping("/set-default/{addressId}")
+    @PostMapping("/{addressId}/set-default")
     public ResponseEntity<GenericResponse> setDefault(@RequestHeader("Authorization") String authorizationHeader, @PathVariable String addressId) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);

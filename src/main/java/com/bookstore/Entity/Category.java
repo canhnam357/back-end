@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -32,5 +33,5 @@ public class Category {
             inverseJoinColumns = @JoinColumn(name = "bookId")
     )
     @JsonBackReference
-    private List<Book> books;
+    private List<Book> books = new ArrayList<>();;
 }

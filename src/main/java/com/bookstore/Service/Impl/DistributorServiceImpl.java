@@ -27,10 +27,10 @@ public class DistributorServiceImpl implements DistributorService {
             Distributor distributor = new Distributor();
             distributor.setDistributorName(createDistributor.getDistributorName());
             distributor.setNameNormalized(Normalized.remove(createDistributor.getDistributorName()));
-            distributorRepository.save(distributor);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Distributor successfully!")
                     .statusCode(HttpStatus.CREATED.value())
+                    .result(distributorRepository.save(distributor))
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -75,10 +75,10 @@ public class DistributorServiceImpl implements DistributorService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.ok().body(GenericResponse.builder()
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Search Distributor failed!")
-                    .statusCode(HttpStatus.OK.value())
-                    .success(true)
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
                     .build());
         }
     }
@@ -86,13 +86,20 @@ public class DistributorServiceImpl implements DistributorService {
     @Override
     public ResponseEntity<GenericResponse> update(String distributorId, Admin_Req_Update_Distributor distributor) {
         try {
+            if (distributorRepository.findById(distributorId).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Not found distributor!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
             Distributor _distributor = distributorRepository.findById(distributorId).get();
             _distributor.setDistributorName(distributor.getDistributorName());
             _distributor.setNameNormalized(Normalized.remove(distributor.getDistributorName()));
-            distributorRepository.save(_distributor);
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update Distributor successfully!")
                     .statusCode(HttpStatus.OK.value())
+                    .result(distributorRepository.save(_distributor))
                     .success(true)
                     .build());
         } catch (Exception ex) {

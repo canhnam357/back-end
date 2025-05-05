@@ -27,10 +27,10 @@ public class PublisherServiceImpl implements PublisherService {
             Publisher publisher = new Publisher();
             publisher.setPublisherName(createPublisher.getPublisherName());
             publisher.setNameNormalized(Normalized.remove(createPublisher.getPublisherName()));
-            publisherRepository.save(publisher);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Publisher successfully!")
                     .statusCode(HttpStatus.CREATED.value())
+                    .result(publisherRepository.save(publisher))
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -86,13 +86,20 @@ public class PublisherServiceImpl implements PublisherService {
     @Override
     public ResponseEntity<GenericResponse> update(String publisherId, Admin_Req_Update_Publisher publisher) {
         try {
+            if (publisherRepository.findById(publisherId).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Not found publisher!!!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
             Publisher _publisher = publisherRepository.findById(publisherId).get();
             _publisher.setPublisherName(publisher.getPublisherName());
             _publisher.setNameNormalized(Normalized.remove(publisher.getPublisherName()));
-            publisherRepository.save(_publisher);
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update Publisher successfully!")
                     .statusCode(HttpStatus.OK.value())
+                    .result(publisherRepository.save(_publisher))
                     .success(true)
                     .build());
         } catch (Exception ex) {

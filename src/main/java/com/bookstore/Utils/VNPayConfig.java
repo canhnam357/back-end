@@ -83,9 +83,6 @@ public class VNPayConfig {
 
     public String hmacSHA512(final String key, final String data) {
         try {
-            System.err.println("TEST");
-            System.err.println(secretKey);
-            System.err.println(vnp_TmnCode);
             if (key == null || data == null) {
                 throw new NullPointerException();
             }

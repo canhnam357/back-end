@@ -55,19 +55,27 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public ResponseEntity<GenericResponse> create(Req_Create_Address createAddress, String userId) {
         try {
-            Address address = new Address();
-            address.setFullName(createAddress.getFullName());
-            address.setPhoneNumber(createAddress.getPhoneNumber());
-            address.setAddressInformation(createAddress.getAddressInformation());
-            address.setOtherDetail(createAddress.getOtherDetail());
-            address.setUser(userRepository.findById(userId).get());
+            Address tempAddress = new Address();
+            tempAddress.setFullName(createAddress.getFullName());
+            tempAddress.setPhoneNumber(createAddress.getPhoneNumber());
+            tempAddress.setAddressInformation(createAddress.getAddressInformation());
+            tempAddress.setOtherDetail(createAddress.getOtherDetail());
+            tempAddress.setUser(userRepository.findById(userId).get());
             if (addressRepository.countByUserUserId(userId) == 0) {
-                address.setIsDefault(true);
+                tempAddress.setIsDefault(true);
             }
-            addressRepository.save(address);
+            Address address = addressRepository.save(tempAddress);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create Address successfully!")
                     .statusCode(HttpStatus.CREATED.value())
+                    .result(new Res_Get_Address(
+                            address.getAddressId(),
+                            address.getFullName(),
+                            address.getPhoneNumber(),
+                            address.getAddressInformation(),
+                            address.getOtherDetail(),
+                            address.getIsDefault()
+                    ))
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -90,10 +98,19 @@ public class AddressServiceImpl implements AddressService {
                         .success(false)
                         .build());
             }
+
+            if (address.get().getIsDefault()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
+                        .message("Can't delete default address!!!")
+                        .statusCode(HttpStatus.CONFLICT.value())
+                        .success(false)
+                        .build());
+            }
+
             addressRepository.delete(address.get());
-            return ResponseEntity.status(200).body(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
                     .message("Delete Address Successfully!")
-                    .statusCode(HttpStatus.OK.value())
+                    .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -106,7 +123,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> update(Req_PatchUpdate_Address address, String userId, String addressId) {
+    public ResponseEntity<GenericResponse> update(Req_PatchUpdate_Address tempAddress, String userId, String addressId) {
         try {
             Optional<Address> _address = addressRepository.findByAddressIdAndUserUserId(addressId, userId);
             if (_address.isEmpty()) {
@@ -116,27 +133,34 @@ public class AddressServiceImpl implements AddressService {
                         .success(false)
                         .build());
             }
-            if (address.getFullName() != null) {
-                _address.get().setFullName(address.getFullName());
+            if (tempAddress.getFullName() != null) {
+                _address.get().setFullName(tempAddress.getFullName());
             }
 
-            if (address.getPhoneNumber() != null) {
-                _address.get().setPhoneNumber(address.getPhoneNumber());
+            if (tempAddress.getPhoneNumber() != null) {
+                _address.get().setPhoneNumber(tempAddress.getPhoneNumber());
             }
 
-            if (address.getAddressInformation() != null) {
-                _address.get().setAddressInformation(address.getAddressInformation());
+            if (tempAddress.getAddressInformation() != null) {
+                _address.get().setAddressInformation(tempAddress.getAddressInformation());
             }
 
-            if (address.getOtherDetail() != null) {
-                _address.get().setOtherDetail(address.getOtherDetail());
+            if (tempAddress.getOtherDetail() != null) {
+                _address.get().setOtherDetail(tempAddress.getOtherDetail());
             }
 
-            addressRepository.save(_address.get());
-
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Updated Address Successfully!")
+            Address address = addressRepository.save(_address.get());
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Update Address successfully!")
                     .statusCode(HttpStatus.OK.value())
+                    .result(new Res_Get_Address(
+                            address.getAddressId(),
+                            address.getFullName(),
+                            address.getPhoneNumber(),
+                            address.getAddressInformation(),
+                            address.getOtherDetail(),
+                            address.getIsDefault()
+                    ))
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -162,9 +186,9 @@ public class AddressServiceImpl implements AddressService {
                 System.err.println(addressRepository.findDefaultAddressOfUser(userId).get().getAddressId());
                 System.err.println(addressId);
                 if (addressRepository.findDefaultAddressOfUser(userId).get().getAddressId().equals(addressId)) {
-                    return ResponseEntity.status(400).body(GenericResponse.builder()
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
                             .message("Address already is default!!!")
-                            .statusCode(HttpStatus.BAD_REQUEST.value())
+                            .statusCode(HttpStatus.CONFLICT.value())
                             .success(false)
                             .build());
                 }
@@ -175,9 +199,9 @@ public class AddressServiceImpl implements AddressService {
             Address address = addressRepository.findByAddressId(addressId).get();
             address.setIsDefault(true);
             addressRepository.save(address);
-            return ResponseEntity.status(200).body(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
                     .message("Set Address default success!!!")
-                    .statusCode(HttpStatus.OK.value())
+                    .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {

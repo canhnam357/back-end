@@ -21,4 +21,7 @@ public class Res_Get_Order {
     private String phoneNumber;
     private Date orderAt;
     private BigDecimal totalPrice;
+    private String refundStatus;
+    private Date refundAt;
+    private int refundTimesRemain;
 }

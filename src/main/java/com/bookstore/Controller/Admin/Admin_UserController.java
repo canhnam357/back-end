@@ -17,13 +17,13 @@ public class Admin_UserController {
     private UserService userService;
 
     @GetMapping("")
-    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
+    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int index,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "2") int isActive,
                                                    @RequestParam(defaultValue = "2") int isVerified,
                                                    @RequestParam(defaultValue = "") String email) {
         System.out.println("ADMIN get all Users");
-        return userService.getAll(page, size, isActive, isVerified, email);
+        return userService.getAll(index, size, isActive, isVerified, email);
     }
 
     @PutMapping("/{userId}")

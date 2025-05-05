@@ -17,4 +17,5 @@ public class Req_Get_OrderItem {
     private int quantity;
     private BigDecimal totalPrice;
     private String urlThumbnail;
+
 }

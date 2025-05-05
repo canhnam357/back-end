@@ -2,6 +2,7 @@ package com.bookstore.Controller.User;
 
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_Create_Order;
+import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Service.OrderService;
 import com.bookstore.Service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +26,9 @@ public class PaymentController {
     @Value("${user-url}")
     private String userUrl;
 
+    @Autowired
+    private EmailVerificationService emailVerificationService;
+
     @PostMapping("/api/create-order")
     @ResponseBody
     public ResponseEntity<GenericResponse> createOrderCARD(@RequestHeader("Authorization") String authorizationHeader, HttpServletRequest request, @RequestBody Req_Create_Order order) {
@@ -35,6 +39,11 @@ public class PaymentController {
         if (!res.getBody().getSuccess()) {
             return res;
         }
+
+        System.err.println("SEND CREATED ORDER NOTIFICATION");
+
+        emailVerificationService.createdOrderNotification(res.getBody().getResult().toString());
+
 
         if (order.getPaymentMethod().equals("COD")) {
             return res;
@@ -51,21 +60,20 @@ public class PaymentController {
         return res;
     }
 
-    @GetMapping("")
-    public String payment() {
-        return "createOrder";
-    }
-
     @GetMapping("/payment-return")
     public ResponseEntity<Void> paymentCompleted(HttpServletRequest request) {
         int paymentStatus = vnPayService.orderReturn(request);
 
         System.err.println("PAYMENT STATUS " + paymentStatus);
 
+        System.err.println("REQUEST " + request.toString());
+
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String paymentTime = request.getParameter("vnp_PayDate");
         String transactionId = request.getParameter("vnp_TransactionNo");
         String totalPrice = request.getParameter("vnp_Amount");
+
+        System.err.println(paymentTime);
 
         // Tạo URL redirect về frontend với query parameters
         String redirectUrl = userUrl + "/payment-return" +

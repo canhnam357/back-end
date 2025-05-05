@@ -8,8 +8,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -33,7 +36,7 @@ public class Admin_Req_Update_Book {
     @Positive(message = "Number of page must be greater than 0")
     private int numberOfPage;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date publishedDate;
 
     @Positive(message = "Weight must be greater than 0")
@@ -41,7 +44,7 @@ public class Admin_Req_Update_Book {
 
     private String authorId;
 
-    private List<String> categoriesId;
+    private List<String> categoriesId = new ArrayList<>();
 
     private String publisherId;
 
@@ -49,7 +52,14 @@ public class Admin_Req_Update_Book {
 
     private String bookTypeId;
 
-    private String urlThumbnail;
+    private List<String> remainImages = new ArrayList<>();
 
-    private List<String> images;
+    private List<MultipartFile> images = new ArrayList<>();
+
+    private int thumbnailIdx = 0;
+
+    private Boolean newArrival = false;
+
+    private Boolean isDeleted = false;
+
 }

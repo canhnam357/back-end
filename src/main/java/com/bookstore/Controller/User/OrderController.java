@@ -27,24 +27,16 @@ public class OrderController {
     @Autowired
     private OrderStatusHistoryService orderStatusHistoryService;
 
-    @PostMapping("")
-    public ResponseEntity<GenericResponse> createOrderCOD(@RequestHeader("Authorization") String authorizationHeader,
-                                                     @RequestBody Req_Create_Order orderDTO) {
-        String token = authorizationHeader.substring(7);
-        String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        System.err.println("create order " + userId);
-        return orderService.createOrder(orderDTO, userId);
-    }
 
     @GetMapping("")
-    public ResponseEntity<GenericResponse> getAll(@RequestParam(defaultValue = "1") int page,
-                                                  @RequestParam(defaultValue = "100") int size,
+    public ResponseEntity<GenericResponse> getAll(@RequestParam(defaultValue = "1") int index,
+                                                  @RequestParam(defaultValue = "10") int size,
                                                   @RequestHeader("Authorization") String authorizationHeader,
                                                   @RequestParam(defaultValue = "") String orderStatus) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         System.err.println("getAll order " + userId);
-        return orderService.getAllOfUser(userId, orderStatus, page, size);
+        return orderService.getAllOfUser(userId, orderStatus, index, size);
     }
 
     @PutMapping("/change-order-status")
@@ -52,12 +44,13 @@ public class OrderController {
                                                              @RequestParam("orderId") String orderId,
                                                              @RequestParam("fromStatus") String fromStatus,
                                                              @RequestParam("toStatus") String toStatus) {
+        System.err.println(authorizationHeader);
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         return orderStatusHistoryService.changeOrderStatus(userId, orderId, fromStatus, toStatus);
     }
 
-    @GetMapping("/order-detail/{orderId}")
+    @GetMapping("/{orderId}")
     public ResponseEntity<GenericResponse> orderDetail(@RequestHeader("Authorization") String authorizationHeader,
                                                        @PathVariable String orderId) {
         String token = authorizationHeader.substring(7);

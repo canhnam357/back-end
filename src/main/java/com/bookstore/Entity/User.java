@@ -11,6 +11,7 @@ import lombok.*;
 import org.hibernate.annotations.Nationalized;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -67,19 +68,19 @@ public class User implements Serializable {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<Address> addresses;
+    private List<Address> addresses = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<Orders> orders;
+    private List<Orders> orders = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<Review> reviews;
+    private List<Review> reviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "changedBy")
     @JsonIgnore
-    private List<OrderStatusHistory> changedOrders;
+    private List<OrderStatusHistory> changedOrders = new ArrayList<>();
 
     @PrePersist
     void createdAt() { this.createdAt = new Date();}

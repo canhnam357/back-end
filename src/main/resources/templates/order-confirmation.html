@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Confirmation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      max-width: 250px;
+    }
+
+    .order-details {
+      margin-bottom: 20px;
+    }
+
+    .products-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .products-table th, .products-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .products-table th {
+      background-color: #f2f2f2;
+    }
+
+    .total {
+      text-align: right;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Book Store</h1>
+  </div>
+  <div class="order-details">
+    <p><strong>Address:</strong> <span th:text="${address}"></span></p>
+    <p><strong>Phone:</strong> <span th:text="${phone}"></span></p>
+    <p><strong>Payment Method:</strong> <span th:text="${paymentMethod}"></span></p>
+  </div>
+  <table class="products-table">
+    <thead>
+    <tr>
+      <th>Image</th>
+      <th>Name</th>
+      <th>Quantity</th>
+      <th>Total Price</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="orderDetail : ${orderDetails}">
+      <td><img th:src="${orderDetail.urlThumbnail}" alt="Product Image" width="50"></td>
+      <td th:text="${orderDetail.bookName}"></td>
+      <td th:text="${orderDetail.quantity}"></td>
+      <td th:text="${orderDetail.totalPrice}"></td>
+    </tr>
+    </tbody>
+  </table>
+  <div class="total">
+    <p><strong>Total Order Value:</strong> <span th:text="${totalOrderValue}"></span></p>
+  </div>
+  <div class="footer">
+    <p>Thank you for your order!</p>
+    <p>© 2025 BookShop. All rights reserved.</p>
+  </div>
+</div>
+</body>
+</html>

@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -25,10 +26,10 @@ public class BookTypeServiceImpl implements BookTypeService {
         try {
             BookType bookType = new BookType();
             bookType.setBookTypeName(createBookType.getBookTypeName());
-            bookTypeRepository.save(bookType);
             return ResponseEntity.status(201).body(GenericResponse.builder()
                     .message("Create BookType successfully!")
                     .statusCode(HttpStatus.CREATED.value())
+                     .result(bookTypeRepository.save(bookType))
                     .success(true)
                     .build());
         } catch (Exception ex) {
@@ -43,7 +44,7 @@ public class BookTypeServiceImpl implements BookTypeService {
     @Override
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
         try {
-            Page<BookType> bookTypes = bookTypeRepository.findAll(PageRequest.of(page - 1, size));
+            List<BookType> bookTypes = bookTypeRepository.findAll();
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .message("Get All BookType Successfully!")
                     .result(bookTypes)
@@ -97,10 +98,10 @@ public class BookTypeServiceImpl implements BookTypeService {
                         .build());
             }
             bookType.get().setBookTypeName(bookTypeDto.getBookTypeName());
-            bookTypeRepository.save(bookType.get());
             return ResponseEntity.status(200).body(GenericResponse.builder()
                     .message("Update BookType successfully!!!")
                     .statusCode(HttpStatus.OK.value())
+                    .result(bookTypeRepository.save(bookType.get()))
                     .success(true)
                     .build());
         } catch (Exception ex) {

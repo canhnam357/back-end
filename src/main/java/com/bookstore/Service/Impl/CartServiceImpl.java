@@ -90,7 +90,7 @@ public class CartServiceImpl implements CartService {
             cartRepository.save(cart);
 
             // Tạo response
-            Req_Get_Cart res = new Req_Get_Cart(cartItemList, totalPrice);
+            Req_Get_Cart res = new Req_Get_Cart(cartItemList);
 
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .message("Get Cart Successfully!")
@@ -110,9 +110,9 @@ public class CartServiceImpl implements CartService {
     @Override
     public ResponseEntity<GenericResponse> addToCart(Req_Add_Cart addToCart, String userId) {
         try {
-            Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(addToCart.getBookId(), userId);
+            Optional<CartItem> tempcartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(addToCart.getBookId(), userId);
             CartItem _cartItem;
-            if (!cartItem.isPresent())
+            if (!tempcartItem.isPresent())
             {
                 _cartItem = new CartItem();
                 _cartItem.setBook(bookRepository.findById(addToCart.getBookId()).get());
@@ -120,28 +120,40 @@ public class CartServiceImpl implements CartService {
                 _cartItem.setQuantity(addToCart.getQuantity());
             }
             else {
-                _cartItem = cartItem.get();
+                _cartItem = tempcartItem.get();
                 _cartItem.setQuantity(_cartItem.getQuantity() + addToCart.getQuantity());
             }
             _cartItem.reCalTotalPrice();
             if (_cartItem.getQuantity() <= 0) {
-                return ResponseEntity.badRequest().body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("Quantity must greater than 0!")
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
             }
 
             if (_cartItem.getQuantity() > _cartItem.getBook().getInStock()) {
-                return ResponseEntity.badRequest().body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("Quantity less than or equal inStock!")
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
             }
 
-            cartItemRepository.save(_cartItem);
-            return getCart(userId);
+            CartItem cartItem = cartItemRepository.save(_cartItem);
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Add to Cart success!!!")
+                    .statusCode(HttpStatus.OK.value())
+                    .result(new Req_Get_CartItem(
+                            cartItem.getBook().getBookId(),
+                            cartItem.getBook().getBookName(),
+                            cartItem.getBook().getUrlThumbnail(),
+                            cartItem.getBook().getPrice(),
+                            cartItem.getQuantity(),
+                            cartItem.getTotalPrice()
+                    ))
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Add to Cart failed!!!")
@@ -163,7 +175,11 @@ public class CartServiceImpl implements CartService {
                         .build());
             }
             cartItemRepository.delete(cartItem.get());
-            return getCart(userId);
+            return ResponseEntity.status(200).body(GenericResponse.builder()
+                    .message("Remove from Cart success!!!")
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Remove from Cart failed!!!")
@@ -176,26 +192,37 @@ public class CartServiceImpl implements CartService {
     @Override
     public ResponseEntity<GenericResponse> changeQuantity(String bookId, String userId, int quantity) {
         try {
-            Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
-            if (!cartItem.isPresent()) {
+            Optional<CartItem> tempcartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
+            if (!tempcartItem.isPresent()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Not found cartItem!!!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
-            System.out.println("BEFORE " + cartItem.get().getQuantity());
-            if (cartItem.get().getQuantity() + quantity <= 0) {
-                cartItemRepository.delete(cartItem.get());
+            if (tempcartItem.get().getQuantity() + quantity <= 0) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Can't make quantity <= 0!!!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
             }
-            else
-            {
-                cartItem.get().setQuantity(Math.min(cartItem.get().getQuantity() + quantity, cartItem.get().getBook().getInStock()));
-                cartItem.get().reCalTotalPrice();
-                cartItemRepository.save(cartItem.get());
-            }
-            System.out.println("AFTER " + cartItem.get().getQuantity());
-            return getCart(userId);
+            tempcartItem.get().setQuantity(Math.min(tempcartItem.get().getQuantity() + quantity, tempcartItem.get().getBook().getInStock()));
+            tempcartItem.get().reCalTotalPrice();
+            CartItem cartItem = cartItemRepository.save(tempcartItem.get());
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Change quantity success!!!")
+                    .statusCode(HttpStatus.OK.value())
+                    .result(new Req_Get_CartItem(
+                            cartItem.getBook().getBookId(),
+                            cartItem.getBook().getBookName(),
+                            cartItem.getBook().getUrlThumbnail(),
+                            cartItem.getBook().getPrice(),
+                            cartItem.getQuantity(),
+                            cartItem.getTotalPrice()
+                    ))
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Change quantity cart-item failed!!!")
@@ -208,8 +235,8 @@ public class CartServiceImpl implements CartService {
     @Override
     public ResponseEntity<GenericResponse> updateQuantity(String bookId, String userId, int quantity) {
         try {
-            Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
-            if (!cartItem.isPresent()) {
+            Optional<CartItem> tempcartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
+            if (!tempcartItem.isPresent()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Not found cartItem!!!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
@@ -217,16 +244,29 @@ public class CartServiceImpl implements CartService {
                         .build());
             }
 
-            if (quantity <= 0 || cartItem.get().getBook().getInStock() == 0) {
-                cartItemRepository.delete(cartItem.get());
+            if (quantity <= 0 || tempcartItem.get().getBook().getInStock() == 0) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Can't make quantity <= 0!!!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
             }
-            else
-            {
-                cartItem.get().setQuantity(Math.min(quantity, cartItem.get().getBook().getInStock()));
-                cartItem.get().reCalTotalPrice();
-                cartItemRepository.save(cartItem.get());
-            }
-            return getCart(userId);
+            tempcartItem.get().setQuantity(Math.min(quantity, tempcartItem.get().getBook().getInStock()));
+            tempcartItem.get().reCalTotalPrice();
+            CartItem cartItem = cartItemRepository.save(tempcartItem.get());
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Update quantity success!!!")
+                    .statusCode(HttpStatus.OK.value())
+                    .result(new Req_Get_CartItem(
+                            cartItem.getBook().getBookId(),
+                            cartItem.getBook().getBookName(),
+                            cartItem.getBook().getUrlThumbnail(),
+                            cartItem.getBook().getPrice(),
+                            cartItem.getQuantity(),
+                            cartItem.getTotalPrice()
+                    ))
+                    .success(true)
+                    .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Update quantity cart-item failed!!!")

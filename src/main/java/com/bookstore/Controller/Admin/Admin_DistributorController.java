@@ -18,11 +18,11 @@ public class Admin_DistributorController {
     private DistributorService distributorService;
 
     @GetMapping("") // OK
-    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int page,
+    public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int index,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "") String keyword) {
         System.out.println("ADMIN get all Distributor");
-        return distributorService.search(page, size, keyword);
+        return distributorService.search(index, size, keyword);
     }
 
     @PostMapping("") // OK
