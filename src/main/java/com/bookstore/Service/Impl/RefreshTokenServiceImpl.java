@@ -48,7 +48,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     if(!token.get().getToken().equals(reqVerify.getToken())){
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                                 .success(false)
-                                .message("RefreshToken is not present. Please login again!")
+                                .message("RefreshToken is not present. Please log in again!")
                                 .statusCode(HttpStatus.UNAUTHORIZED.value())
                                 .build());
                     }
@@ -58,22 +58,22 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     resultMap.put("accessToken", accessToken);
                     resultMap.put("refreshToken", reqVerify.getToken());
                     resultMap.put("username", optionalUser.get().getFullName());
-                    return ResponseEntity.status(200).body(GenericResponse.builder()
+                    return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                             .success(true)
                             .result(resultMap)
                             .statusCode(HttpStatus.OK.value())
                             .build());
                 }
             }
-            return ResponseEntity.status(401).body(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Unauthorized. Please login again!")
+                    .message("Unauthorized. Please log in again!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message(e.getMessage())
+                    .message("Failed to reset access token, message = " + e.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -112,26 +112,26 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
                     return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                             .success(true)
-                            .message("Logout successfully!")
+                            .message("Logged out successfully!")
                             .statusCode(HttpStatus.OK.value())
                             .build());
                 }
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                         .success(false)
-                        .message("Logout failed!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .message("Failed to log out!")
+                        .statusCode(HttpStatus.UNAUTHORIZED.value())
                         .build());
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Logout failed!")
+                    .message("Failed to log out!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
 
         }catch(Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message(e.getMessage())
+                    .message("Failed to log out, message = " + e.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }

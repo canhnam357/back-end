@@ -26,15 +26,15 @@ public class BookTypeServiceImpl implements BookTypeService {
         try {
             BookType bookType = new BookType();
             bookType.setBookTypeName(createBookType.getBookTypeName());
-            return ResponseEntity.status(201).body(GenericResponse.builder()
-                    .message("Create BookType successfully!")
+            return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
+                    .message("Book type created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
                      .result(bookTypeRepository.save(bookType))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Create BookType failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to create book type, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -45,15 +45,15 @@ public class BookTypeServiceImpl implements BookTypeService {
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
         try {
             List<BookType> bookTypes = bookTypeRepository.findAll();
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Get All BookType Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all book types successfully!")
                     .result(bookTypes)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get All BookType failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve all book types, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -65,21 +65,21 @@ public class BookTypeServiceImpl implements BookTypeService {
         try {
             Optional<BookType> bookType = bookTypeRepository.findById(bookTypeId);
             if (bookType.isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found BookType!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Book type not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             bookTypeRepository.deleteById(bookTypeId);
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Delete BookType successfully!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Book type deleted successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Delete BookType failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to delete book type, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -91,22 +91,22 @@ public class BookTypeServiceImpl implements BookTypeService {
         try {
             Optional<BookType> bookType = bookTypeRepository.findById(bookTypeId);
             if (bookType.isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found BookType!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Book type not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             bookType.get().setBookTypeName(bookTypeDto.getBookTypeName());
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Update BookType successfully!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Book type updated successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(bookTypeRepository.save(bookType.get()))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Update BookType failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to update book type, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

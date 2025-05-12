@@ -47,6 +47,16 @@
       background-color: #f2f2f2;
     }
 
+    .price {
+      color: #ef4444; /* Màu đỏ cho giá không gạch ngang */
+    }
+
+    .original-price {
+      text-decoration: line-through;
+      color: #4a5568; /* Màu xám cho giá gốc */
+      margin-right: 8px;
+    }
+
     .total {
       text-align: right;
       font-weight: bold;
@@ -72,23 +82,31 @@
   <table class="products-table">
     <thead>
     <tr>
-      <th>Image</th>
-      <th>Name</th>
-      <th>Quantity</th>
-      <th>Total Price</th>
+      <th>Ảnh</th>
+      <th>Tên sách</th>
+      <th>Giá</th>
+      <th>Số lượng</th>
+      <th>Tổng giá</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="orderDetail : ${orderDetails}">
       <td><img th:src="${orderDetail.urlThumbnail}" alt="Product Image" width="50"></td>
       <td th:text="${orderDetail.bookName}"></td>
+      <td>
+        <span th:if="${orderDetail.priceAfterSales == null}" th:text="${orderDetail.price}" class="price"></span>
+        <span th:unless="${orderDetail.priceAfterSales == null}">
+          <span th:text="${orderDetail.price}" class="original-price"></span>
+          <span th:text="${orderDetail.priceAfterSales}" class="price"></span>
+        </span>
+      </td>
       <td th:text="${orderDetail.quantity}"></td>
       <td th:text="${orderDetail.totalPrice}"></td>
     </tr>
     </tbody>
   </table>
   <div class="total">
-    <p><strong>Total Order Value:</strong> <span th:text="${totalOrderValue}"></span></p>
+    <p><strong>Thành tiền:</strong> <span th:text="${totalOrderValue}"></span> <strong> VNĐ</strong></p>
   </div>
   <div class="footer">
     <p>Thank you for your order!</p>

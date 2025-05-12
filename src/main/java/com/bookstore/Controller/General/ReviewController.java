@@ -37,11 +37,4 @@ public class ReviewController {
         System.err.println("RATING " + review.getRating());
         return reviewService.update(reviewId, authorizationHeader, review);
     }
-
-    @DeleteMapping("/{reviewId}")
-    public ResponseEntity<GenericResponse> deleteReview (@RequestHeader("Authorization") String authorizationHeader,
-                                                         @PathVariable String reviewId)  {
-        return reviewService.delete(reviewId, authorizationHeader);
-    }
-
 }

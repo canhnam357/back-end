@@ -14,6 +14,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @Controller
 public class PaymentController {
 
@@ -72,6 +74,12 @@ public class PaymentController {
         String paymentTime = request.getParameter("vnp_PayDate");
         String transactionId = request.getParameter("vnp_TransactionNo");
         String totalPrice = request.getParameter("vnp_Amount");
+
+        if (totalPrice != null) {
+            BigDecimal amount = new BigDecimal(totalPrice);
+            amount = amount.divide(BigDecimal.valueOf(100L));
+            totalPrice = amount.toString();
+        }
 
         System.err.println(paymentTime);
 

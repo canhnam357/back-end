@@ -1,11 +1,14 @@
 package com.bookstore.Service.Impl;
 
+import com.bookstore.Constant.OrderStatus;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_Create_Review;
 import com.bookstore.DTO.Res_Get_Review;
+import com.bookstore.Entity.OrderItem;
 import com.bookstore.Entity.Review;
 import com.bookstore.Entity.User;
 import com.bookstore.Repository.BookRepository;
+import com.bookstore.Repository.OrderItemRepository;
 import com.bookstore.Repository.ReviewRepository;
 import com.bookstore.Repository.UserRepository;
 import com.bookstore.Security.JwtTokenProvider;
@@ -19,7 +22,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.print.attribute.standard.MediaSize;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,37 +45,67 @@ public class ReviewServiceImpl implements ReviewService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
     @Transactional
     @Override
     public ResponseEntity<GenericResponse> addReview(String authorizationHeader, String bookId, Req_Create_Review review) {
         try {
             String accessToken = authorizationHeader.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(accessToken);
-            System.err.println("ADD REVIEW , USERID " + userId);
-            System.err.println("BOOK NAME " + bookRepository.findById(bookId).get().getBookName());
+            User user = userRepository.findById(userId).get();
+
+            List<OrderItem> orderItems = orderItemRepository.findOrderItemByBookIdAndStatus(bookId, OrderStatus.DELIVERED);
+
+            List<Review> reviews = reviewRepository.findReviewsByBookIdOrderedByCreatedAtDesc(bookId);
+            if (orderItems.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                        .message("You must purchase the book in order to leave a review!")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .success(false)
+                        .build());
+            }
+
+            LocalDate reviewCreateDeadline = orderItems.get(0).getOrders().getOrderAt().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+            reviewCreateDeadline.plusMonths(1);
+
+            if (reviewCreateDeadline.isBefore(LocalDate.now())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                        .message("It has been over a month since you purchased this book. Please purchase it again in order to leave a review!")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .success(false)
+                        .build());
+            }
+
+            if (!reviews.isEmpty() && reviews.get(0).getCreatedAt().after(orderItems.get(0).getOrders().getOrderAt())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                        .message("You have already reviewed this book. Please purchase it again to submit another review!")
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .success(false)
+                        .build());
+            }
+
             Review new_review = new Review();
             new_review.setBook(bookRepository.findById(bookId).get());
             new_review.setUser(userRepository.findById(userId).get());
-            System.err.println("CONTENT " + review.getContent());
             new_review.setContent(review.getContent());
             new_review.setRating(review.getRating());
+
             Review temp = reviewRepository.save(new_review);
             Res_Get_Review res = new Res_Get_Review();
-            res.setReviewId(temp.getReviewId());
-            res.setUserId(temp.getUser().getUserId());
-            res.setUserReviewed(temp.getUser().getFullName());
-            res.setContent(temp.getContent());
-            res.setRating(temp.getRating());
-            res.setCreatedAt(temp.getCreatedAt());
-            return ResponseEntity.status(201).body(GenericResponse.builder()
-                    .message("Add review successfully!!!")
+            res.convert(temp);
+            return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
+                    .message("Review created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(res)
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Add review failed!!! " + ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to create review, message =  " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -108,15 +145,15 @@ public class ReviewServiceImpl implements ReviewService {
             }
 
             Page<Res_Get_Review> dtoPage = new PageImpl<>(res, reviews.getPageable(), reviews.getTotalElements());
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Get all review successfully!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all reviews successfully!")
                     .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get all review failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve all reviews, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -129,78 +166,70 @@ public class ReviewServiceImpl implements ReviewService {
             String accessToken = token.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(accessToken);
             Optional<User> user = userRepository.findById(userId);
-            if (user.isPresent()) {
-                Optional<User> user_ = reviewRepository.findUserByReviewId(reviewId);
-                Optional<Review> review_ = reviewRepository.findById(reviewId);
-                System.err.println("UPDATE REVIEW USERID " + user_.get().getUserId());
-                if (user_.isPresent() && user_.get().getUserId() == userId) {
-                    review_.get().setRating(review.getRating());
-                    review_.get().setContent(review.getContent());
-                    Review temp = reviewRepository.save(review_.get());
-                    Res_Get_Review res = new Res_Get_Review();
-                    res.setReviewId(temp.getReviewId());
-                    res.setUserId(temp.getUser().getUserId());
-                    res.setUserReviewed(temp.getUser().getFullName());
-                    res.setContent(temp.getContent());
-                    res.setRating(temp.getRating());
-                    res.setCreatedAt(temp.getCreatedAt());
-                    return ResponseEntity.ok().body(GenericResponse.builder()
-                            .message("Update review success !!!")
-                            .statusCode(HttpStatus.OK.value())
-                            .result(res)
-                            .success(true)
-                            .build());
-                }
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found review !!!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
-                        .success(false)
-                        .build());
-            }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                    .message("Not found user !!!")
-                    .statusCode(HttpStatus.UNAUTHORIZED.value())
-                    .success(false)
-                    .build());
-        } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Update review failed!!!")
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .success(false)
-                    .build());
-        }
-    }
 
-    @Override
-    public ResponseEntity<GenericResponse> delete(String reviewId, String token) {
-        try {
-            String accessToken = token.substring(7);
-            String userId = jwtTokenProvider.getUserIdFromJwt(accessToken);
-            Optional<User> user = userRepository.findById(userId);
-            if (user.isPresent()) {
-                Optional<User> user_ = reviewRepository.findUserByReviewId(reviewId);
-                if (user_.isPresent() && user_.get().getUserId() == userId) {
-                    reviewRepository.deleteById(reviewId);
-                    return ResponseEntity.ok().body(GenericResponse.builder()
-                            .message("Delete review success !!!")
-                            .statusCode(HttpStatus.OK.value())
-                            .success(true)
-                            .build());
-                }
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found review !!!")
+            if (user.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("User not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                    .message("Not found user !!!")
-                    .statusCode(HttpStatus.UNAUTHORIZED.value())
-                    .success(false)
+
+            Optional<Review> ele = reviewRepository.findById(reviewId);
+
+            if (ele.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Review not found!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .success(false)
+                        .build());
+            }
+
+            if (ele.get().getUser() != user.get()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
+                        .message("This review does not belong to the user!")
+                        .statusCode(HttpStatus.FORBIDDEN.value())
+                        .success(false)
+                        .build());
+            }
+
+            LocalDate reviewUpdateDeadline = ele.get().getCreatedAt().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+            reviewUpdateDeadline.plusMonths(1);
+
+            if (reviewUpdateDeadline.isBefore(LocalDate.now())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
+                        .message("You cannot edit a review after 30 days from the date it was created!")
+                        .statusCode(HttpStatus.FORBIDDEN.value())
+                        .success(false)
+                        .build());
+            }
+
+            if (review.getContent() == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
+                        .message("The Content must not be null!")
+                        .statusCode(HttpStatus.FORBIDDEN.value())
+                        .success(false)
+                        .build());
+            }
+
+            ele.get().setContent(review.getContent());
+            ele.get().setRating(review.getRating());
+            Res_Get_Review res = new Res_Get_Review();
+            Review temp = reviewRepository.save(ele.get());
+            res.convert(temp);
+
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Review updated successfully!")
+                    .statusCode(HttpStatus.OK.value())
+                    .result(res)
+                    .success(true)
                     .build());
+
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Delete review failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to update review, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

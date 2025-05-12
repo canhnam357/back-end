@@ -1,6 +1,7 @@
 package com.bookstore.Controller.User;
 
 import com.bookstore.DTO.GenericResponse;
+import com.bookstore.DTO.Req_ChangeOrderStatus;
 import com.bookstore.DTO.Req_Create_Order;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.OrderService;
@@ -41,13 +42,11 @@ public class OrderController {
 
     @PutMapping("/change-order-status")
     public ResponseEntity<GenericResponse> changeOrderStatus(@RequestHeader("Authorization") String authorizationHeader,
-                                                             @RequestParam("orderId") String orderId,
-                                                             @RequestParam("fromStatus") String fromStatus,
-                                                             @RequestParam("toStatus") String toStatus) {
+                                                             @RequestBody Req_ChangeOrderStatus reqChangeOrderStatus) {
         System.err.println(authorizationHeader);
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        return orderStatusHistoryService.changeOrderStatus(userId, orderId, fromStatus, toStatus);
+        return orderStatusHistoryService.changeOrderStatus(userId, reqChangeOrderStatus);
     }
 
     @GetMapping("/{orderId}")

@@ -31,4 +31,9 @@ public class Admin_UserController {
         System.out.println("ADMIN update User status (active, verified)");
         return userService.updateUserStatus(userId, adminUpdateUserDTO);
     }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<GenericResponse> getUserById(@PathVariable String userId) {
+        return userService.getUserById(userId);
+    }
 }

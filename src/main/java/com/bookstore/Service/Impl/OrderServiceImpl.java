@@ -1,9 +1,6 @@
 package com.bookstore.Service.Impl;
 
-import com.bookstore.Constant.OrderStatus;
-import com.bookstore.Constant.PaymentMethod;
-import com.bookstore.Constant.PaymentStatus;
-import com.bookstore.Constant.RefundStatus;
+import com.bookstore.Constant.*;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_Create_Order;
 import com.bookstore.DTO.Res_Get_Order;
@@ -23,9 +20,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -65,7 +62,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (userRepository.findByUserIdAndIsActiveIsTrue(userId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("User not found or not active!!!")
+                        .message("User does not exist or is not active!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -73,14 +70,14 @@ public class OrderServiceImpl implements OrderService {
 
             if (addressRepository.findByAddressId(orderDTO.getAddressId()).isEmpty()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found address!!!")
+                        .message("Address not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             if (!Arrays.stream(PaymentMethod.values()).anyMatch(e -> e.name().equals(orderDTO.getPaymentMethod()))) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Payment method doesn't exists!!!")
+                        .message("Payment method does not exist!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -89,8 +86,24 @@ public class OrderServiceImpl implements OrderService {
 
             if (cart.getCartItems().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Cart is empty!!!")
+                        .message("Cart is empty!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
+            }
+
+            LocalDateTime nowTime = LocalDateTime.now();
+            LocalDateTime cutoff = nowTime.minusHours(8);
+
+            // Chuyển sang java.util.Date
+            Date cutoffDate = Date.from(cutoff.atZone(ZoneId.systemDefault()).toInstant());
+
+            int LIMIT = 3;
+
+            if (ordersRepository.countCancelledOrdersWithinTime(OrderStatus.CANCELLED, cutoffDate) >= LIMIT) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
+                        .message("You have canceled too many orders recently. Please wait a few hours before placing a new one!")
+                        .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
             }
@@ -115,7 +128,7 @@ public class OrderServiceImpl implements OrderService {
                 cart.setCartItems(cartItems);
                 cartRepository.save(cart);
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                        .message("Cart have item that quantity more than inStock, quantity has been reset by inStock!!!")
+                        .message("Cart has items with quantity greater than in stock. Quantity has been reset to in stock value!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
@@ -135,7 +148,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (orderCartItem.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Must have at least 1 book in order!!!")
+                        .message("Must have at least 1 book in the order!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -152,20 +165,31 @@ public class OrderServiceImpl implements OrderService {
             order.setRefundStatus(RefundStatus.NONE);
             order = ordersRepository.save(order);
 
+            Date now = new Date();
 
             for (CartItem cartItem : orderCartItem) {
                 OrderItem orderItem = new OrderItem();
                 orderItem.setOrders(order);
+                orderItem.setPrice(cartItem.getBook().getPrice());
                 orderItem.setBookId(cartItem.getBook().getBookId());
                 orderItem.setBookName(cartItem.getBook().getBookName());
                 orderItem.setQuantity(cartItem.getQuantity());
                 orderItem.setTotalPrice(cartItem.getTotalPrice());
                 orderItem.setUrlThumbnail(cartItem.getBook().getUrlThumbnail());
                 Book book = bookRepository.findById(cartItem.getBook().getBookId()).get();
+                if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+                    if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
+                        orderItem.setPriceAfterSales(book.getPrice().subtract(book.getDiscount().getDiscount()));
+                    }
+                    else {
+                        orderItem.setPriceAfterSales(book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L)));
+                    }
+                    orderItem.setTotalPrice(orderItem.getPriceAfterSales().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+                }
                 book.setInStock(book.getInStock() - cartItem.getQuantity());
                 orderItemRepository.save(orderItem);
                 order.getOrderDetails().add(orderItem);
-                order.setTotalPrice(order.getTotalPrice().add(cartItem.getTotalPrice()));
+                order.setTotalPrice(order.getTotalPrice().add(orderItem.getTotalPrice()));
             }
             cart.getCartItems().clear();
 
@@ -175,15 +199,15 @@ public class OrderServiceImpl implements OrderService {
             }
             cartRepository.save(cart);
 
-            return ResponseEntity.status(201).body(GenericResponse.builder()
-                    .message("Create Order successfully!!!")
+            return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
+                    .message("Order created successfully!")
                     .result(order.getOrderId())
                     .statusCode(HttpStatus.CREATED.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Create Order failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to create order, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -221,15 +245,15 @@ public class OrderServiceImpl implements OrderService {
             Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
 
 
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Get all Orders success!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all orders successfully!")
                     .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message(ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve all orders, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -242,8 +266,8 @@ public class OrderServiceImpl implements OrderService {
             User user = userRepository.findById(userId).get();
 
             if (ordersRepository.findById(orderId).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found Order!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Order not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -253,7 +277,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (userId != order.getUser().getUserId() && user.getRole().getName().equals("USER")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("User doesn't have permission to see this Order!!!")
+                        .message("User doesn't have permission to view this order!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -265,22 +289,24 @@ public class OrderServiceImpl implements OrderService {
                         ele.getOrderDetailId(),
                         ele.getBookId(),
                         ele.getBookName(),
+                        ele.getPrice(),
+                        ele.getPriceAfterSales(),
                         ele.getQuantity(),
                         ele.getTotalPrice(),
                         ele.getUrlThumbnail()
                 ));
             }
 
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Get Order Detail successfully!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved order details successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(res)
                     .success(true)
                     .build());
 
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get Order Detail failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve order details, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -315,15 +341,15 @@ public class OrderServiceImpl implements OrderService {
                 ));
             }
             Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Get All Order successfully!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all orders successfully!!!")
                     .statusCode(HttpStatus.OK.value())
                     .result(dtoPage)
                     .success(true)
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get All Order failed!!!")
+                    .message("Failed to retrieve all orders, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -338,11 +364,12 @@ public class OrderServiceImpl implements OrderService {
             list.add("READY_TO_SHIP");
             list.add("DELIVERING");
             list.add("DELIVERED");
+            list.add("FAILED_DELIVERY");
             if (list.contains(orderStatus)) {
                 orders = ordersRepository.findAllByOrderStatusOrderByOrderAtDesc(OrderStatus.valueOf(orderStatus), PageRequest.of(index - 1, size));
             }
             else {
-                List<OrderStatus> orderStatusList = List.of(OrderStatus.READY_TO_SHIP, OrderStatus.DELIVERING, OrderStatus.DELIVERED);
+                List<OrderStatus> orderStatusList = List.of(OrderStatus.READY_TO_SHIP, OrderStatus.DELIVERING, OrderStatus.DELIVERED, OrderStatus.FAILED_DELIVERY);
                 orders = ordersRepository.findAllByOrderStatusInOrderByOrderAtDesc(orderStatusList, PageRequest.of(index - 1, size));
             }
 
@@ -363,15 +390,83 @@ public class OrderServiceImpl implements OrderService {
                 ));
             }
             Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Get All Order successfully!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all orders successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(dtoPage)
                     .success(true)
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get All Order failed!!!")
+                    .message("Failed to retrieve all orders, message = " + ex.getMessage())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> getMonthlyRevenue(int year) {
+        try {
+            List<Object[]> rawResult = ordersRepository.findMonthlyRevenueByYear(year);
+            Map<Integer, BigDecimal> result = new HashMap<>();
+
+            // Khởi tạo mặc định 12 tháng = 0
+            for (int month = 1; month <= 12; month++) {
+                result.put(month, BigDecimal.ZERO);
+            }
+
+            // Ghi đè các tháng có dữ liệu
+            for (Object[] row : rawResult) {
+                int month = ((Number) row[0]).intValue();
+                BigDecimal total = (BigDecimal) row[1];
+                result.put(month, total);
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved month revenue successfully!")
+                    .result(result)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
+
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Failed to retrieve monthly revenue, message = " + ex.getMessage())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> getOrderCountByStatus() {
+        try {
+            List<Object[]> rawResult = ordersRepository.countOrdersByStatus();
+            Map<OrderStatus, Long> result = new EnumMap<>(OrderStatus.class);
+
+            // Khởi tạo tất cả orderStatus = 0
+            for (OrderStatus status : OrderStatus.values()) {
+                result.put(status, 0L);
+            }
+
+            // Ghi đè những status có dữ liệu thực
+            for (Object[] row : rawResult) {
+                OrderStatus status = (OrderStatus) row[0];
+                Long count = (Long) row[1];
+                result.put(status, count);
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved count order statuses successfully!")
+                    .result(result)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
+
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Failed to get order count by status, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

@@ -14,7 +14,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "address")
-// like Tiktok?
 public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -23,14 +22,12 @@ public class Address {
     @NotNull
     private String fullName;
 
-    // checked?
     @NotNull
     private String phoneNumber;
 
     @NotNull
     private String addressInformation;
 
-    // Optional
     private String otherDetail;
 
     private Boolean isDefault = false;

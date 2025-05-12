@@ -37,15 +37,15 @@ public class AddressServiceImpl implements AddressService {
                         address.getIsDefault()
                 ));
             }
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Get All Address Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all addresses successfully!")
                     .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get All Address failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve all addresses, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -55,6 +55,15 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public ResponseEntity<GenericResponse> create(Req_Create_Address createAddress, String userId) {
         try {
+
+            if (addressRepository.findAllByUserUserId(userId).size() == 10) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
+                        .message("You can only save up to 10 addresses. Please delete another address before adding a new one!")
+                        .statusCode(HttpStatus.CONFLICT.value())
+                        .success(false)
+                        .build());
+            }
+
             Address tempAddress = new Address();
             tempAddress.setFullName(createAddress.getFullName());
             tempAddress.setPhoneNumber(createAddress.getPhoneNumber());
@@ -65,8 +74,8 @@ public class AddressServiceImpl implements AddressService {
                 tempAddress.setIsDefault(true);
             }
             Address address = addressRepository.save(tempAddress);
-            return ResponseEntity.status(201).body(GenericResponse.builder()
-                    .message("Create Address successfully!")
+            return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
+                    .message("Address created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(new Res_Get_Address(
                             address.getAddressId(),
@@ -79,8 +88,8 @@ public class AddressServiceImpl implements AddressService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Create Address failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to create address, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -92,8 +101,8 @@ public class AddressServiceImpl implements AddressService {
         try {
             Optional<Address> address = addressRepository.findByAddressIdAndUserUserId(addressId, userId);
             if (!address.isPresent()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Address Not Found!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Address not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -101,7 +110,7 @@ public class AddressServiceImpl implements AddressService {
 
             if (address.get().getIsDefault()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                        .message("Can't delete default address!!!")
+                        .message("Cannot delete default address. Please set another address as default first!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
@@ -109,13 +118,13 @@ public class AddressServiceImpl implements AddressService {
 
             addressRepository.delete(address.get());
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
-                    .message("Delete Address Successfully!")
+                    .message("Address deleted successfully!")
                     .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                .message("Delete Address failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                .message("Failed to delete address, message = " + ex.getMessage())
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .success(false)
                 .build());
@@ -127,8 +136,8 @@ public class AddressServiceImpl implements AddressService {
         try {
             Optional<Address> _address = addressRepository.findByAddressIdAndUserUserId(addressId, userId);
             if (_address.isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Address Not Found!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Address not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -151,7 +160,7 @@ public class AddressServiceImpl implements AddressService {
 
             Address address = addressRepository.save(_address.get());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Update Address successfully!")
+                    .message("Address updated successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(new Res_Get_Address(
                             address.getAddressId(),
@@ -164,8 +173,8 @@ public class AddressServiceImpl implements AddressService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Updated Address failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to update address, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -176,8 +185,8 @@ public class AddressServiceImpl implements AddressService {
     public ResponseEntity<GenericResponse> setDefault(String userId, String addressId) {
         try {
             if (addressRepository.findByAddressIdAndUserUserId(addressId, userId).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found Address!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Address not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -187,7 +196,7 @@ public class AddressServiceImpl implements AddressService {
                 System.err.println(addressId);
                 if (addressRepository.findDefaultAddressOfUser(userId).get().getAddressId().equals(addressId)) {
                     return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                            .message("Address already is default!!!")
+                            .message("Address is already the default!")
                             .statusCode(HttpStatus.CONFLICT.value())
                             .success(false)
                             .build());
@@ -200,13 +209,13 @@ public class AddressServiceImpl implements AddressService {
             address.setIsDefault(true);
             addressRepository.save(address);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
-                    .message("Set Address default success!!!")
+                    .message("Set Address as default successfully!")
                     .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Set Address default failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to set address as default, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

@@ -15,6 +15,7 @@ import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Utils.VNPayConfig;
 import com.bookstore.Service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -29,6 +30,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -146,6 +148,7 @@ public class VNPayServiceImpl implements VNPayService {
 
     @Transactional
     public boolean refundOrder(String orderId, String txnRef, String transactionNo, String transactionDate, String createdBy, String amount, String ipAddress) {
+        String Message = null;
         try {
             String vnp_Version = "2.1.0";
             String vnp_Command = "refund";
@@ -181,9 +184,12 @@ public class VNPayServiceImpl implements VNPayService {
                     vnpParams.get("vnp_IpAddr") + "|" +
                     vnpParams.get("vnp_OrderInfo");
 
+            System.err.println("vnp_data: " + vnp_data);
+
             String vnp_SecureHash = vnPayConfig.hmacSHA512(vnp_HashSecret, vnp_data);
             vnpParams.put("vnp_SecureHash", vnp_SecureHash);
 
+            System.err.println("vnp_SecureHash = " + vnp_SecureHash);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, String>> request = new HttpEntity<>(vnpParams, headers);
@@ -194,10 +200,11 @@ public class VNPayServiceImpl implements VNPayService {
                 throw new IllegalStateException("Invalid response from VNPay");
             }
 
+
             String ResponseId = response.getOrDefault("vnp_ResponseId", "");
             String Command = response.getOrDefault("vnp_Command", "");
             String ResponseCode = response.getOrDefault("vnp_ResponseCode", "");
-            String Message = response.getOrDefault("vnp_Message", "");
+            Message = response.getOrDefault("vnp_Message", "");
             String TmnCode = response.getOrDefault("vnp_TmnCode", "");
             String TxnRef = response.getOrDefault("vnp_TxnRef", "");
             String Amount = response.getOrDefault("vnp_Amount", "");
@@ -219,14 +226,38 @@ public class VNPayServiceImpl implements VNPayService {
             if (!computedHash.equals(SecureHash)) {
                 throw new IllegalStateException("Invalid response hash from VNPay");
             }
-            Orders orders = ordersRepository.findById(orderId).get();
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-            orders.setRefundAt(formatter.parse(PayDate));
-            ordersRepository.save(orders);
-            ordersRepository.flush(); // Flush để đảm bảo dữ liệu được cập nhật ngay lập tức
-            emailVerificationService.refundOrderNotification(orders); // Truyền đối tượng orders đã cập nhật
+            System.err.println("VNPay returned PayDate = '" + PayDate + "'");
+            Date refundAt;
+            try {
+                SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss");
+                refundAt = fmt.parse(PayDate);
+            } catch (ParseException pe) {
+                throw new IllegalStateException("Parse PayDate failed: " + PayDate, pe);
+            }
+
+            Orders orders = ordersRepository.findById(orderId)
+                    .orElseThrow(() -> new IllegalStateException("Order not found: " + orderId));
+            orders.setRefundAt(refundAt);
+
+            try {
+                ordersRepository.flush();
+                System.err.println(">> flush() thành công");
+            } catch (Exception e) {
+                System.err.println("!!! Error on flush(): " + e.getMessage());
+                throw e;
+            }
+
+            // 3) Gửi email không được throw exception phá luồng
+            try {
+                emailVerificationService.refundOrderNotification(orders);
+            } catch (Exception e) {
+                System.err.println("Warning: refund notification failed: " + e.getMessage());
+            }
+
             return "00".equals(ResponseCode);
         } catch (Exception ex) {
+            // ex.getMessage() giờ đã là chi tiết lỗi parse hoặc order not found,
+            // nếu ex do VNPay thì Message = vnp_Message ban đầu
             throw new IllegalStateException("Refund failed: " + ex.getMessage(), ex);
         }
     }
@@ -313,8 +344,7 @@ public class VNPayServiceImpl implements VNPayService {
         ordersRepository.saveAll(expiredOrders);
     }
 
-    @Scheduled(fixedRate = 15 * 60 * 1000)
-    @Transactional
+    @Scheduled(fixedRate = 1 * 60 * 1000)
     public void refundPendingOrders() {
         System.err.println("START REFUND PROCESSING!!!");
         Date now = new Date();
@@ -341,7 +371,7 @@ public class VNPayServiceImpl implements VNPayService {
             attempt.setTransactionDate(order.getTransactionDate());
             attempt.setAmount(order.getTotalPrice().multiply(BigDecimal.valueOf(100)).longValue());
             attempt.setCreatedBy("system");
-            attempt.setIpAddress("127.0.0.1"); // Giả định IP, có thể thay bằng logic lấy IP thực tế
+            attempt.setIpAddress("127.0.0.1");
             attempt.setStatus(RefundStatus.PENDING_REFUND);
             attempt.setAttemptTime(new Date());
             attempt.setAttemptCount(refundAttemptRepository.countByOrderId(order.getOrderId()) + 1);

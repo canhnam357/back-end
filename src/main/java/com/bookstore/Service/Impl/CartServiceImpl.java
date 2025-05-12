@@ -1,9 +1,11 @@
 package com.bookstore.Service.Impl;
 
+import com.bookstore.Constant.DiscountType;
 import com.bookstore.DTO.Req_Add_Cart;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_Get_Cart;
 import com.bookstore.DTO.Req_Get_CartItem;
+import com.bookstore.Entity.Book;
 import com.bookstore.Entity.Cart;
 import com.bookstore.Entity.CartItem;
 import com.bookstore.Repository.BookRepository;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +47,7 @@ public class CartServiceImpl implements CartService {
             List<Req_Get_CartItem> cartItemList = new ArrayList<>();
             List<CartItem> newCartItems = new ArrayList<>();
             BigDecimal totalPrice = BigDecimal.ZERO;
-
+            Date now = new Date();
             // Xử lý từng CartItem
             for (CartItem cartItem : cartItems) {
                 // Kiểm tra và cập nhật quantity nếu vượt quá inStock
@@ -53,7 +56,7 @@ public class CartServiceImpl implements CartService {
                 }
 
                 // Bỏ qua CartItem có quantity == 0
-                if (cartItem.getQuantity() == 0) {
+                if (cartItem.getQuantity() == 0 || cartItem.getBook().getIsDeleted()) {
                     continue;
                 }
 
@@ -65,6 +68,18 @@ public class CartServiceImpl implements CartService {
 
                 // Thêm vào danh sách mới
                 newCartItems.add(cartItem);
+                BigDecimal priceAfterSale = null;
+                Book book = cartItem.getBook();
+                BigDecimal price = cartItem.getTotalPrice();
+                if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+                    if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
+                        priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
+                    }
+                    else {
+                        priceAfterSale = book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L));
+                    }
+                    price = priceAfterSale.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                }
 
                 // Tạo Req_Get_CartItem để trả về response
                 cartItemList.add(new Req_Get_CartItem(
@@ -72,8 +87,9 @@ public class CartServiceImpl implements CartService {
                         cartItem.getBook().getBookName(),
                         cartItem.getBook().getUrlThumbnail(),
                         cartItem.getBook().getPrice(),
+                        priceAfterSale,
                         cartItem.getQuantity(),
-                        cartItem.getTotalPrice()
+                        price
                 ));
 
                 // Cộng dồn totalPrice
@@ -92,15 +108,15 @@ public class CartServiceImpl implements CartService {
             // Tạo response
             Req_Get_Cart res = new Req_Get_Cart(cartItemList);
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Get Cart Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved cart successfully!")
                     .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get Cart failed: " + ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve cart, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -126,7 +142,7 @@ public class CartServiceImpl implements CartService {
             _cartItem.reCalTotalPrice();
             if (_cartItem.getQuantity() <= 0) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Quantity must greater than 0!")
+                        .message("Quantity must be greater than 0!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -134,7 +150,7 @@ public class CartServiceImpl implements CartService {
 
             if (_cartItem.getQuantity() > _cartItem.getBook().getInStock()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Quantity less than or equal inStock!")
+                        .message("Total quantity must be less than or equal to in stock!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -142,21 +158,22 @@ public class CartServiceImpl implements CartService {
 
             CartItem cartItem = cartItemRepository.save(_cartItem);
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Add to Cart success!!!")
+                    .message("Added to cart successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(new Req_Get_CartItem(
                             cartItem.getBook().getBookId(),
                             cartItem.getBook().getBookName(),
                             cartItem.getBook().getUrlThumbnail(),
                             cartItem.getBook().getPrice(),
+                            null,
                             cartItem.getQuantity(),
                             cartItem.getTotalPrice()
                     ))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Add to Cart failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to add to cart, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -168,21 +185,21 @@ public class CartServiceImpl implements CartService {
         try {
             Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
             if (!cartItem.isPresent()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found cartItem!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Cart item not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             cartItemRepository.delete(cartItem.get());
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Remove from Cart success!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Removed from cart successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Remove from Cart failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to remove from cart, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -194,15 +211,15 @@ public class CartServiceImpl implements CartService {
         try {
             Optional<CartItem> tempcartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
             if (!tempcartItem.isPresent()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found cartItem!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Cart item not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             if (tempcartItem.get().getQuantity() + quantity <= 0) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Can't make quantity <= 0!!!")
+                        .message("Can't set quantity to less than or equal to 0!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -210,22 +227,36 @@ public class CartServiceImpl implements CartService {
             tempcartItem.get().setQuantity(Math.min(tempcartItem.get().getQuantity() + quantity, tempcartItem.get().getBook().getInStock()));
             tempcartItem.get().reCalTotalPrice();
             CartItem cartItem = cartItemRepository.save(tempcartItem.get());
+            BigDecimal priceAfterSale = null;
+            Book book = cartItem.getBook();
+            Date now = new Date();
+            BigDecimal price = cartItem.getTotalPrice();
+            if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+                if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
+                    priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
+                }
+                else {
+                    priceAfterSale = book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L));
+                }
+                price = priceAfterSale.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+            }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Change quantity success!!!")
+                    .message("Quantity changed successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(new Req_Get_CartItem(
                             cartItem.getBook().getBookId(),
                             cartItem.getBook().getBookName(),
                             cartItem.getBook().getUrlThumbnail(),
                             cartItem.getBook().getPrice(),
+                            priceAfterSale,
                             cartItem.getQuantity(),
-                            cartItem.getTotalPrice()
+                            price
                     ))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Change quantity cart-item failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to change quantity, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -237,8 +268,8 @@ public class CartServiceImpl implements CartService {
         try {
             Optional<CartItem> tempcartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
             if (!tempcartItem.isPresent()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found cartItem!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Cart item not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -246,7 +277,7 @@ public class CartServiceImpl implements CartService {
 
             if (quantity <= 0 || tempcartItem.get().getBook().getInStock() == 0) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Can't make quantity <= 0!!!")
+                        .message("Can't set quantity to less than or equal to 0!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -254,22 +285,36 @@ public class CartServiceImpl implements CartService {
             tempcartItem.get().setQuantity(Math.min(quantity, tempcartItem.get().getBook().getInStock()));
             tempcartItem.get().reCalTotalPrice();
             CartItem cartItem = cartItemRepository.save(tempcartItem.get());
+            BigDecimal priceAfterSale = null;
+            Book book = cartItem.getBook();
+            Date now = new Date();
+            BigDecimal price = cartItem.getTotalPrice();
+            if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+                if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
+                    priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
+                }
+                else {
+                    priceAfterSale = book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L));
+                }
+                price = priceAfterSale.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+            }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Update quantity success!!!")
+                    .message("Quantity updated successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(new Req_Get_CartItem(
                             cartItem.getBook().getBookId(),
                             cartItem.getBook().getBookName(),
                             cartItem.getBook().getUrlThumbnail(),
                             cartItem.getBook().getPrice(),
+                            priceAfterSale,
                             cartItem.getQuantity(),
-                            cartItem.getTotalPrice()
+                            price
                     ))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Update quantity cart-item failed!!!")
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                    .message("Failed to update quantity, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

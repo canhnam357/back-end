@@ -1,5 +1,6 @@
 package com.bookstore.DTO;
 
+import com.bookstore.Constant.DiscountType;
 import com.bookstore.Entity.Book;
 import com.bookstore.Entity.Category;
 import com.bookstore.Entity.Image;
@@ -29,16 +30,21 @@ public class Res_Get_Books {
     // "dd-MM-yyyy HH:mm:ss"
     private Date publishedDate;
     private int weight;
-    private String authorName;
-    private List<String> categories;
-    private String publisherName;
-    private String distributorName;
-    private String bookType;
+    private Admin_Res_Get_Author author;
+    private List<Admin_Res_Get_Category> categories;
+    private Admin_Res_Get_Publisher publisher;
+    private Admin_Res_Get_Distributor distributor;
+    private Admin_Res_Get_BookType bookType;
     private String urlThumbnail;
     private List<String> images;
     private BigDecimal rating;
+    private BigDecimal priceAfterSale;
+    private int soldQuantity;
+    private Boolean newArrival;
 
-    public void convert(Book book) {
+    public void convert(Book book, Date now) {
+        newArrival = book.getNewArrival();
+        soldQuantity = book.getSoldQuantity();
         bookId = book.getBookId();
         bookName = book.getBookName();
         inStock = book.getInStock();
@@ -48,29 +54,29 @@ public class Res_Get_Books {
         publishedDate = book.getPublishedDate();
         weight = book.getWeight();
 
-        authorName = null;
+        author = null;
         if (book.getAuthor() != null) {
-            authorName = book.getAuthor().getAuthorName();
+            author = new Admin_Res_Get_Author(book.getAuthor().getAuthorId(), book.getAuthor().getAuthorName());
         }
 
         categories = new ArrayList<>();
         for (Category category : book.getCategories()) {
-            categories.add(category.getCategoryName());
+            categories.add(new Admin_Res_Get_Category(category.getCategoryId(), category.getCategoryName()));
         }
 
-        publisherName = null;
+        publisher = null;
         if (book.getPublisher() != null) {
-            publisherName = book.getPublisher().getPublisherName();
+            publisher = new Admin_Res_Get_Publisher(book.getPublisher().getPublisherId(), book.getPublisher().getPublisherName());
         }
 
-        distributorName = null;
+        distributor = null;
         if (book.getDistributor() != null) {
-            distributorName = book.getDistributor().getDistributorName();
+            distributor = new Admin_Res_Get_Distributor(book.getDistributor().getDistributorId(), book.getDistributor().getDistributorName());
         }
 
         bookType = null;
         if (book.getBookType() != null) {
-            bookType = book.getBookType().getBookTypeName();
+            bookType = new Admin_Res_Get_BookType(book.getBookType().getBookTypeId(), book.getBookType().getBookTypeName());
         }
 
         urlThumbnail = null;
@@ -81,6 +87,15 @@ public class Res_Get_Books {
         images = new ArrayList<>();
         for (Image image : book.getImages()) {
             images.add(image.getUrl());
+        }
+
+        if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+            if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
+                priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
+            }
+            else {
+                priceAfterSale = book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L));
+            }
         }
     }
 }

@@ -70,27 +70,6 @@
     <p><strong>Reason for Refund:</strong> <span th:text="${refundReason}"></span></p>
     <p><strong>Estimated Refund Time:</strong> <span th:text="${estimatedRefundTime}"></span></p>
   </div>
-  <table class="products-table">
-    <thead>
-    <tr>
-      <th>Image</th>
-      <th>Name</th>
-      <th>Quantity</th>
-      <th>Total Price</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="orderDetail : ${orderDetails}">
-      <td><img th:src="${orderDetail.urlThumbnail}" alt="Product Image" width="50"></td>
-      <td th:text="${orderDetail.bookName}"></td>
-      <td th:text="${orderDetail.quantity}"></td>
-      <td th:text="${orderDetail.totalPrice}"></td>
-    </tr>
-    </tbody>
-  </table>
-  <div class="total">
-    <p><strong>Total Order Value:</strong> <span th:text="${totalOrderValue}"></span></p>
-  </div>
   <div class="footer">
     <p>We apologize for any inconvenience caused. If you have any questions, please contact our support team.</p>
     <p>© 2025 BookShop. All rights reserved.</p>

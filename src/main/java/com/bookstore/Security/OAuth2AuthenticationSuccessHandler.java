@@ -2,6 +2,7 @@ package com.bookstore.Security;
 
 import com.bookstore.Entity.RefreshToken;
 import com.bookstore.Entity.User;
+import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.RefreshTokenService;
 import com.bookstore.Service.UserService;
 import com.bookstore.Utils.Normalized;
@@ -32,6 +33,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     @Value("${user-url}")
     private String userUrl;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
@@ -43,6 +47,15 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         // Tìm hoặc tạo user trong database
         User user = userService.findOrCreateUser(email, name);
+
+        if (!user.isActive()) {
+            String errorRedirectUrl = userUrl + "/callback?error=account_locked";
+            getRedirectStrategy().sendRedirect(request, response, errorRedirectUrl);
+            return;
+        }
+
+        user.setVerified(true);
+        userRepository.save(user);
 
         // Tạo UserDetail để sinh token
         UserDetail userDetail = new UserDetail(user);
@@ -60,8 +73,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         // Redirect về front-end với token
         String redirectUrl = userUrl + "/callback?accessToken=" + accessToken +
-                "&refreshToken=" + refreshToken.getToken() +
-                "&username=" + Normalized.remove(user.getFullName());
+                "&refreshToken=" + refreshToken.getToken();
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

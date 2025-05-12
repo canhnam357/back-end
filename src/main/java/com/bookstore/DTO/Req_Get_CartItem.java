@@ -16,6 +16,7 @@ public class Req_Get_CartItem {
     private String bookName;
     private String urlThumbnail;
     private BigDecimal price;
+    private BigDecimal priceAfterSales;
     private int quantity;
     private BigDecimal totalPrice;
 }

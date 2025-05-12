@@ -8,6 +8,7 @@ import com.bookstore.Repository.EmailVerificationRepository;
 import com.bookstore.Repository.OrdersRepository;
 import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.EmailVerificationService;
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -43,6 +45,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private OrdersRepository ordersRepository;
 
     @Override
+    @Async
     public void sendOtp(String email) {
         String otp = generateOtp();
         try {
@@ -93,6 +96,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     @Override
+    @Async
     public void sendOTPChangePassword(String userId) {
         String otp = generateOtp();
         try {
@@ -137,17 +141,25 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     @Override
     public ResponseEntity<GenericResponse> sendOTPResetPassword(String email) {
-        String otp = generateOtp();
         try {
 
+            if (email.length() > 300) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Email length must be less than or equal to 300!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
             if (userRepository.findByEmail(email).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found email!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("No account exists with this email!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
 
+            String otp = generateOtp();
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
@@ -174,14 +186,15 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             }
 
             emailVerificationRepository.save(emailVerification);
+
             return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Send OTP ResetPassword success!!!")
+                    .message("OTP for password reset sent successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Send OTP ResetPassword failed!!!")
+                    .message("Failed to send OTP for password reset, message = " + e.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -231,7 +244,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @Async
     public void refundOrderNotification(Orders order) {
         try {
@@ -263,9 +276,6 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             System.err.println(order.getRefundAt());
             context.setVariable("estimatedRefundTime", order.getRefundAt());
             context.setVariable("refundReason", reason_for_refund);
-            context.setVariable("orderDetails", order.getOrderDetails());
-            System.err.println("No OrderItems : " + order.getOrderDetails().size());
-            context.setVariable("totalOrderValue", order.getTotalPrice());
             String mailContent = templateEngine.process("refund-notification", context);
             helper.setText(mailContent, true);
             helper.setSubject("Refund Order Notification");

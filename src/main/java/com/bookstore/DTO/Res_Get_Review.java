@@ -23,4 +23,13 @@ public class Res_Get_Review {
     // format : dd-MM-yyyy HH:mm:ss
     private Date createdAt;
 
+    public void convert(Review review) {
+        reviewId = review.getReviewId();
+        userId = review.getUser().getUserId();
+        userReviewed = review.getUser().getFullName();
+        content = review.getContent();
+        rating = review.getRating();
+        createdAt = review.getCreatedAt();
+    }
+
 }

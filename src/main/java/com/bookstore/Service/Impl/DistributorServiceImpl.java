@@ -27,15 +27,15 @@ public class DistributorServiceImpl implements DistributorService {
             Distributor distributor = new Distributor();
             distributor.setDistributorName(createDistributor.getDistributorName());
             distributor.setNameNormalized(Normalized.remove(createDistributor.getDistributorName()));
-            return ResponseEntity.status(201).body(GenericResponse.builder()
-                    .message("Create Distributor successfully!")
+            return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
+                    .message("Distributor created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(distributorRepository.save(distributor))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Create Distributor failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to create distributor, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -46,15 +46,15 @@ public class DistributorServiceImpl implements DistributorService {
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
         try {
             Page<Distributor> contributors = distributorRepository.findAll(PageRequest.of(page - 1, size));
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Get All Distributor Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all distributors successfully!")
                     .result(contributors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get All Distributor failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve all distributors, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -68,15 +68,15 @@ public class DistributorServiceImpl implements DistributorService {
 
             Page<Distributor> distributors = distributorRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Search Distributor Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Searched distributors Successfully!")
                     .result(distributors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Search Distributor failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to search distributors, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -88,7 +88,7 @@ public class DistributorServiceImpl implements DistributorService {
         try {
             if (distributorRepository.findById(distributorId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Not found distributor!!!")
+                        .message("Distributor not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -96,15 +96,15 @@ public class DistributorServiceImpl implements DistributorService {
             Distributor _distributor = distributorRepository.findById(distributorId).get();
             _distributor.setDistributorName(distributor.getDistributorName());
             _distributor.setNameNormalized(Normalized.remove(distributor.getDistributorName()));
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Update Distributor successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Distributor updated successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(distributorRepository.save(_distributor))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Update Distributor failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to update distributor, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -118,15 +118,15 @@ public class DistributorServiceImpl implements DistributorService {
 
             List<Distributor> distributors = distributorRepository.findListByNameContainingSubsequence(search_word);
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Search Distributor Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Searched distributors successfully!")
                     .result(distributors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Search Distributor failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to search distributors, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -138,21 +138,21 @@ public class DistributorServiceImpl implements DistributorService {
         try {
             Optional<Distributor> distributor = distributorRepository.findById(distributorId);
             if (distributor.isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found Distributor!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Distributor not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             distributorRepository.delete(distributor.get());
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Delete distributor successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Distributor deleted successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Delete distributor failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to delete distributor, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

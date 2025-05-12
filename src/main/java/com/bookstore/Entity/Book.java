@@ -60,19 +60,19 @@ public class Book {
     private Boolean isDeleted = false;
 
     @ManyToOne
-    @JoinColumn(name = "authorId", nullable = true)
+    @JoinColumn(name = "authorId")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     @JsonIgnore
     private Author author;
 
     @ManyToOne
-    @JoinColumn(name = "publisherId", nullable = true)
+    @JoinColumn(name = "publisherId")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     @JsonIgnore
     private Publisher publisher;
 
     @ManyToOne
-    @JoinColumn(name = "distributorId", nullable = true)
+    @JoinColumn(name = "distributorId")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     @JsonIgnore
     private Distributor distributor;
@@ -85,9 +85,9 @@ public class Book {
     @JsonIgnore
     private List<Review> reviews = new ArrayList<>();
 
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Voucher> vouchers = new ArrayList<>();
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "discountId", referencedColumnName = "discountId")
+    private Discount discount;
 
     @ManyToMany(mappedBy = "books")
     @JsonManagedReference
@@ -107,6 +107,8 @@ public class Book {
     private Boolean newArrival;
 
     private String nameNormalized;
+
+    private int soldQuantity = 0;
 
     public void addImage(Image image) {
         if (images == null) {

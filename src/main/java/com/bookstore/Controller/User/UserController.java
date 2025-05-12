@@ -39,7 +39,7 @@ public class UserController {
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                 .success(true)
-                .message("Get userId success")
+                .message("Get userId successfully!")
                 .result(userId)
                 .statusCode(HttpStatus.OK.value())
                 .build());

@@ -30,4 +30,14 @@ public interface BookService {
     ResponseEntity<GenericResponse> delete(String bookId);
 
     ResponseEntity<GenericResponse> update(String bookId, Admin_Req_Update_Book bookDto);
+
+    ResponseEntity<GenericResponse> search(String keyword);
+
+    ResponseEntity<GenericResponse> getDiscountBook();
+
+    ResponseEntity<GenericResponse> getHighRatingBook();
+
+    ResponseEntity<GenericResponse> getMostPopularBooks();
+
+    ResponseEntity<GenericResponse> getBooksInCategoriesMostSold();
 }

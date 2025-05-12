@@ -35,5 +35,7 @@ public class OrderStatusHistory {
     @JoinColumn(name = "userId", nullable = false)
     private User changedBy;
 
+    private String cause;
+
     private Date changedAt;
 }

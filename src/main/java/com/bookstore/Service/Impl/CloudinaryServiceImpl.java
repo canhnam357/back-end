@@ -22,15 +22,15 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     public ResponseEntity<GenericResponse> upload(MultipartFile file) {
         try {
             Map data = this.cloudinary.uploader().upload(file.getBytes(), Map.of());
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Upload Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Uploaded successfully!")
                     .result(data)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (IOException io) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Upload failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to upload, message = " + io.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

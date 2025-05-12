@@ -26,15 +26,15 @@ public class AuthorServiceImpl implements AuthorService {
             Author author = new Author();
             author.setAuthorName(createAuthor.getAuthorName());
             author.setNameNormalized(Normalized.remove(createAuthor.getAuthorName()));
-            return ResponseEntity.status(201).body(GenericResponse.builder()
-                    .message("Create Author successfully!")
+            return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
+                    .message("Author created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(authorRepository.save(author))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Create Author failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to create author, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -45,15 +45,15 @@ public class AuthorServiceImpl implements AuthorService {
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
         try {
             Page<Author> authors = authorRepository.findAll(PageRequest.of(page - 1, size));
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Get All Author Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all authors successfully!")
                     .result(authors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get All Author failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve all authors, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -67,15 +67,15 @@ public class AuthorServiceImpl implements AuthorService {
 
             Page<Author> authors = authorRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Search Author Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Authors searched successfully!")
                     .result(authors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Search Author failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to search authors, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -88,7 +88,7 @@ public class AuthorServiceImpl implements AuthorService {
 
             if (authorRepository.findById(authorId).isEmpty()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found author!")
+                        .message("Author not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -97,15 +97,15 @@ public class AuthorServiceImpl implements AuthorService {
             Author author = authorRepository.findById(authorId).get();
             author.setAuthorName(updateAuthor.getAuthorName());
             author.setNameNormalized(Normalized.remove(updateAuthor.getAuthorName()));
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Update Author successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Author updated successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(authorRepository.save(author))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Update Author failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to update author, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -116,21 +116,21 @@ public class AuthorServiceImpl implements AuthorService {
     public ResponseEntity<GenericResponse> delete(String authorId) {
         try {
             if (authorRepository.findById(authorId).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found author!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Author not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             authorRepository.deleteById(authorId);
-            return ResponseEntity.status(204).body(GenericResponse.builder()
-                    .message("Delete Author successfully!")
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
+                    .message("Deleted author successfully!")
                     .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Delete Author failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to delete author, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -144,15 +144,15 @@ public class AuthorServiceImpl implements AuthorService {
 
             List<Author> authors = authorRepository.findListByNameContainingSubsequence(search_word);
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Search Author Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Searched authors successfully!")
                     .result(authors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Search Author failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to search authors, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

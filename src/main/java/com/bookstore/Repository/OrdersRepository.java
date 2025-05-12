@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Date;
 import java.util.List;
@@ -47,4 +48,23 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
             RefundStatus pendingRefund,
             RefundStatus refunded,
             Date oneHourAgo);
+
+    @Query("SELECT COUNT(o) FROM Orders o " +
+            "WHERE o.orderStatus = :status " +
+            "AND o.orderAt >= :cutoffTime")
+    long countCancelledOrdersWithinTime(
+            @Param("status") OrderStatus status,
+            @Param("cutoffTime") Date cutoffTime
+    );
+
+    @Query(value = "SELECT MONTH(order_at) AS month, COALESCE(SUM(total_price), 0) AS total " +
+            "FROM orders " +
+            "WHERE order_status = 'DELIVERED' " +
+            "AND YEAR(order_at) = :year " +
+            "GROUP BY MONTH(order_at)", nativeQuery = true)
+    List<Object[]> findMonthlyRevenueByYear(@Param("year") int year);
+
+    @Query("SELECT o.orderStatus, COUNT(o) FROM Orders o GROUP BY o.orderStatus")
+    List<Object[]> countOrdersByStatus();
+
 }

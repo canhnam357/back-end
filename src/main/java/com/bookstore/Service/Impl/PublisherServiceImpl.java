@@ -27,15 +27,15 @@ public class PublisherServiceImpl implements PublisherService {
             Publisher publisher = new Publisher();
             publisher.setPublisherName(createPublisher.getPublisherName());
             publisher.setNameNormalized(Normalized.remove(createPublisher.getPublisherName()));
-            return ResponseEntity.status(201).body(GenericResponse.builder()
-                    .message("Create Publisher successfully!")
+            return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
+                    .message("Publisher created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(publisherRepository.save(publisher))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Create Publisher failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to create publisher, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -46,15 +46,15 @@ public class PublisherServiceImpl implements PublisherService {
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
         try {
             Page<Publisher> publishers = publisherRepository.findAll(PageRequest.of(page - 1, size));
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Get All Publisher Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all publishers successfully!")
                     .result(publishers)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get All Publisher failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve all publishers, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -68,15 +68,15 @@ public class PublisherServiceImpl implements PublisherService {
 
             Page<Publisher> publishers = publisherRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Search Publisher Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Searched publishers successfully!")
                     .result(publishers)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Search Publisher failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to search publishers, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -88,7 +88,7 @@ public class PublisherServiceImpl implements PublisherService {
         try {
             if (publisherRepository.findById(publisherId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Not found publisher!!!")
+                        .message("Publisher not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -96,15 +96,15 @@ public class PublisherServiceImpl implements PublisherService {
             Publisher _publisher = publisherRepository.findById(publisherId).get();
             _publisher.setPublisherName(publisher.getPublisherName());
             _publisher.setNameNormalized(Normalized.remove(publisher.getPublisherName()));
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Update Publisher successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Publisher updated successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(publisherRepository.save(_publisher))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Update Publisher failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to update publisher, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -115,14 +115,14 @@ public class PublisherServiceImpl implements PublisherService {
     public ResponseEntity<GenericResponse> delete(String publisherId) {
         try {
             publisherRepository.deleteById(publisherId);
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Delete Publisher successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Publisher deleted successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Delete Publisher failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to delete publisher, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -136,15 +136,15 @@ public class PublisherServiceImpl implements PublisherService {
 
             List<Publisher> publishers = publisherRepository.findListByNameContainingSubsequence(search_word);
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Search Publisher Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Searched publishers successfully!")
                     .result(publishers)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Search Publisher failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to search publishers, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

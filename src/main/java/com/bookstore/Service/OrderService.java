@@ -15,4 +15,8 @@ public interface OrderService {
 
     ResponseEntity<GenericResponse> getAllForShipper(String orderStatus, int index, int size);
 
+    ResponseEntity<GenericResponse> getMonthlyRevenue(int year);
+
+    ResponseEntity<GenericResponse> getOrderCountByStatus();
+
 }

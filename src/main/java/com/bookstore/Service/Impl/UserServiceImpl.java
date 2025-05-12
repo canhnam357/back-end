@@ -22,6 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -84,28 +86,28 @@ public class UserServiceImpl implements UserService {
                 System.err.println("ROLE " + user.getRole().getName());
                 if (user.getRole().getName().equals("ADMIN")) {
                     System.err.println("ADMIN");
-                    return ResponseEntity.ok(GenericResponse.builder()
-                            .success(true)
-                            .message("Verify admin Success")
+                    return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                            .success(false)
                             .result(user.getFullName())
-                            .statusCode(200)
+                            .message("Verified ADMIN successfully!")
+                            .statusCode(HttpStatus.OK.value())
                             .build());
                 }
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                         .success(false)
-                        .message("User is not ADMIN!")
+                        .message("User is not an ADMIN!")
                         .statusCode(HttpStatus.UNAUTHORIZED.value())
                         .build());
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Wrong token!")
+                    .message("Incorrect token!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("User is not ADMIN or wrong token!")
+                    .message("Failed to verify ADMIN, message = " + ex.getMessage())
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         }
@@ -121,28 +123,28 @@ public class UserServiceImpl implements UserService {
                 System.err.println("ROLE " + user.getRole().getName());
                 if (user.getRole().getName().equals("ADMIN") || (user.isVerified() && user.isActive())) {
                     System.err.println("VERIFIED");
-                    return ResponseEntity.ok(GenericResponse.builder()
-                            .success(true)
-                            .message("Verify Success")
+                    return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                            .success(false)
                             .result(user.getFullName())
-                            .statusCode(200)
+                            .message("Verified successfully!")
+                            .statusCode(HttpStatus.OK.value())
                             .build());
                 }
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                         .success(false)
-                        .message("User is not admin or not active or not verified!")
+                        .message("User is not an ADMIN, not active, or not verified!")
                         .statusCode(HttpStatus.UNAUTHORIZED.value())
                         .build());
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Wrong token!")
+                    .message("Incorrect token!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Wrong token!")
+                    .message("Failed to verified, message = " + ex.getMessage())
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         }
@@ -185,15 +187,15 @@ public class UserServiceImpl implements UserService {
 
             Page<Admin_Res_Get_Users> dtoPage = new PageImpl<>(res, userList.getPageable(), userList.getTotalElements());
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Get All Users Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all users successfully!")
                     .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get all user failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve all users, message = " + e.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -205,23 +207,23 @@ public class UserServiceImpl implements UserService {
         try {
             Optional<User> user = userRepository.findById(userId);
             if (user.isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found user")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("User not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             if (adminUpdateUserDTO.getActive() == null || adminUpdateUserDTO.getVerified() == null) {
-                return ResponseEntity.badRequest().body(GenericResponse.builder()
-                        .message("isActive and isVerified must not null!!!")
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
+                        .message("isActive and isVerified must not ne null!")
                         .statusCode(HttpStatus.BAD_REQUEST.value())
                         .success(false)
                         .build());
             }
 
             if (adminUpdateUserDTO.getRole() == null || roleService.findByName(adminUpdateUserDTO.getRole()).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found role")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Role not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -234,14 +236,14 @@ public class UserServiceImpl implements UserService {
             _user.setVerified(Boolean.parseBoolean(adminUpdateUserDTO.getVerified()));
             _user.setRole(roleService.findByName(adminUpdateUserDTO.getRole()).get());
             userRepository.save(_user);
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Update status user success!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("User status updated successfully!!!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Update status user failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to update user status, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -251,9 +253,41 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<GenericResponse> login(Login login) {
         try {
+            if (login.getEmail() == null || login.getEmail().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Email must be provided!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+            if (login.getEmail().length() > 300) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Email length must be less than or equal to 300!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+            if (login.getPassword() == null || login.getPassword().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Password must be provided!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+            if (login.getPassword().length() < 8 || login.getPassword().length() > 32) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Password length must be between 8 and 32 characters!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
             if (userRepository.findByEmail(login.getEmail()).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Email does not exists!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Account does not exist!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -262,14 +296,14 @@ public class UserServiceImpl implements UserService {
             if (!user.isVerified()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
-                        .message("Your account is not verified!")
+                        .message("Account is not verified!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
             if (!user.isActive()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
-                        .message("Your account is not active!")
+                        .message("Account is not active!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
@@ -298,14 +332,22 @@ public class UserServiceImpl implements UserService {
 
             return ResponseEntity.ok().body(GenericResponse.builder()
                     .success(true)
-                    .message("Login successfully!")
+                    .message("Logged in successfully!")
                     .result(tokenMap)
                     .statusCode(HttpStatus.OK.value())
                     .build());
+        } catch (BadCredentialsException ex) {
+            // Bắt riêng lỗi mật khẩu sai
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Incorrect password!")
+                    .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                    .build());
         } catch (Exception ex) {
+            // Bắt các lỗi hệ thống khác
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Login failed!")
+                    .message("Failed to log in, message =  " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -320,19 +362,19 @@ public class UserServiceImpl implements UserService {
                 refreshTokenService.logout(refreshToken);
                 return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                         .success(true)
-                        .message("Logout success!")
+                        .message("Logged out successfully!")
                         .statusCode(HttpStatus.OK.value())
                         .build());
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Logout failed!, Please login before logout!")
+                    .message("Failed to log out, please log in before logging out!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Logout failed!")
+                    .message("Failed to log out, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -341,19 +383,53 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<GenericResponse> register(Register registerRequest) {
         try {
+
+            if (registerRequest.getFullName() == null || registerRequest.getEmail() == null || registerRequest.getPhoneNumber() == null || registerRequest.getPassword() == null || registerRequest.getConfirmPassword() == null) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("All fields must be provided!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+            if (registerRequest.getFullName().length() > 300) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Full name length must be less than or equal to 300!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+            if (registerRequest.getEmail().length() > 300) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Email length must be less than or equal to 300!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+            if (registerRequest.getPhoneNumber().length() < 10 || registerRequest.getPhoneNumber().length() > 11 || !isNumericInput(registerRequest.getPhoneNumber())) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Phone must be 10-11 digits long!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+
             if (registerRequest.getPassword().length() < 8 || registerRequest.getPassword().length() > 32) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password must be between 8 and 32 characters long")
+                        .message("Password must be between 8 and 32 characters long!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
             Optional<User> user = userRepository.findByEmailAndIsVerifiedIsTrue(registerRequest.getEmail());
             if (user.isPresent()) {
-                return ResponseEntity.status(409).body(GenericResponse.builder()
-                        .success(true)
-                        .message("Email already in used!")
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Email already exists!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .build());
             }
@@ -366,8 +442,8 @@ public class UserServiceImpl implements UserService {
 
             if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .success(true)
-                        .message("Password and confirm password do not match")
+                        .success(false)
+                        .message("Password and confirm password must be the same!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -389,14 +465,14 @@ public class UserServiceImpl implements UserService {
 
             emailVerificationService.sendOtp(registerRequest.getEmail());
 
-            return ResponseEntity.ok(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .success(true)
-                    .message("Register Success , please check mail and verify OTP!")
-                    .statusCode(200)
+                    .message("Registered successfully. Please check your email and verify using the OTP!")
+                    .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message(ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to register, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -421,15 +497,15 @@ public class UserServiceImpl implements UserService {
             profile.setAvatar(user.get().getAvatar());
             profile.setGender(user.get().getGender().name());
             profile.setDateOfBirth(user.get().getDateOfBirth());
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Get Profile User Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("User profile retrieved successfully!")
                     .result(profile)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get Profile User failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve user profile, message = " + e.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -451,9 +527,9 @@ public class UserServiceImpl implements UserService {
             System.err.println("OTP : " + otp);
             Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(otp, email);
             if (!emailVerification.isPresent()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                        .message("Invalid token, please check the token again!")
-                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Incorrect OTP, please try again!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
             }
@@ -462,14 +538,14 @@ public class UserServiceImpl implements UserService {
             user.setVerified(true);
             user.setActive(true);
             userRepository.save(user);
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Account verification successful, please login!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Account verified successfully. Please log in!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Account verification failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to verify account, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -487,7 +563,7 @@ public class UserServiceImpl implements UserService {
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .success(false)
-                        .message("User not found!")
+                        .message("Account does not exist!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .build());
             }
@@ -507,7 +583,7 @@ public class UserServiceImpl implements UserService {
             if (!passwordEncoder.matches(reqUpdatePassword.getPassword(), user.getPassword())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
-                        .message("Current password is incorrect!")
+                        .message("Incorrect current password!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
@@ -515,7 +591,7 @@ public class UserServiceImpl implements UserService {
             if (reqUpdatePassword.getPassword().equals(reqUpdatePassword.getNewPassword())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
                         .success(false)
-                        .message("Current password and new password are the same!")
+                        .message("Password and new password must not be the same!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .build());
             }
@@ -525,7 +601,7 @@ public class UserServiceImpl implements UserService {
             if (emailVerification.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
                         .success(false)
-                        .message("Wrong OTP!")
+                        .message("Incorrect OTP, please try again!")
                         .statusCode(HttpStatus.BAD_REQUEST.value())
                         .build());
             }
@@ -535,15 +611,15 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(reqUpdatePassword.getNewPassword()));
             userRepository.save(user);
 
-            return ResponseEntity.ok(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .success(true)
-                    .message("Password changed successfully!")
+                    .message("Changed password successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Change password failed!")
+                    .message("Failed to change password, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -558,15 +634,15 @@ public class UserServiceImpl implements UserService {
             System.err.println(url);
             user.get().setAvatar(url);
             userRepository.save(user.get());
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Change avatar Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Changed avatar successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(url)
                     .success(true)
                     .build());
         } catch (IOException io) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Change avatar failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to change avatar, message = " + io.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -577,8 +653,8 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<GenericResponse> changeProfile(String userId, Req_Update_Profile profile) {
         try {
             if (userRepository.findById(userId).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found user!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Account does not exist!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -597,16 +673,16 @@ public class UserServiceImpl implements UserService {
             res.setAvatar(user.getAvatar());
             res.setGender(user.getGender().toString());
             res.setDateOfBirth(user.getDateOfBirth());
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Change profile successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Changed profile successfully!")
                     .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
 
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Change profile failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to change profile, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -635,14 +711,35 @@ public class UserServiceImpl implements UserService {
         return new_user;
     }
 
+    public boolean isNumericInput(String input) {
+        return input != null && input.matches("\\d+");
+    }
+
     @Override
     public ResponseEntity<GenericResponse> resetPassword(Req_Reset_Password password) {
         try {
+
+            if (password.getOtp() == null || password.getEmail() == null || password.getNewPassword() == null || password.getConfirmPassword() == null) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("All fields must be provided!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+            if (password.getOtp().length() != 6 || !isNumericInput(password.getOtp())) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("OTP length must be 6 digits long!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
             Optional<User> userOptional = userRepository.findByEmail(password.getEmail());
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .success(false)
-                        .message("User not found!")
+                        .message("Account does not exist!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .build());
             }
@@ -650,7 +747,7 @@ public class UserServiceImpl implements UserService {
             if (password.getNewPassword().length() < 8 || password.getNewPassword().length() > 32) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password must be between 8 and 32 characters long")
+                        .message("Password must be between 8 and 32 characters long!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -659,7 +756,7 @@ public class UserServiceImpl implements UserService {
             if (!password.getNewPassword().equals(password.getConfirmPassword())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("New Password and Confirm New Password must same.")
+                        .message("Password and confirm password must be the same!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -670,10 +767,10 @@ public class UserServiceImpl implements UserService {
             Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(password.getOtp(), user.getEmail());
 
             if (emailVerification.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
-                        .message("Wrong OTP!")
-                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                        .message("Incorrect OTP, please try again!")
+                        .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
 
@@ -682,7 +779,7 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(password.getNewPassword()));
             userRepository.save(user);
 
-            return ResponseEntity.ok(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .success(true)
                     .message("Password reset successfully!")
                     .statusCode(HttpStatus.OK.value())
@@ -690,8 +787,75 @@ public class UserServiceImpl implements UserService {
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Reset password failed!")
+                    .message("Failed to reset password, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> getUserById(String userId) {
+        try {
+            Optional<User> user = userRepository.findById(userId);
+            Admin_Res_Get_Users res = new Admin_Res_Get_Users();
+            if (user.isPresent()) {
+                res = new Admin_Res_Get_Users(
+                        user.get().getUserId(),
+                        user.get().getFullName(),
+                        user.get().getEmail(),
+                        user.get().getPhoneNumber(),
+                        user.get().getDateOfBirth(),
+                        user.get().getGender().toString(),
+                        user.get().isActive(),
+                        user.get().isVerified(),
+                        user.get().getRole().getName()
+                );
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .success(true)
+                    .message("Retrieved user successfully!")
+                    .result(res)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Failed to retrieve user, message = " + ex.getMessage())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> countVerifiedUsersByMonth(int year) {
+        try {
+            List<Object[]> rawResult = userRepository.countVerifiedUsersByMonth(year);
+            Map<Integer, Long> result = new HashMap<>();
+
+            // Khởi tạo 12 tháng với giá trị 0
+            for (int month = 1; month <= 12; month++) {
+                result.put(month, 0L);
+            }
+
+            // Ghi đè các tháng có dữ liệu thực tế
+            for (Object[] row : rawResult) {
+                int month = ((Number) row[0]).intValue();
+                long count = ((Number) row[1]).longValue();
+                result.put(month, count);
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Counted verified user by month successfully!")
+                    .result(result)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
+
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(GenericResponse.builder()
+                    .message("Failed to count verified user by month, message = " + ex.getMessage())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
                     .build());
         }
     }

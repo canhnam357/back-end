@@ -15,6 +15,8 @@ public class Res_Get_OrderDetail {
     private String orderDetailId;
     private String bookId;
     private String bookName;
+    private BigDecimal price;
+    private BigDecimal priceAfterSales;
     private int quantity;
     private BigDecimal totalPrice;
     private String urlThumbnail;

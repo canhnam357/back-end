@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<Review, String> {
@@ -26,4 +27,9 @@ public interface ReviewRepository extends JpaRepository<Review, String> {
 
     @Query("SELECT r.user FROM Review r WHERE r.reviewId = :reviewId")
     Optional<User> findUserByReviewId(@Param("reviewId") String reviewId);
+
+    @Query("SELECT r FROM Review r " +
+            "WHERE r.book.bookId = :bookId " +
+            "ORDER BY r.createdAt DESC")
+    List<Review> findReviewsByBookIdOrderedByCreatedAtDesc(@Param("bookId") String bookId);
 }

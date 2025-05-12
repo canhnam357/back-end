@@ -29,15 +29,15 @@ public class CategoryServiceImpl implements CategoryService {
             Category category = new Category();
             category.setCategoryName(createCategory.getCategoryName());
             category.setNameNormalized(Normalized.remove(category.getCategoryName()));
-            return ResponseEntity.status(201).body(GenericResponse.builder()
-                    .message("Create Category successfully!")
+            return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
+                    .message("Category created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(categoryRepository.save(category))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Create Category failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to create category, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -48,15 +48,15 @@ public class CategoryServiceImpl implements CategoryService {
     public ResponseEntity<GenericResponse> getAll(String keyword) {
         try {
             List<Category> categories = categoryRepository.findAll();
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Get All Category Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved all categories successfully!")
                     .result(categories)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Get All Category failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve all categories, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -68,21 +68,21 @@ public class CategoryServiceImpl implements CategoryService {
         try {
             Optional<Category> category = categoryRepository.findById(categoryId);
             if (category.isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found category!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Category not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             categoryRepository.delete(category.get());
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Delete category successfully!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Category deleted successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Delete Category failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to delete category, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -94,23 +94,23 @@ public class CategoryServiceImpl implements CategoryService {
         try {
             Optional<Category> ele = categoryRepository.findById(categoryId);
             if (ele.isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Not found category!!!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Category not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             ele.get().setCategoryName(category.getCategoryName());
             ele.get().setNameNormalized(Normalized.remove(category.getCategoryName()));
-            return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("Update category successfully!!!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Category updated successfully!")
                     .statusCode(HttpStatus.OK.value())
                     .result(categoryRepository.save(ele.get()))
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Update Category failed!!!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to update category, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -124,15 +124,15 @@ public class CategoryServiceImpl implements CategoryService {
 
             List<Category> categories = categoryRepository.findListByNameContainingSubsequence(search_word);
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .message("Search Categories Successfully!")
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Searched categories successfully!")
                     .result(categories)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Search Categories failed!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to search categories, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

@@ -41,4 +41,8 @@ public interface UserService {
     public User findOrCreateUser(String email, String fullName);
 
     public ResponseEntity<GenericResponse> resetPassword(Req_Reset_Password password);
+
+    public ResponseEntity<GenericResponse> getUserById(String userId);
+
+    public ResponseEntity<GenericResponse> countVerifiedUsersByMonth(int year);
 }
