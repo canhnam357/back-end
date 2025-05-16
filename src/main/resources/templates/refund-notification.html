@@ -65,10 +65,10 @@
     <h1>Book Store</h1>
   </div>
   <div class="refund-details">
-    <p><strong>Order ID:</strong> <span th:text="${orderId}"></span></p>
-    <p><strong>Order Date:</strong> <span th:text="${orderAt}"></span></p>
-    <p><strong>Reason for Refund:</strong> <span th:text="${refundReason}"></span></p>
-    <p><strong>Estimated Refund Time:</strong> <span th:text="${estimatedRefundTime}"></span></p>
+    <p><strong>ID Đơn hàng :</strong> <span th:text="${orderId}"></span></p>
+    <p><strong>Đặt hàng lúc :</strong> <span th:text="${#temporals.format(orderAt, 'HH:mm:ss dd-MM-yyyy', T(java.time.ZoneId).of('Asia/Ho_Chi_Minh'))}"></span></p>
+    <p><strong>Lý do hoàn tiền :</strong> <span th:text="${refundReason}"></span></p>
+    <p><strong>Thời gian hoàn tiền :</strong> <span th:text="${#temporals.format(estimatedRefundTime, 'HH:mm:ss dd-MM-yyyy', T(java.time.ZoneId).of('Asia/Ho_Chi_Minh'))}"></span></p>
   </div>
   <div class="footer">
     <p>We apologize for any inconvenience caused. If you have any questions, please contact our support team.</p>

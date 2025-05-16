@@ -24,6 +24,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.Random;
 
@@ -232,6 +233,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             context.setVariable("orderDetails", order.getOrderDetails());
             System.err.println("No OrderItems : " + order.getOrderDetails().size());
             context.setVariable("totalOrderValue", order.getTotalPrice());
+            context.setVariable("orderAt", order.getOrderAt());
             String mailContent = templateEngine.process("order-confirmation", context);
             helper.setText(mailContent, true);
             helper.setSubject("Order Confirmation");
@@ -246,7 +248,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @Async
-    public void refundOrderNotification(Orders order) {
+    public void refundOrderNotification(Orders order, ZonedDateTime refundAt) {
         try {
             String email = order.getUser().getEmail();
 
@@ -273,8 +275,8 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             else if (order.getOrderStatus().equals(OrderStatus.RETURNED)) {
                 reason_for_refund = "Giao hàng thất bại!";
             }
-            System.err.println(order.getRefundAt());
-            context.setVariable("estimatedRefundTime", order.getRefundAt());
+            System.err.println("Refund AT " + refundAt);
+            context.setVariable("estimatedRefundTime", refundAt);
             context.setVariable("refundReason", reason_for_refund);
             String mailContent = templateEngine.process("refund-notification", context);
             helper.setText(mailContent, true);

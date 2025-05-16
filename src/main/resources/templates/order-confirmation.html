@@ -75,9 +75,10 @@
     <h1>Book Store</h1>
   </div>
   <div class="order-details">
-    <p><strong>Address:</strong> <span th:text="${address}"></span></p>
-    <p><strong>Phone:</strong> <span th:text="${phone}"></span></p>
-    <p><strong>Payment Method:</strong> <span th:text="${paymentMethod}"></span></p>
+    <p><strong>Địa chỉ :</strong> <span th:text="${address}"></span></p>
+    <p><strong>Số điện thoại :</strong> <span th:text="${phone}"></span></p>
+    <p><strong>Phương thức thanh toán :</strong> <span th:text="${paymentMethod}"></span></p>
+    <p><strong>Đặt hàng lúc :</strong> <span th:text="${#temporals.format(orderAt, 'HH:mm:ss dd-MM-yyyy', T(java.time.ZoneId).of('Asia/Ho_Chi_Minh'))}"></span></p>
   </div>
   <table class="products-table">
     <thead>
@@ -94,14 +95,18 @@
       <td><img th:src="${orderDetail.urlThumbnail}" alt="Product Image" width="50"></td>
       <td th:text="${orderDetail.bookName}"></td>
       <td>
-        <span th:if="${orderDetail.priceAfterSales == null}" th:text="${orderDetail.price}" class="price"></span>
+        <span th:if="${orderDetail.priceAfterSales == null}">
+          <span th:text="${orderDetail.price}" class="price"></span> <strong>VNĐ</strong>
+        </span>
         <span th:unless="${orderDetail.priceAfterSales == null}">
           <span th:text="${orderDetail.price}" class="original-price"></span>
-          <span th:text="${orderDetail.priceAfterSales}" class="price"></span>
+          <span th:text="${orderDetail.priceAfterSales}" class="price"></span> <strong>VNĐ</strong>
         </span>
       </td>
       <td th:text="${orderDetail.quantity}"></td>
-      <td th:text="${orderDetail.totalPrice}"></td>
+      <td>
+        <span th:text="${orderDetail.totalPrice}"></span> <strong>VNĐ</strong>
+      </td>
     </tr>
     </tbody>
   </table>

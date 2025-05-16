@@ -261,7 +261,7 @@ public class VNPayServiceImpl implements VNPayService {
 
             // 3) Gửi email không được throw exception phá luồng
             try {
-                emailVerificationService.refundOrderNotification(orders);
+                emailVerificationService.refundOrderNotification(orders, refundAt);
             } catch (Exception e) {
                 System.err.println("Warning: refund notification failed: " + e.getMessage());
             }

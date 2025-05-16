@@ -6,6 +6,7 @@ import com.bookstore.Entity.Orders;
 import jakarta.mail.MessagingException;
 import org.springframework.http.ResponseEntity;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 public interface EmailVerificationService {
@@ -18,5 +19,5 @@ public interface EmailVerificationService {
 
     void createdOrderNotification(String orderId);
 
-    void refundOrderNotification(Orders orders);
+    void refundOrderNotification(Orders orders, ZonedDateTime refundAt);
 }
