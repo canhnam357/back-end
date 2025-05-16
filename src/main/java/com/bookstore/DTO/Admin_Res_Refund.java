@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.ZonedDateTime;
 
 @Getter
@@ -26,8 +27,9 @@ public class Admin_Res_Refund {
 
     public void convert(RefundAttempt refund) {
         id = refund.getId();
-        orderId = refund.getOrderId();
-        amount = BigDecimal.valueOf(refund.getAmount()).divide(BigDecimal.valueOf(100L));
+        orderId = refund.getOrder().getOrderId();
+        amount = BigDecimal.valueOf(refund.getAmount())
+                .divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);
         createdBy = refund.getCreatedBy();
         refundStatus = refund.getStatus().name();
         attemptTime = refund.getAttemptTime();

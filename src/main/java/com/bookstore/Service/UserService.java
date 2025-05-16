@@ -3,13 +3,9 @@ package com.bookstore.Service;
 import com.bookstore.DTO.*;
 import com.bookstore.Entity.User;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
-
 public interface UserService {
-    Optional<User> findByEmail(String email);
     ResponseEntity<GenericResponse> register(Register registerRequest);
 
     ResponseEntity<GenericResponse> getProfile(String userId);
@@ -18,31 +14,25 @@ public interface UserService {
 
     ResponseEntity<GenericResponse> validateVerificationAccount(Req_Verify_OTPRegister register);
 
-    public String getUserName(String email);
+    ResponseEntity<GenericResponse> verifyAdmin(Admin_Req_Verify adminReqVerify);
 
-    public ResponseEntity<GenericResponse> verifyAdmin(Admin_Req_Verify adminReqVerify);
+    ResponseEntity<GenericResponse> verify(String authorizationHeader);
 
-    public ResponseEntity<GenericResponse> verify(String authorizationHeader);
+    ResponseEntity<GenericResponse> getAll(int page, int size, int isActive, int isVerified, String email);
 
-    public ResponseEntity<GenericResponse> getAll(int page, int size, int isActive, int isVerified, String email);
+    ResponseEntity<GenericResponse> updateUserStatus(String userId, Admin_Req_Update_UserStatus adminUpdateUserDTO);
 
-    public ResponseEntity<GenericResponse> updateUserStatus(String userId, Admin_Req_Update_UserStatus adminUpdateUserDTO);
+    ResponseEntity<GenericResponse> changePassword(String userId, Req_Update_Password reqUpdatePassword);
 
-    public ResponseEntity<GenericResponse> login(Login login);
+    ResponseEntity<GenericResponse> changeAvatar(MultipartFile file, String userId);
 
-    public ResponseEntity<GenericResponse>  logout(String authorizationHeader, String refreshToken);
+    ResponseEntity<GenericResponse> changeProfile(String userId, Req_Update_Profile profile);
 
-    public ResponseEntity<GenericResponse> changePassword(String userId, Req_Update_Password reqUpdatePassword);
+    User findOrCreateUser(String email, String fullName);
 
-    public ResponseEntity<GenericResponse> changeAvatar(MultipartFile file, String userId);
+    ResponseEntity<GenericResponse> resetPassword(Req_Reset_Password password);
 
-    public ResponseEntity<GenericResponse> changeProfile(String userId, Req_Update_Profile profile);
+    ResponseEntity<GenericResponse> getUserById(String userId);
 
-    public User findOrCreateUser(String email, String fullName);
-
-    public ResponseEntity<GenericResponse> resetPassword(Req_Reset_Password password);
-
-    public ResponseEntity<GenericResponse> getUserById(String userId);
-
-    public ResponseEntity<GenericResponse> countVerifiedUsersByMonth(int year);
+    ResponseEntity<GenericResponse> countVerifiedUsersByMonth(int year);
 }

@@ -47,7 +47,7 @@ public class User implements Serializable {
     private Gender gender = Gender.OTHER;
 
     @Column(columnDefinition = "boolean default true")
-    private boolean isActive;
+    private boolean active;
 
     private ZonedDateTime createdAt;
 
@@ -55,8 +55,8 @@ public class User implements Serializable {
 
     private ZonedDateTime lastLoginAt;
 
-    @Column(nullable = true, columnDefinition = "boolean default false")
-    private boolean isVerified;
+    @Column(columnDefinition = "boolean default false")
+    private boolean verified;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JsonBackReference
@@ -64,7 +64,7 @@ public class User implements Serializable {
     private Role role;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cartId", referencedColumnName = "cartId")
+    @JoinColumn(name = "cart_id")
     private Cart cart;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -82,6 +82,11 @@ public class User implements Serializable {
     @OneToMany(mappedBy = "changedBy")
     @JsonIgnore
     private List<OrderStatusHistory> changedOrders = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<RefreshToken> refreshTokens = new ArrayList<>();
+
 
     @PrePersist
     void createdAt() {

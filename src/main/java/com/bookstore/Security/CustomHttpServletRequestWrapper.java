@@ -4,6 +4,7 @@ import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.validation.constraints.NotNull;
 import org.owasp.encoder.Encode;
 
 import java.io.BufferedReader;
@@ -13,13 +14,11 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class CustomHttpServletRequestWrapper extends HttpServletRequestWrapper {
-    private static final Pattern XSS_PATTERN = Pattern.compile("\\<.*\\>");
 
-    public CustomHttpServletRequestWrapper(HttpServletRequest request) throws IOException {
+    public CustomHttpServletRequestWrapper(HttpServletRequest request) {
         super(request);
     }
 
@@ -81,7 +80,7 @@ public class CustomHttpServletRequestWrapper extends HttpServletRequestWrapper {
         return new CachedServletInputStream(byteArrayInputStream);
     }
 
-    public class CachedServletInputStream extends ServletInputStream {
+    public static class CachedServletInputStream extends ServletInputStream {
 
         private final ByteArrayInputStream inputStream;
 
@@ -105,17 +104,17 @@ public class CustomHttpServletRequestWrapper extends HttpServletRequestWrapper {
         }
 
         @Override
-        public int read() throws IOException {
+        public int read() {
             return inputStream.read();
         }
 
         @Override
-        public int read(byte[] b) throws IOException {
+        public int read(byte @NotNull [] b) throws IOException {
             return inputStream.read(b);
         }
 
         @Override
-        public int read(byte[] b, int off, int len) throws IOException {
+        public int read(byte @NotNull [] b, int off, int len) {
             return inputStream.read(b, off, len);
         }
     }

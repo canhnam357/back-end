@@ -6,30 +6,28 @@ import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Service.OrderService;
 import com.bookstore.Service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Objects;
 
 @Controller
+@RequiredArgsConstructor
 public class PaymentController {
 
-    @Autowired
-    private VNPayService vnPayService;
+    private final VNPayService vnPayService;
 
-    @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
 
     @Value("${user-url}")
     private String userUrl;
 
-    @Autowired
-    private EmailVerificationService emailVerificationService;
+    private final EmailVerificationService emailVerificationService;
 
     @PostMapping("/api/create-order")
     @ResponseBody
@@ -38,7 +36,7 @@ public class PaymentController {
 
         System.err.println(authorizationHeader);
 
-        if (!res.getBody().getSuccess()) {
+        if (!Objects.requireNonNull(res.getBody()).getSuccess()) {
             return res;
         }
 
@@ -80,7 +78,7 @@ public class PaymentController {
 
         if (totalPrice != null) {
             BigDecimal amount = new BigDecimal(totalPrice);
-            amount = amount.divide(BigDecimal.valueOf(100L));
+            amount = amount.divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);
             totalPrice = amount.toString();
         }
 

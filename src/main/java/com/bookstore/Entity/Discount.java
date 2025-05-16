@@ -12,7 +12,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 @Entity
 @Getter
@@ -39,7 +38,7 @@ public class Discount {
 
     private BigDecimal discount;
 
-    private Boolean isActive;
+    private boolean active;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
     private ZonedDateTime createdAt;

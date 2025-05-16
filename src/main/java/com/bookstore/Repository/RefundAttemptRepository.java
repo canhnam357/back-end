@@ -6,9 +6,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RefundAttemptRepository extends JpaRepository<RefundAttempt, Long> {
-    int countByOrderId(String orderId);
+    int countByOrderOrderId(String orderId);
 
-    Page<RefundAttempt> findByOrderIdOrderByAttemptTimeDesc(String orderId, Pageable pageable);
+    Page<RefundAttempt> findByOrderOrderIdOrderByAttemptTimeDesc(String orderId, Pageable pageable);
 
     Page<RefundAttempt> findAllByOrderByAttemptTimeDesc(Pageable pageable);
 }

@@ -13,7 +13,7 @@ import com.bookstore.Repository.OrdersRepository;
 import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.OrderStatusHistoryService;
 import com.bookstore.Utils.CheckCanChangeOrderStatus;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -28,31 +28,24 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private OrdersRepository ordersRepository;
-
-    @Autowired
-    private OrderStatusHistoryRepository orderStatusHistoryRepository;
-
-    @Autowired
-    private BookRepository bookRepository;
+    private final UserRepository userRepository;
+    private final OrdersRepository ordersRepository;
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final BookRepository bookRepository;
 
 
     private boolean EMPLOYEEPermission(String roleName) {
-        return roleName.equals("ADMIN") || roleName.equals("EMPLOYEE");
+        return !roleName.equals("ADMIN") && !roleName.equals("EMPLOYEE");
     }
 
     private boolean SHIPPERPermission(String roleName) {
-        return roleName.equals("ADMIN") || roleName.equals("SHIPPER");
+        return !roleName.equals("ADMIN") && !roleName.equals("SHIPPER");
     }
 
     @Override
@@ -96,7 +89,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
 
             Orders order = ordersRepository.findById(orderId).get();
-            if (fromStatus == null || toStatus == null || !Arrays.stream(OrderStatus.values()).anyMatch(e -> e.name().equals(fromStatus)) || !Arrays.stream(OrderStatus.values()).anyMatch(e -> e.name().equals(toStatus))) {
+            if (Arrays.stream(OrderStatus.values()).noneMatch(e -> e.name().equals(fromStatus)) || Arrays.stream(OrderStatus.values()).noneMatch(e -> e.name().equals(toStatus))) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .message("fromStatus or toStatus not in OrderStatus!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
@@ -129,6 +122,8 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
                         .build());
             }
 
+            assert (userRepository.findById(userId).isPresent());
+
             User user = userRepository.findById(userId).get();
 
             if (order.getPaymentMethod().equals(PaymentMethod.CARD) && order.getPaymentStatus().equals(PaymentStatus.PENDING) && toStatus.equals(OrderStatus.REJECTED.name())) {
@@ -148,7 +143,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
 
             // PENDING -> REJECTED
-            if (!EMPLOYEEPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.REJECTED.name())) {
+            if (EMPLOYEEPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.REJECTED.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("Must have EMPLOYEE Permission to change from PENDING -> REJECTED!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
@@ -157,7 +152,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
 
             // PENDING -> IN_PREPARATION
-            if (!EMPLOYEEPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.IN_PREPARATION.name())) {
+            if (EMPLOYEEPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.IN_PREPARATION.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("Must have EMPLOYEE Permission to change from PENDING -> IN_PREPARATION!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
@@ -166,7 +161,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
 
             // IN_PREPARATION -> READY_TO_SHIP
-            if (!EMPLOYEEPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.READY_TO_SHIP.name())) {
+            if (EMPLOYEEPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.READY_TO_SHIP.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("Must have EMPLOYEE Permission to change from IN_PREPARATION -> READY_TO_SHIP!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
@@ -175,7 +170,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
 
             // FAILED_DELIVERY -> RETURNED
-            if (!EMPLOYEEPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.RETURNED.name())) {
+            if (EMPLOYEEPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.RETURNED.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("Must have EMPLOYEE Permission to change from FAILED_DELIVERY -> RETURNED!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
@@ -184,7 +179,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
 
             // READY_TO_SHIP -> DELIVERING
-            if (!SHIPPERPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.DELIVERING.name())) {
+            if (SHIPPERPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.DELIVERING.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("Must have SHIPPER Permission to change from READY_TO_SHIP -> DELIVERING!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
@@ -193,7 +188,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
 
             // DELIVERING -> DELIVERED
-            if (!SHIPPERPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.DELIVERED.name())) {
+            if (SHIPPERPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.DELIVERED.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("Must have SHIPPER Permission to change from DELIVERING -> DELIVERED!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
@@ -202,7 +197,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
 
             // DELIVERING -> FAILED_DELIVERY
-            if (!SHIPPERPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.FAILED_DELIVERY.name())) {
+            if (SHIPPERPermission(user.getRole().getName()) && toStatus.equals(OrderStatus.FAILED_DELIVERY.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("Must have SHIPPER Permission to change from DELIVERING -> FAILED_DELIVERY!")
                         .statusCode(HttpStatus.FORBIDDEN.value())

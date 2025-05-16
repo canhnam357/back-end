@@ -2,6 +2,7 @@ package com.bookstore.Specification;
 
 import com.bookstore.Entity.Book;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
 import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Predicate;
 
@@ -24,31 +25,28 @@ public class BookSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Lọc theo khoảng giá
+            Path<BigDecimal> pricePath = root.get("price");
+
             if (leftBound != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("price"), leftBound));
+                predicates.add(cb.greaterThanOrEqualTo(pricePath, leftBound));
             }
 
             if (rightBound != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("price"), rightBound));
+                predicates.add(cb.lessThanOrEqualTo(pricePath, rightBound));
             }
 
-            // Lọc theo danh sách authorId nếu có
             if (authorIds != null && !authorIds.isEmpty()) {
                 predicates.add(root.get("author").get("authorId").in(authorIds));
             }
 
-            // Lọc theo danh sách publisherId nếu có
             if (publisherIds != null && !publisherIds.isEmpty()) {
                 predicates.add(root.get("publisher").get("publisherId").in(publisherIds));
             }
 
-            // Lọc theo danh sách distributorId nếu có
             if (distributorIds != null && !distributorIds.isEmpty()) {
                 predicates.add(root.get("distributor").get("distributorId").in(distributorIds));
             }
 
-            // Lọc theo tên sách (không phân biệt hoa thường)
             if (bookName != null && !bookName.trim().isEmpty()) {
                 predicates.add(cb.like(cb.lower(root.get("nameNormalized")), "%" + bookName.toLowerCase() + "%"));
             }
@@ -56,16 +54,19 @@ public class BookSpecification {
             if (categoryIds != null && !categoryIds.isEmpty()) {
                 Join<Object, Object> categoriesJoin = root.join("categories"); // JOIN categories
                 predicates.add(categoriesJoin.get("categoryId").in(categoryIds)); // WHERE categoryId IN (....)
+                assert query != null;
                 query.groupBy(root.get("bookId")); // GROUP BY bookId
                 query.having(cb.equal(cb.countDistinct(categoriesJoin.get("categoryId")), categoryIds.size())); // HAVING COUNT(DISTINCT categoryId) = categoryIds.size()
             }
 
-            predicates.add(cb.equal(root.get("isDeleted"), false));
+            predicates.add(cb.equal(root.get("deleted"), false));
 
             // Sắp xếp theo giá nếu có
             if ("asc".equalsIgnoreCase(sort)) {
+                assert query != null;
                 query.orderBy(cb.asc(root.get("price")));
             } else if ("desc".equalsIgnoreCase(sort)) {
+                assert query != null;
                 query.orderBy(cb.desc(root.get("price")));
             }
 

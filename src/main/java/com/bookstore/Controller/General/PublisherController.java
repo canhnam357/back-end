@@ -2,16 +2,16 @@ package com.bookstore.Controller.General;
 
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.PublisherService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/publishers")
+@RequiredArgsConstructor
 public class PublisherController {
 
-    @Autowired
-    private PublisherService publisherService;
+    private final PublisherService publisherService;
 
     @GetMapping("")
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "") String keyword) {

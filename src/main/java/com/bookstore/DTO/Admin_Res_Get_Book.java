@@ -8,12 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -57,7 +55,7 @@ public class Admin_Res_Get_Book {
         this.weight = book.getWeight();
         this.createdAt = book.getCreatedAt();
         this.updatedAt = book.getUpdatedAt();
-        this.isDeleted = book.getIsDeleted();
+        this.isDeleted = book.isDeleted();
         this.author = new Admin_Res_Get_Author(book.getAuthorId(), book.getAuthorName());
         this.publisher = new Admin_Res_Get_Publisher(book.getPublisherId(), book.getPublisherName());
         this.distributor = new Admin_Res_Get_Distributor(book.getDistributorId(), book.getDistributorName());
@@ -69,6 +67,6 @@ public class Admin_Res_Get_Book {
             this.images.add(new Admin_Res_Get_Image(image.getImageId(), image.getUrl()));
         }
         this.urlThumbnail = book.getUrlThumbnail();
-        this.newArrival = book.getNewArrival();
+        this.newArrival = book.isNewArrival();
     }
 }

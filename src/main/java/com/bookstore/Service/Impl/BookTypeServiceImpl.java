@@ -6,9 +6,7 @@ import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Entity.BookType;
 import com.bookstore.Repository.BookTypeRepository;
 import com.bookstore.Service.BookTypeService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,9 +15,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BookTypeServiceImpl implements BookTypeService {
-    @Autowired
-    private BookTypeRepository bookTypeRepository;
+    private final BookTypeRepository bookTypeRepository;
 
     @Override
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_BookType createBookType) {

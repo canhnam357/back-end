@@ -17,14 +17,14 @@ public class VNPayConfig {
     @Value("${vnpay.hashSecret}")
     public String secretKey;
 
-    public String hashAllFields(Map fields) {
-        List fieldNames = new ArrayList(fields.keySet());
+    public String hashAllFields(Map<String, String> fields) {
+        List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
+        Iterator<String> itr = fieldNames.iterator();
         while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) fields.get(fieldName);
+            String fieldName = itr.next();
+            String fieldValue = fields.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
                 sb.append(fieldName);
                 sb.append("=");
@@ -34,8 +34,9 @@ public class VNPayConfig {
                 sb.append("&");
             }
         }
-        return hmacSHA512(secretKey,sb.toString());
+        return hmacSHA512(secretKey, sb.toString());
     }
+
 
     public String hmacSHA512(final String key, final String data) {
         try {

@@ -4,7 +4,6 @@ import com.bookstore.Constant.DiscountType;
 import com.bookstore.Entity.Book;
 import com.bookstore.Entity.Category;
 import com.bookstore.Entity.Image;
-import com.bookstore.Entity.Review;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,10 +12,10 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -48,7 +47,7 @@ public class Res_Get_Books {
     private Boolean newArrival;
 
     public void convert(Book book, ZonedDateTime now) {
-        newArrival = book.getNewArrival();
+        newArrival = book.isNewArrival();
         soldQuantity = book.getSoldQuantity();
         bookId = book.getBookId();
         bookName = book.getBookName();
@@ -99,8 +98,9 @@ public class Res_Get_Books {
                 priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
             }
             else {
-                priceAfterSale = book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L));
-            }
+                priceAfterSale = book.getPrice()
+                        .multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount()))
+                        .divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);            }
         }
     }
 }

@@ -30,11 +30,11 @@ public class Address {
 
     private String otherDetail;
 
-    private Boolean isDefault = false;
+    private boolean defaultAddress = false;
 
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;
 }

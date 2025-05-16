@@ -3,7 +3,7 @@ package com.bookstore.Controller.General;
 import com.bookstore.DTO.Req_Verify_Email;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.EmailVerificationService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,10 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class EmailVerificationController {
-    @Autowired
-    private EmailVerificationService emailVerificationService;
-
+    private final EmailVerificationService emailVerificationService;
     @PostMapping("/sendOTP")
     public ResponseEntity<GenericResponse> sendOtp(@RequestBody Req_Verify_Email emailVerificationRequest) {
         try {

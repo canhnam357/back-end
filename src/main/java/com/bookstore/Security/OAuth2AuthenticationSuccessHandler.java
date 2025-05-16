@@ -5,11 +5,9 @@ import com.bookstore.Entity.User;
 import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.RefreshTokenService;
 import com.bookstore.Service.UserService;
-import com.bookstore.Utils.Normalized;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -19,33 +17,30 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    private RefreshTokenService refreshTokenService;
+    private final RefreshTokenService refreshTokenService;
+
+    private final UserRepository userRepository;
 
     @Value("${user-url}")
     private String userUrl;
 
-    @Autowired
-    private UserRepository userRepository;
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+                                        Authentication authentication) throws IOException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
         System.err.println("HERE");
 
-        // Tìm hoặc tạo user trong database
+        // find or create user in database
         User user = userService.findOrCreateUser(email, name);
 
         if (!user.isActive()) {

@@ -10,7 +10,6 @@ import lombok.Setter;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 @Getter
 @Setter
@@ -23,9 +22,6 @@ public class RefundAttempt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    private String orderId;
 
     @Column(nullable = false)
     private String transactionNo;
@@ -56,7 +52,7 @@ public class RefundAttempt {
     private String errorMessage;
 
     @ManyToOne
-    @JoinColumn(name = "orderId", insertable = false, updatable = false)
+    @JoinColumn(name = "order_id", nullable = false)
     private Orders order;
 
     @PrePersist

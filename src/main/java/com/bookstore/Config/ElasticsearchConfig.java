@@ -1,5 +1,6 @@
 package com.bookstore.Config;
 
+import jakarta.validation.constraints.NotNull;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
@@ -11,7 +12,7 @@ import javax.net.ssl.SSLContext;
 public class ElasticsearchConfig extends ElasticsearchConfiguration {
 
     @Override
-    public ClientConfiguration clientConfiguration() {
+    public @NotNull ClientConfiguration clientConfiguration() {
         return ClientConfiguration.builder()
                 .connectedTo("localhost:9200")
                 .usingSsl(createInsecureSslContext())
@@ -22,7 +23,7 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
     private SSLContext createInsecureSslContext() {
         try {
             return SSLContextBuilder.create()
-                    .loadTrustMaterial(null, (chain, authType) -> true) // Bỏ qua kiểm tra chứng chỉ
+                    .loadTrustMaterial(null, (chain, authType) -> true)
                     .build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to create SSL context", e);

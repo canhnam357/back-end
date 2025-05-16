@@ -6,7 +6,7 @@ import com.bookstore.DTO.Req_Update_Profile;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,15 +16,13 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'USER', 'SHIPPER')")
 @RequestMapping("/api/user")
+@RequiredArgsConstructor
 public class UserController {
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    private EmailVerificationService emailVerificationService;
+    private final EmailVerificationService emailVerificationService;
 
     @GetMapping("/profile")
     public ResponseEntity<GenericResponse> getProfile(@RequestHeader("Authorization") String authorizationHeader) {

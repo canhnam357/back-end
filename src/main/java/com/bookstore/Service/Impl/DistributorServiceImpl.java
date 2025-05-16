@@ -7,7 +7,7 @@ import com.bookstore.Entity.Distributor;
 import com.bookstore.Repository.DistributorRepository;
 import com.bookstore.Service.DistributorService;
 import com.bookstore.Utils.Normalized;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class DistributorServiceImpl implements DistributorService {
-    @Autowired
-    private DistributorRepository distributorRepository;
+    private final DistributorRepository distributorRepository;
     @Override
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Distributor createDistributor) {
         try {

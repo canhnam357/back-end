@@ -1,19 +1,17 @@
 package com.bookstore.Security;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.authorization.method.AuthorizeReturnObject;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -26,21 +24,17 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class WebSecurityConfig {
 
-    @Autowired
-    private UserDetailService userDetailService;
+    private final UserDetailService userDetailService;
 
 
-    @Autowired
-    private MyBasicAuthenticationEntryPoint myBasicAuthenticationEntryPoint;
+    private final MyBasicAuthenticationEntryPoint myBasicAuthenticationEntryPoint;
 
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
-    @Autowired
-    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Bean
     public JwtAuthenticationFilter JwtAuthenticationFilter() {
@@ -97,7 +91,7 @@ public class WebSecurityConfig {
                         .authorizationEndpoint(auth -> auth
                                 .baseUri("/api/auth/oauth2/authorization")
                         )
-                        .redirectionEndpoint(redir -> redir
+                        .redirectionEndpoint(redirection -> redirection
                                 .baseUri("/api/auth/callback/*")
                         )
                         .successHandler(oAuth2AuthenticationSuccessHandler)
@@ -114,7 +108,7 @@ public class WebSecurityConfig {
                 "https://shipper.erotskoob.xyz", "https://www.shipper.erotskoob.xyz",
                 "https://admin.erotskoob.xyz", "https://www.admin.erotskoob.xyz",
                 "https://employee.erotskoob.xyz", "https://www.employee.erotskoob.xyz",
-                "http://localhost:3006", "http://localhost:3000", "http://localhost:3010", "http://localhost:3020")); // Chỉ định rõ origin
+                "http://localhost:3006", "http://localhost:3000", "http://localhost:3010", "http://localhost:3020"));
         configuration.setAllowedMethods(List.of("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true); // Bật credentials

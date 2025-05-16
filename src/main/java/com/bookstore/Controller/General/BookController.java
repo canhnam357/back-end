@@ -2,7 +2,7 @@ package com.bookstore.Controller.General;
 
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.BookService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,9 +10,9 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/books")
+@RequiredArgsConstructor
 public class BookController {
-    @Autowired
-    private BookService bookService;
+    private final BookService bookService;
 
     @GetMapping("")
     public ResponseEntity<GenericResponse> getAllBook(@RequestParam(required = false) BigDecimal minPrice,

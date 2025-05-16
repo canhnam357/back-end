@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "emailVerification")
+@Table(name = "email_verification")
 public class EmailVerification {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

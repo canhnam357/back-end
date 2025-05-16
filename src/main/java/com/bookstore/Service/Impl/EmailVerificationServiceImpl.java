@@ -8,9 +8,8 @@ import com.bookstore.Repository.EmailVerificationRepository;
 import com.bookstore.Repository.OrdersRepository;
 import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.EmailVerificationService;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -30,20 +29,13 @@ import java.util.Random;
 
 @Service
 @EnableScheduling
+@RequiredArgsConstructor
 public class EmailVerificationServiceImpl implements EmailVerificationService {
-    private final int OTP_LENGTH = 6;
-    @Autowired
-    private JavaMailSender mailSender;
-    @Autowired
-    private EmailVerificationRepository emailVerificationRepository;
-    @Autowired
-    private TemplateEngine templateEngine;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private OrdersRepository ordersRepository;
+    private final JavaMailSender mailSender;
+    private final EmailVerificationRepository emailVerificationRepository;
+    private final TemplateEngine templateEngine;
+    private final UserRepository userRepository;
+    private final OrdersRepository ordersRepository;
 
     @Override
     @Async
@@ -72,9 +64,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             emailVerification.setExpirationTime(expirationTime);
 
             Optional<EmailVerification> existingEmailVerification = findByEmail(email);
-            if (existingEmailVerification.isPresent()) {
-                emailVerificationRepository.delete(existingEmailVerification.get());
-            }
+            existingEmailVerification.ifPresent(emailVerificationRepository::delete);
 
             emailVerificationRepository.save(emailVerification);
         } catch (Exception e) {
@@ -86,6 +76,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private String generateOtp() {
         StringBuilder otp = new StringBuilder();
         Random random = new Random();
+        int OTP_LENGTH = 6;
         for (int i = 0; i < OTP_LENGTH; i++) {
             otp.append(random.nextInt(10));
         }
@@ -129,9 +120,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             emailVerification.setExpirationTime(expirationTime);
 
             Optional<EmailVerification> existingEmailVerification = findByEmail(email);
-            if (existingEmailVerification.isPresent()) {
-                emailVerificationRepository.delete(existingEmailVerification.get());
-            }
+            existingEmailVerification.ifPresent(emailVerificationRepository::delete);
 
             emailVerificationRepository.save(emailVerification);
         } catch (Exception e) {
@@ -182,9 +171,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             emailVerification.setExpirationTime(expirationTime);
 
             Optional<EmailVerification> existingEmailVerification = findByEmail(email);
-            if (existingEmailVerification.isPresent()) {
-                emailVerificationRepository.delete(existingEmailVerification.get());
-            }
+            existingEmailVerification.ifPresent(emailVerificationRepository::delete);
 
             emailVerificationRepository.save(emailVerification);
 

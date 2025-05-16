@@ -4,7 +4,7 @@ import com.bookstore.DTO.Admin_Req_Create_Distributor;
 import com.bookstore.DTO.Admin_Req_Update_Distributor;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.DistributorService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,22 +12,20 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/admin/distributors")
+@RequiredArgsConstructor
 public class Admin_DistributorController {
 
-    @Autowired
-    private DistributorService distributorService;
+    private final DistributorService distributorService;
 
     @GetMapping("") // OK
     public ResponseEntity<GenericResponse> getAll (@RequestParam(defaultValue = "1") int index,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "") String keyword) {
-        System.out.println("ADMIN get all Distributor");
         return distributorService.search(index, size, keyword);
     }
 
     @PostMapping("") // OK
     public ResponseEntity<GenericResponse> createDistributor (@RequestBody Admin_Req_Create_Distributor createDistributor)  {
-        System.out.println("ADMIN create Distributor");
         return distributorService.create(createDistributor);
     }
 

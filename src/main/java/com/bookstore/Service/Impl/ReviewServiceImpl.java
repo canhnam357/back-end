@@ -14,7 +14,7 @@ import com.bookstore.Repository.UserRepository;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.ReviewService;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -23,32 +23,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import javax.print.attribute.standard.MediaSize;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
-
-    @Autowired
-    private ReviewRepository reviewRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private OrderItemRepository orderItemRepository;
+    private final ReviewRepository reviewRepository;
+    private final UserRepository userRepository;
+    private final BookRepository bookRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final OrderItemRepository orderItemRepository;
 
     @Transactional
     @Override
@@ -59,7 +47,6 @@ public class ReviewServiceImpl implements ReviewService {
         try {
             String accessToken = authorizationHeader.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(accessToken);
-            User user = userRepository.findById(userId).get();
 
             List<OrderItem> orderItems = orderItemRepository.findOrderItemByBookIdAndStatus(bookId, OrderStatus.DELIVERED);
 
@@ -75,7 +62,7 @@ public class ReviewServiceImpl implements ReviewService {
             LocalDate reviewCreateDeadline = orderItems.get(0).getOrders().getOrderAt().toInstant()
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate();
-            reviewCreateDeadline.plusMonths(1);
+            reviewCreateDeadline = reviewCreateDeadline.plusMonths(1);
 
             if (reviewCreateDeadline.isBefore(LocalDate.now())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
@@ -94,7 +81,9 @@ public class ReviewServiceImpl implements ReviewService {
             }
 
             Review new_review = new Review();
+            assert (bookRepository.findById(bookId).isPresent());
             new_review.setBook(bookRepository.findById(bookId).get());
+            assert (userRepository.findById(userId).isPresent());
             new_review.setUser(userRepository.findById(userId).get());
             new_review.setContent(review.getContent());
             new_review.setRating(review.getRating());
@@ -204,7 +193,7 @@ public class ReviewServiceImpl implements ReviewService {
             LocalDate reviewUpdateDeadline = ele.get().getCreatedAt().toInstant()
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate();
-            reviewUpdateDeadline.plusMonths(1);
+            reviewUpdateDeadline = reviewUpdateDeadline.plusMonths(1);
 
             if (reviewUpdateDeadline.isBefore(LocalDate.now())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()

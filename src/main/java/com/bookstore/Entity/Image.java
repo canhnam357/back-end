@@ -22,7 +22,7 @@ public class Image {
     private String caption;
 
     @ManyToOne
-    @JoinColumn(name = "bookId", nullable = false)
+    @JoinColumn(name = "book_id", nullable = false)
     @JsonIgnore
     private Book book;
 }
