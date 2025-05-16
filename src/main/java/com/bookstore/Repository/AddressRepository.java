@@ -16,7 +16,7 @@ public interface AddressRepository extends JpaRepository<Address, String> {
 
     Optional<Address> findByAddressId (String addressId);
 
-    @Query("SELECT a FROM Address a WHERE a.user.userId = :userId AND a.isDefault = true")
+    @Query("SELECT a FROM Address a WHERE a.user.userId = :userId AND a.defaultAddress = true")
     Optional<Address> findDefaultAddressOfUser(@Param("userId") String userId);
 
     long countByUserUserId(String userId);

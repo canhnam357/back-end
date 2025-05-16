@@ -3,12 +3,8 @@ package com.bookstore.Service;
 import com.bookstore.DTO.Admin_Req_Create_Book;
 import com.bookstore.DTO.Admin_Req_Update_Book;
 import com.bookstore.DTO.GenericResponse;
-import com.bookstore.Entity.Book;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.math.BigDecimal;
-import java.util.List;
 
 public interface BookService {
 

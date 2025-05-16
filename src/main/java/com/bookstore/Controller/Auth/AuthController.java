@@ -1,12 +1,12 @@
 package com.bookstore.Controller.Auth;
 
 import com.bookstore.DTO.*;
+import com.bookstore.Service.AuthService;
 import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Service.RefreshTokenService;
 import com.bookstore.Service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -15,17 +15,17 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @Validated
+@RequiredArgsConstructor
 public class AuthController {
 
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private RefreshTokenService refreshTokenService;
+    private final RefreshTokenService refreshTokenService;
 
-    @Autowired
-    private EmailVerificationService emailVerificationService;
+    private final EmailVerificationService emailVerificationService;
+
+    private final AuthService authService;
 
     @GetMapping("/oauth2/authorization/google")
     public ResponseEntity<?> initiateGoogleLogin() {
@@ -35,7 +35,7 @@ public class AuthController {
     @PostMapping("/login")
     @Transactional
     public ResponseEntity<GenericResponse> login(@Valid @RequestBody Login loginDTO) {
-        return userService.login(loginDTO);
+        return authService.login(loginDTO);
     }
 
     @PostMapping("/register")
@@ -46,7 +46,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<GenericResponse> logout(@RequestHeader("Authorization") String authorizationHeader,
                                     @RequestParam("refreshToken") String refreshToken) {
-        return userService.logout(authorizationHeader, refreshToken);
+        return authService.logout(authorizationHeader, refreshToken);
     }
 
     @PostMapping("/refresh-access-token")

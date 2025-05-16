@@ -10,7 +10,7 @@ import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Security.UserDetail;
 import com.bookstore.Security.UserDetailService;
 import com.bookstore.Service.RefreshTokenService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,15 +22,12 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class RefreshTokenServiceImpl implements RefreshTokenService {
-    @Autowired
-    RefreshTokenRepository refreshTokenRepository;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    UserDetailService userDetailService;
-    @Autowired
-    JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final UserRepository userRepository;
+    private final UserDetailService userDetailService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public <S extends RefreshToken> S save(S entity) {
@@ -100,7 +97,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Override
-    public ResponseEntity<?> logout(String refreshToken){
+    public void logout(String refreshToken){
         try{
             if(jwtTokenProvider.validateToken(refreshToken)){
                 Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByTokenAndExpiredIsFalseAndRevokedIsFalse(refreshToken);
@@ -110,26 +107,28 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     refreshTokenRepository.save(optionalRefreshToken.get());
                     SecurityContextHolder.clearContext();
 
-                    return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                             .success(true)
                             .message("Logged out successfully!")
                             .statusCode(HttpStatus.OK.value())
                             .build());
+                    return;
                 }
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+                ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                         .success(false)
                         .message("Failed to log out!")
                         .statusCode(HttpStatus.UNAUTHORIZED.value())
                         .build());
+                return;
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to log out!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
 
         }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to log out, message = " + e.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())

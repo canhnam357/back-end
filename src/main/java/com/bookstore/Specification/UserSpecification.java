@@ -14,11 +14,11 @@ public class UserSpecification {
             List<Predicate> predicates = new ArrayList<>();
 
             if (isActive != null && isActive != 2) {
-                predicates.add(cb.equal(root.get("isActive"), isActive == 1));
+                predicates.add(cb.equal(root.get("active"), isActive == 1));
             }
 
             if (isVerified != null && isVerified != 2) {
-                predicates.add(cb.equal(root.get("isVerified"), isVerified == 1));
+                predicates.add(cb.equal(root.get("verified"), isVerified == 1));
             }
 
             if (email != null && !email.trim().isEmpty()) {

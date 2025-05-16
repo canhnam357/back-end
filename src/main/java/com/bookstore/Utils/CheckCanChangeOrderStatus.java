@@ -16,9 +16,6 @@ public class CheckCanChangeOrderStatus {
         if (before.equals(OrderStatus.DELIVERING.name()) && (after.equals(OrderStatus.DELIVERED.name()) || after.equals(OrderStatus.FAILED_DELIVERY.name()))) {
             return true;
         }
-        if (before.equals(OrderStatus.FAILED_DELIVERY.name()) && after.equals(OrderStatus.RETURNED.name())) {
-            return true;
-        }
-        return false;
+        return before.equals(OrderStatus.FAILED_DELIVERY.name()) && after.equals(OrderStatus.RETURNED.name());
     }
 }

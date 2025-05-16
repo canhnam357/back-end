@@ -5,7 +5,7 @@ import com.bookstore.Entity.Address;
 import com.bookstore.Repository.AddressRepository;
 import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.AddressService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,12 +15,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class AddressServiceImpl implements AddressService {
-    @Autowired
-    private AddressRepository addressRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    private final AddressRepository addressRepository;
+    private final UserRepository userRepository;
 
     @Override
     public ResponseEntity<GenericResponse> getAll(String userId) {
@@ -34,7 +32,7 @@ public class AddressServiceImpl implements AddressService {
                         address.getPhoneNumber(),
                         address.getAddressInformation(),
                         address.getOtherDetail(),
-                        address.getIsDefault()
+                        address.isDefaultAddress()
                 ));
             }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
@@ -69,9 +67,10 @@ public class AddressServiceImpl implements AddressService {
             tempAddress.setPhoneNumber(createAddress.getPhoneNumber());
             tempAddress.setAddressInformation(createAddress.getAddressInformation());
             tempAddress.setOtherDetail(createAddress.getOtherDetail());
+            assert(userRepository.findById(userId).isPresent());
             tempAddress.setUser(userRepository.findById(userId).get());
             if (addressRepository.countByUserUserId(userId) == 0) {
-                tempAddress.setIsDefault(true);
+                tempAddress.setDefaultAddress(true);
             }
             Address address = addressRepository.save(tempAddress);
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
@@ -83,7 +82,7 @@ public class AddressServiceImpl implements AddressService {
                             address.getPhoneNumber(),
                             address.getAddressInformation(),
                             address.getOtherDetail(),
-                            address.getIsDefault()
+                            address.isDefaultAddress()
                     ))
                     .success(true)
                     .build());
@@ -100,7 +99,7 @@ public class AddressServiceImpl implements AddressService {
     public ResponseEntity<GenericResponse> delete(String addressId, String userId) {
         try {
             Optional<Address> address = addressRepository.findByAddressIdAndUserUserId(addressId, userId);
-            if (!address.isPresent()) {
+            if (address.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .message("Address not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
@@ -108,7 +107,7 @@ public class AddressServiceImpl implements AddressService {
                         .build());
             }
 
-            if (address.get().getIsDefault()) {
+            if (address.get().isDefaultAddress()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
                         .message("Cannot delete default address. Please set another address as default first!")
                         .statusCode(HttpStatus.CONFLICT.value())
@@ -168,7 +167,7 @@ public class AddressServiceImpl implements AddressService {
                             address.getPhoneNumber(),
                             address.getAddressInformation(),
                             address.getOtherDetail(),
-                            address.getIsDefault()
+                            address.isDefaultAddress()
                     ))
                     .success(true)
                     .build());
@@ -202,11 +201,12 @@ public class AddressServiceImpl implements AddressService {
                             .build());
                 }
                 Address address = addressRepository.findDefaultAddressOfUser(userId).get();
-                address.setIsDefault(false);
+                address.setDefaultAddress(false);
                 addressRepository.save(address);
             }
+            assert (addressRepository.findByAddressId(addressId).isPresent());
             Address address = addressRepository.findByAddressId(addressId).get();
-            address.setIsDefault(true);
+            address.setDefaultAddress(true);
             addressRepository.save(address);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
                     .message("Set Address as default successfully!")

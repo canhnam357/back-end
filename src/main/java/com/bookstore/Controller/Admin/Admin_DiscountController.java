@@ -4,7 +4,7 @@ import com.bookstore.DTO.Admin_Create_Discount;
 import com.bookstore.DTO.Admin_Update_Discount;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Service.DiscountService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/admin/discounts")
+@RequiredArgsConstructor
 public class Admin_DiscountController {
-    @Autowired
-    private DiscountService discountService;
+    private final DiscountService discountService;
 
     @PostMapping("")
     public ResponseEntity<GenericResponse> createDiscount(@RequestBody Admin_Create_Discount discount) {

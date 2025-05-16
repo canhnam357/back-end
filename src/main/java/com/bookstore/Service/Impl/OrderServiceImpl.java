@@ -8,10 +8,9 @@ import com.bookstore.DTO.Res_Get_OrderDetail;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
 import com.bookstore.Security.JwtTokenProvider;
-import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Service.OrderService;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -20,39 +19,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.math.RoundingMode;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
-    @Autowired
-    private CartItemRepository cartItemRepository;
-
-    @Autowired
-    private CartRepository cartRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private OrdersRepository ordersRepository;
-
-    @Autowired
-    private OrderItemRepository orderItemRepository;
-
-    @Autowired
-    private AddressRepository addressRepository;
-
-    @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private EmailVerificationService emailVerificationService;
+    private final CartRepository cartRepository;
+    private final UserRepository userRepository;
+    private final OrdersRepository ordersRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final AddressRepository addressRepository;
+    private final BookRepository bookRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     @Transactional
@@ -61,7 +42,7 @@ public class OrderServiceImpl implements OrderService {
             String token = authorizationHeader.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(token);
 
-            if (userRepository.findByUserIdAndIsActiveIsTrue(userId).isEmpty()) {
+            if (userRepository.findByUserIdAndActiveIsTrue(userId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("User does not exist or is not active!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
@@ -76,13 +57,14 @@ public class OrderServiceImpl implements OrderService {
                         .success(false)
                         .build());
             }
-            if (!Arrays.stream(PaymentMethod.values()).anyMatch(e -> e.name().equals(orderDTO.getPaymentMethod()))) {
+            if (Arrays.stream(PaymentMethod.values()).noneMatch(e -> e.name().equals(orderDTO.getPaymentMethod()))) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Payment method does not exist!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
+            assert (cartRepository.findByUserUserId(userId).isPresent());
             Cart cart = cartRepository.findByUserUserId(userId).get();
 
             if (cart.getCartItems().isEmpty()) {
@@ -108,8 +90,9 @@ public class OrderServiceImpl implements OrderService {
             List<CartItem> cartItems = new ArrayList<>();
             boolean bad_request = false;
             for (CartItem cartItem : cart.getCartItems()) {
+                assert (bookRepository.findById(cartItem.getBook().getBookId()).isPresent());
                 Book book = bookRepository.findById(cartItem.getBook().getBookId()).get();
-                if (book.getIsDeleted() || book.getInStock() == 0) {
+                if (book.isDeleted() || book.getInStock() == 0) {
                     bad_request = true;
                 }
                 else
@@ -157,6 +140,7 @@ public class OrderServiceImpl implements OrderService {
             order.setPaymentStatus(PaymentStatus.PENDING);
             order.setAddress(addressRepository.findByAddressId(orderDTO.getAddressId()).get().getAddressInformation());
             order.setPhoneNumber(addressRepository.findByAddressId(orderDTO.getAddressId()).get().getPhoneNumber());
+            assert (userRepository.findById(userId).isPresent());
             order.setUser(userRepository.findById(userId).get());
             order.setTotalPrice(BigDecimal.ZERO);
             order.setRefundStatus(RefundStatus.NONE);
@@ -173,13 +157,14 @@ public class OrderServiceImpl implements OrderService {
                 orderItem.setQuantity(cartItem.getQuantity());
                 orderItem.setTotalPrice(cartItem.getTotalPrice());
                 orderItem.setUrlThumbnail(cartItem.getBook().getUrlThumbnail());
+                assert (bookRepository.findById(cartItem.getBook().getBookId()).isPresent());
                 Book book = bookRepository.findById(cartItem.getBook().getBookId()).get();
                 if (book.getDiscount() != null && book.getDiscount().getStartDate().isBefore(now) && book.getDiscount().getEndDate().isAfter(now)) {
                     if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
                         orderItem.setPriceAfterSales(book.getPrice().subtract(book.getDiscount().getDiscount()));
                     }
                     else {
-                        orderItem.setPriceAfterSales(book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L)));
+                        orderItem.setPriceAfterSales(book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP));
                     }
                     orderItem.setTotalPrice(orderItem.getPriceAfterSales().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
                 }
@@ -260,6 +245,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public ResponseEntity<GenericResponse> orderDetail(String userId, String orderId) {
         try {
+            assert (userRepository.findById(userId).isPresent());
             User user = userRepository.findById(userId).get();
 
             if (ordersRepository.findById(orderId).isEmpty()) {
@@ -272,7 +258,7 @@ public class OrderServiceImpl implements OrderService {
 
             Orders order = ordersRepository.findById(orderId).get();
 
-            if (userId != order.getUser().getUserId() && user.getRole().getName().equals("USER")) {
+            if (!userId.equals(order.getUser().getUserId()) && user.getRole().getName().equals("USER")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("User doesn't have permission to view this order!")
                         .statusCode(HttpStatus.FORBIDDEN.value())

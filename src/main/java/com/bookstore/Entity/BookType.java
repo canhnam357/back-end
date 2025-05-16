@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "bookType")
+@Table(name = "book_type")
 public class BookType {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -12,5 +12,5 @@ public interface RefreshTokenService {
 
     void revokeRefreshToken(String userId);
 
-    ResponseEntity<?> logout(String refreshToken);
+    void logout(String refreshToken);
 }

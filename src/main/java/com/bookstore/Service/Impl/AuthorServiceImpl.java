@@ -7,7 +7,7 @@ import com.bookstore.Entity.Author;
 import com.bookstore.Repository.AuthorRepository;
 import com.bookstore.Service.AuthorService;
 import com.bookstore.Utils.Normalized;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -16,9 +16,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class AuthorServiceImpl implements AuthorService {
-    @Autowired
-    private AuthorRepository authorRepository;
+    private final AuthorRepository authorRepository;
 
     @Override
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Author createAuthor) {

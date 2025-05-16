@@ -5,7 +5,7 @@ import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_PatchUpdate_Address;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.AddressService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -13,12 +13,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'USER', 'SHIPPER')")
 @RequestMapping("/api/addresses")
+@RequiredArgsConstructor
 public class AddressController {
-    @Autowired
-    private AddressService addressService;
+    private final AddressService addressService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @GetMapping("")
     public ResponseEntity<GenericResponse> getAll(@RequestHeader("Authorization") String authorizationHeader) {
@@ -30,10 +29,8 @@ public class AddressController {
     @PostMapping("")
     public ResponseEntity<GenericResponse> create(@RequestHeader("Authorization") String authorizationHeader,
                                                   @RequestBody Req_Create_Address createAddress) {
-        System.err.println("ORTHER DETAIL " + createAddress.getOtherDetail());
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        System.err.println(userId);
         return addressService.create(createAddress, userId);
     }
 
@@ -51,8 +48,6 @@ public class AddressController {
                                                   @PathVariable String addressId) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        System.err.println(userId);
-        System.err.println("ORTHER DETAIL " + address.getOtherDetail());
         return addressService.update(address, userId, addressId);
     }
 

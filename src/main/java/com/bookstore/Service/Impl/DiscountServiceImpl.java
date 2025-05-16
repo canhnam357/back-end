@@ -9,29 +9,23 @@ import com.bookstore.Entity.Discount;
 import com.bookstore.Repository.BookRepository;
 import com.bookstore.Repository.DiscountRepository;
 import com.bookstore.Service.DiscountService;
-import com.nimbusds.openid.connect.sdk.assurance.evidences.Voucher;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class DiscountServiceImpl implements DiscountService {
-
-    @Autowired
-    private DiscountRepository discountRepository;
-
-    @Autowired
-    private BookRepository bookRepository;
+    private final DiscountRepository discountRepository;
+    private final BookRepository bookRepository;
 
     @Override
     @Caching(evict = {
@@ -95,7 +89,7 @@ public class DiscountServiceImpl implements DiscountService {
                 price = price.subtract(discount.getDiscount());
             } else {
                 price = price.multiply(BigDecimal.valueOf(100L).subtract(discount.getDiscount()));
-                price = price.divide(BigDecimal.valueOf(100L));
+                price = price.divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);
             }
 
             if (price.compareTo(BigDecimal.ZERO) <= 0 || price.compareTo(book.getPrice()) >= 0) {
@@ -125,7 +119,7 @@ public class DiscountServiceImpl implements DiscountService {
             ele.setDiscountType(DiscountType.valueOf(discount.getDiscountType()));
             ele.setBook(book); // liên kết 1 chiều từ Discount sang Book
             ele.setDiscount(discount.getDiscount());
-            ele.setIsActive(discount.getIsActive());
+            ele.setActive(discount.getIsActive());
             ele = discountRepository.save(ele);
 
             // Liên kết ngược lại từ Book sang Discount
@@ -225,7 +219,7 @@ public class DiscountServiceImpl implements DiscountService {
                 price = price.subtract(discount.getDiscount());
             } else {
                 price = price.multiply(BigDecimal.valueOf(100L).subtract(discount.getDiscount()));
-                price = price.divide(BigDecimal.valueOf(100L));
+                price = price.divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);
             }
 
             if (price.compareTo(BigDecimal.ZERO) <= 0 || price.compareTo(book.getPrice()) >= 0) {
@@ -243,7 +237,7 @@ public class DiscountServiceImpl implements DiscountService {
             ele.setEndDate(discount.getEndDate());
             ele.setDiscountType(DiscountType.valueOf(discount.getDiscountType()));
             ele.setDiscount(discount.getDiscount());
-            ele.setIsActive(discount.getIsActive());
+            ele.setActive(discount.getIsActive());
             discountRepository.save(ele);
             bookRepository.save(book);
 

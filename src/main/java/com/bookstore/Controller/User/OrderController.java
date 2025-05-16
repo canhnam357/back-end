@@ -2,17 +2,12 @@ package com.bookstore.Controller.User;
 
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.DTO.Req_ChangeOrderStatus;
-import com.bookstore.DTO.Req_Create_Order;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.OrderService;
 import com.bookstore.Service.OrderStatusHistoryService;
-import com.bookstore.Service.VNPayService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,15 +15,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/order")
 @RequiredArgsConstructor
 public class OrderController {
-
     private final OrderService orderService;
-
     private final JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private OrderStatusHistoryService orderStatusHistoryService;
-
-
+    private final OrderStatusHistoryService orderStatusHistoryService;
     @GetMapping("")
     public ResponseEntity<GenericResponse> getAll(@RequestParam(defaultValue = "1") int index,
                                                   @RequestParam(defaultValue = "10") int size,
@@ -43,7 +32,6 @@ public class OrderController {
     @PutMapping("/change-order-status")
     public ResponseEntity<GenericResponse> changeOrderStatus(@RequestHeader("Authorization") String authorizationHeader,
                                                              @RequestBody Req_ChangeOrderStatus reqChangeOrderStatus) {
-        System.err.println(authorizationHeader);
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         return orderStatusHistoryService.changeOrderStatus(userId, reqChangeOrderStatus);

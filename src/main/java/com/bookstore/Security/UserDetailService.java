@@ -2,17 +2,17 @@ package com.bookstore.Security;
 
 import com.bookstore.Entity.User;
 import com.bookstore.Repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserDetailService implements UserDetailsService {
 
-    @Autowired
-    UserRepository userRepository;
+    private final UserRepository userRepository;
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)
@@ -21,7 +21,7 @@ public class UserDetailService implements UserDetailsService {
     }
 
     public UserDetails loadUserByUserId(String id){
-        User user = userRepository.findByUserIdAndIsActiveIsTrue(id)
+        User user = userRepository.findByUserIdAndActiveIsTrue(id)
                 .orElseThrow(()->new UsernameNotFoundException("user is not found"));
         return new UserDetail(user);
     }

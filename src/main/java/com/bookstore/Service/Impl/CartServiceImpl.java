@@ -12,30 +12,25 @@ import com.bookstore.Repository.BookRepository;
 import com.bookstore.Repository.CartItemRepository;
 import com.bookstore.Repository.CartRepository;
 import com.bookstore.Service.CartService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
-
-    @Autowired
-    private CartItemRepository cartItemRepository;
-
-    @Autowired
-    private CartRepository cartRepository;
-
-    @Autowired
-    private BookRepository bookRepository;
+    private final CartItemRepository cartItemRepository;
+    private final CartRepository cartRepository;
+    private final BookRepository bookRepository;
 
     @Override
     public ResponseEntity<GenericResponse> getCart(String userId) {
@@ -58,7 +53,7 @@ public class CartServiceImpl implements CartService {
                 }
 
                 // Bỏ qua CartItem có quantity == 0
-                if (cartItem.getQuantity() == 0 || cartItem.getBook().getIsDeleted()) {
+                if (cartItem.getQuantity() == 0 || cartItem.getBook().isDeleted()) {
                     continue;
                 }
 
@@ -78,8 +73,9 @@ public class CartServiceImpl implements CartService {
                         priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
                     }
                     else {
-                        priceAfterSale = book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L));
-                    }
+                        priceAfterSale = book.getPrice()
+                                .multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount()))
+                                .divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);                    }
                     price = priceAfterSale.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
                 }
 
@@ -130,10 +126,12 @@ public class CartServiceImpl implements CartService {
         try {
             Optional<CartItem> tempcartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(addToCart.getBookId(), userId);
             CartItem _cartItem;
-            if (!tempcartItem.isPresent())
+            if (tempcartItem.isEmpty())
             {
                 _cartItem = new CartItem();
+                assert (bookRepository.findById(addToCart.getBookId()).isPresent());
                 _cartItem.setBook(bookRepository.findById(addToCart.getBookId()).get());
+                assert (cartRepository.findByUserUserId(userId).isPresent());
                 _cartItem.setCart(cartRepository.findByUserUserId(userId).get());
                 _cartItem.setQuantity(addToCart.getQuantity());
             }
@@ -186,7 +184,7 @@ public class CartServiceImpl implements CartService {
     public ResponseEntity<GenericResponse> removeFromCart(String bookId, String userId) {
         try {
             Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
-            if (!cartItem.isPresent()) {
+            if (cartItem.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .message("Cart item not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
@@ -212,7 +210,7 @@ public class CartServiceImpl implements CartService {
     public ResponseEntity<GenericResponse> changeQuantity(String bookId, String userId, int quantity) {
         try {
             Optional<CartItem> tempcartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
-            if (!tempcartItem.isPresent()) {
+            if (tempcartItem.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .message("Cart item not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
@@ -238,8 +236,9 @@ public class CartServiceImpl implements CartService {
                     priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
                 }
                 else {
-                    priceAfterSale = book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L));
-                }
+                    priceAfterSale = book.getPrice()
+                            .multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount()))
+                            .divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);                }
                 price = priceAfterSale.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
             }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
@@ -268,8 +267,8 @@ public class CartServiceImpl implements CartService {
     @Override
     public ResponseEntity<GenericResponse> updateQuantity(String bookId, String userId, int quantity) {
         try {
-            Optional<CartItem> tempcartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
-            if (!tempcartItem.isPresent()) {
+            Optional<CartItem> tempCartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
+            if (tempCartItem.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .message("Cart item not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
@@ -277,16 +276,16 @@ public class CartServiceImpl implements CartService {
                         .build());
             }
 
-            if (quantity <= 0 || tempcartItem.get().getBook().getInStock() == 0) {
+            if (quantity <= 0 || tempCartItem.get().getBook().getInStock() == 0) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("Can't set quantity to less than or equal to 0!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
             }
-            tempcartItem.get().setQuantity(Math.min(quantity, tempcartItem.get().getBook().getInStock()));
-            tempcartItem.get().reCalTotalPrice();
-            CartItem cartItem = cartItemRepository.save(tempcartItem.get());
+            tempCartItem.get().setQuantity(Math.min(quantity, tempCartItem.get().getBook().getInStock()));
+            tempCartItem.get().reCalTotalPrice();
+            CartItem cartItem = cartItemRepository.save(tempCartItem.get());
             BigDecimal priceAfterSale = null;
             Book book = cartItem.getBook();
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -296,8 +295,9 @@ public class CartServiceImpl implements CartService {
                     priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
                 }
                 else {
-                    priceAfterSale = book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L));
-                }
+                    priceAfterSale = book.getPrice()
+                            .multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount()))
+                            .divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);                }
                 price = priceAfterSale.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
             }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()

@@ -4,11 +4,10 @@ import com.bookstore.DTO.Admin_Req_Create_Category;
 import com.bookstore.DTO.Admin_Req_Update_Category;
 import com.bookstore.DTO.GenericResponse;
 import com.bookstore.Entity.Category;
-import com.bookstore.Entity.Publisher;
 import com.bookstore.Repository.CategoryRepository;
 import com.bookstore.Service.CategoryService;
 import com.bookstore.Utils.Normalized;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,10 +16,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
-
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
 
     @Override

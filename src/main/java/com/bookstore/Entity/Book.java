@@ -18,7 +18,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -60,22 +59,22 @@ public class Book {
     private ZonedDateTime updatedAt;
 
     @Column(columnDefinition = "boolean default false")
-    private Boolean isDeleted = false;
+    private boolean deleted = false;
 
     @ManyToOne
-    @JoinColumn(name = "authorId")
+    @JoinColumn(name = "author_id")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     @JsonIgnore
     private Author author;
 
     @ManyToOne
-    @JoinColumn(name = "publisherId")
+    @JoinColumn(name = "publisher_id")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     @JsonIgnore
     private Publisher publisher;
 
     @ManyToOne
-    @JoinColumn(name = "distributorId")
+    @JoinColumn(name = "distributor_id")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     @JsonIgnore
     private Distributor distributor;
@@ -89,15 +88,15 @@ public class Book {
     private List<Review> reviews = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "discountId", referencedColumnName = "discountId")
+    @JoinColumn(name = "discount_id")
     private Discount discount;
 
     @ManyToMany(mappedBy = "books")
     @JsonManagedReference
-    private List<Category> categories = new ArrayList<>();;
+    private List<Category> categories = new ArrayList<>();
 
     @ManyToOne
-    @JoinColumn(name = "bookTypeId", nullable = false)
+    @JoinColumn(name = "book_type_id", nullable = false)
     @JsonIgnore
     private BookType bookType;
 
@@ -107,7 +106,7 @@ public class Book {
     private String urlThumbnail;
 
     @Column(columnDefinition = "boolean default false")
-    private Boolean newArrival;
+    private boolean newArrival;
 
     private String nameNormalized;
 
@@ -118,7 +117,7 @@ public class Book {
             images = new ArrayList<>();
         }
         images.add(image);
-        image.setBook(this); // Đảm bảo thiết lập quan hệ hai chiều
+        image.setBook(this);
     }
 
     @PrePersist

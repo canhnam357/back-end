@@ -5,78 +5,38 @@ import com.bookstore.DTO.*;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
 import com.bookstore.Security.JwtTokenProvider;
-import com.bookstore.Security.UserDetail;
 import com.bookstore.Service.EmailVerificationService;
-import com.bookstore.Service.RefreshTokenService;
 import com.bookstore.Service.RoleService;
 import com.bookstore.Service.UserService;
 import com.bookstore.Specification.UserSpecification;
-import com.bookstore.Utils.Normalized;
 import com.cloudinary.Cloudinary;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private CartRepository cartRepository;
-
-    @Autowired
-    private EmailVerificationService emailVerificationService;
-
-    @Autowired
-    private EmailVerificationRepository emailVerificationRepository;
-
-    @Autowired
-    private RoleService roleService;
-
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    @Lazy
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private RefreshTokenService refreshTokenService;
-
-    @Autowired
-    private Cloudinary cloudinary;
-
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    public String getUserName(String email) {
-        return userRepository.findByEmail(email).get().getFullName();
-    }
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final CartRepository cartRepository;
+    private final EmailVerificationService emailVerificationService;
+    private final EmailVerificationRepository emailVerificationRepository;
+    private final RoleService roleService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final Cloudinary cloudinary;
 
     @Override
     public ResponseEntity<GenericResponse> verifyAdmin(Admin_Req_Verify adminReqVerify) {
@@ -84,6 +44,7 @@ public class UserServiceImpl implements UserService {
             String token = adminReqVerify.getAccessToken();
             if (jwtTokenProvider._validateToken(token)) {
                 String userId = jwtTokenProvider.getUserIdFromJwt(token);
+                assert (userRepository.findById(userId).isPresent());
                 User user = userRepository.findById(userId).get();
                 System.err.println("ROLE " + user.getRole().getName());
                 if (user.getRole().getName().equals("ADMIN")) {
@@ -121,6 +82,7 @@ public class UserServiceImpl implements UserService {
             String token = authorizationHeader.substring(7);
             if (jwtTokenProvider._validateToken(token)) {
                 String userId = jwtTokenProvider.getUserIdFromJwt(token);
+                assert (userRepository.findById(userId).isPresent());
                 User user = userRepository.findById(userId).get();
                 System.err.println("ROLE " + user.getRole().getName());
                 if (user.getRole().getName().equals("ADMIN") || (user.isVerified() && user.isActive())) {
@@ -161,14 +123,14 @@ public class UserServiceImpl implements UserService {
             if (isVerified != 0 && isVerified != 1) isVerified = 2;
             System.err.println("isActive " + isActive);
             System.err.println("isVerified " + isVerified);
-            String pattern = "";
+            StringBuilder pattern = new StringBuilder();
             for (char c : email.toCharArray()) {
-                pattern += "%" + c + "%";
+                pattern.append("%").append(c).append("%");
             }
-            if (pattern.isEmpty()) {
-                pattern = "%%";
+            if (pattern.length() == 0) {
+                pattern = new StringBuilder("%%");
             }
-            Specification<User> spec = UserSpecification.withFilters(isActive, isVerified, pattern);
+            Specification<User> spec = UserSpecification.withFilters(isActive, isVerified, pattern.toString());
             Page<User> userList = userRepository.findAll(spec, PageRequest.of(page - 1, size));
             List<Admin_Res_Get_Users> res = new ArrayList<>();
             for (User user : userList) {
@@ -253,136 +215,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> login(Login login) {
-        try {
-            if (login.getEmail() == null || login.getEmail().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .success(false)
-                        .message("Email must be provided!")
-                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .build());
-            }
-
-            if (login.getEmail().length() > 300) {
-                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .success(false)
-                        .message("Email length must be less than or equal to 300!")
-                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .build());
-            }
-
-            if (login.getPassword() == null || login.getPassword().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .success(false)
-                        .message("Password must be provided!")
-                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .build());
-            }
-
-            if (login.getPassword().length() < 8 || login.getPassword().length() > 32) {
-                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .success(false)
-                        .message("Password length must be between 8 and 32 characters!")
-                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .build());
-            }
-
-            if (userRepository.findByEmail(login.getEmail()).isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Account does not exist!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
-                        .success(false)
-                        .build());
-            }
-            User user = userRepository.findByEmail(login.getEmail()).get();
-            if (!user.isVerified()) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .success(false)
-                        .message("Account is not verified!")
-                        .statusCode(HttpStatus.FORBIDDEN.value())
-                        .build());
-            }
-            if (!user.isActive()) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .success(false)
-                        .message("Account is not active!")
-                        .statusCode(HttpStatus.FORBIDDEN.value())
-                        .build());
-            }
-
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(login.getEmail(),
-                            login.getPassword()));
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            UserDetail userDetail = (UserDetail) authentication.getPrincipal();
-            String accessToken = jwtTokenProvider.generateAccessToken(userDetail);
-            RefreshToken refreshToken = new RefreshToken();
-            String token = jwtTokenProvider.generateRefreshToken(userDetail);
-            refreshToken.setToken(token);
-            refreshToken.setUser(userDetail.getUser());
-            //invalid all refreshToken before
-            refreshTokenService.revokeRefreshToken(userDetail.getUserId());
-            refreshTokenService.save(refreshToken);
-            Map<String, String> tokenMap = new HashMap<>();
-            tokenMap.put("accessToken", accessToken);
-            tokenMap.put("refreshToken", token);
-            tokenMap.put("username", user.getFullName());
-
-            user.setLastLoginAt(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
-            userRepository.save(user);
-
-            return ResponseEntity.ok().body(GenericResponse.builder()
-                    .success(true)
-                    .message("Logged in successfully!")
-                    .result(tokenMap)
-                    .statusCode(HttpStatus.OK.value())
-                    .build());
-        } catch (BadCredentialsException ex) {
-            // Bắt riêng lỗi mật khẩu sai
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                    .success(false)
-                    .message("Incorrect password!")
-                    .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                    .build());
-        } catch (Exception ex) {
-            // Bắt các lỗi hệ thống khác
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .success(false)
-                    .message("Failed to log in, message =  " + ex.getMessage())
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build());
-        }
-    }
-
-
-    @Override
-    public ResponseEntity<GenericResponse> logout(String authorizationHeader, String refreshToken) {
-        try {
-            String accessToken = authorizationHeader.substring(7);
-            if (jwtTokenProvider.getUserIdFromJwt(accessToken).equals(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken))) {
-                refreshTokenService.logout(refreshToken);
-                return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                        .success(true)
-                        .message("Logged out successfully!")
-                        .statusCode(HttpStatus.OK.value())
-                        .build());
-            }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                    .success(false)
-                    .message("Failed to log out, please log in before logging out!")
-                    .statusCode(HttpStatus.UNAUTHORIZED.value())
-                    .build());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .success(false)
-                    .message("Failed to log out, message = " + ex.getMessage())
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build());
-        }
-    }
-
-    @Override
     public ResponseEntity<GenericResponse> register(Register registerRequest) {
         try {
 
@@ -410,7 +242,7 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
-            if (registerRequest.getPhoneNumber().length() < 10 || registerRequest.getPhoneNumber().length() > 11 || !isNumericInput(registerRequest.getPhoneNumber())) {
+            if (registerRequest.getPhoneNumber().length() < 10 || registerRequest.getPhoneNumber().length() > 11 || isNumericInput(registerRequest.getPhoneNumber())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("Phone must be 10-11 digits long!")
@@ -427,7 +259,7 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
-            Optional<User> user = userRepository.findByEmailAndIsVerifiedIsTrue(registerRequest.getEmail());
+            Optional<User> user = userRepository.findByEmailAndVerifiedIsFalse(registerRequest.getEmail());
             if (user.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
                         .success(false)
@@ -436,11 +268,9 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
-            Optional<User> userNotVerified = userRepository.findByEmailAndIsVerifiedIsFalse(registerRequest.getEmail());
+            Optional<User> userNotVerified = userRepository.findByEmailAndVerifiedIsFalse(registerRequest.getEmail());
 
-            if (userNotVerified.isPresent()) {
-                userRepository.delete(userNotVerified.get());
-            }
+            userNotVerified.ifPresent(userRepository::delete);
 
             if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
@@ -456,6 +286,7 @@ public class UserServiceImpl implements UserService {
             new_user.setUserId(UUID.randomUUID().toString().split("-")[0]);
             new_user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
             new_user.setPhoneNumber(registerRequest.getPhoneNumber());
+            assert (roleService.findByName("USER").isPresent());
             new_user.setRole(roleService.findByName("USER").get());
 
             Cart cart = new Cart();
@@ -484,8 +315,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<GenericResponse> getProfile(String userId) {
         try {
-            Optional<User> user = userRepository.findByUserIdAndIsActiveIsTrue(userId);
-            if (!user.isPresent()) {
+            Optional<User> user = userRepository.findByUserIdAndActiveIsTrue(userId);
+            if (user.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("User is not active!!!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
@@ -528,7 +359,7 @@ public class UserServiceImpl implements UserService {
             System.err.println("EMAIL : " + email);
             System.err.println("OTP : " + otp);
             Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(otp, email);
-            if (!emailVerification.isPresent()) {
+            if (emailVerification.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("Incorrect OTP, please try again!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
@@ -536,6 +367,7 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
             emailVerificationRepository.delete(emailVerification.get());
+            assert (userRepository.findByEmail(emailVerification.get().getEmail()).isPresent());
             User user = userRepository.findByEmail(emailVerification.get().getEmail()).get();
             user.setVerified(true);
             user.setActive(true);
@@ -634,6 +466,7 @@ public class UserServiceImpl implements UserService {
             String url = (String) data.get("url");
             Optional<User> user = userRepository.findById(userId);
             System.err.println(url);
+            assert (user.isPresent());
             user.get().setAvatar(url);
             userRepository.save(user.get());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
@@ -699,6 +532,7 @@ public class UserServiceImpl implements UserService {
         new_user.setFullName(fullName);
         new_user.setEmail(email);
         new_user.setUserId(UUID.randomUUID().toString().split("-")[0]);
+        assert (roleService.findByName("USER").isPresent());
         new_user.setRole(roleService.findByName("USER").get());
         new_user.setVerified(true);
         new_user.setActive(true);
@@ -714,7 +548,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public boolean isNumericInput(String input) {
-        return input != null && input.matches("\\d+");
+        return input == null || !input.matches("\\d+");
     }
 
     @Override
@@ -729,7 +563,7 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
-            if (password.getOtp().length() != 6 || !isNumericInput(password.getOtp())) {
+            if (password.getOtp().length() != 6 || isNumericInput(password.getOtp())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("OTP length must be 6 digits long!")

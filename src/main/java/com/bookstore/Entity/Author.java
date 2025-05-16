@@ -1,6 +1,5 @@
 package com.bookstore.Entity;
 
-import com.bookstore.Utils.Normalized;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

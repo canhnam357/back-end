@@ -7,16 +7,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "orderStatusHistory")
+@Table(name = "order_status_history")
 public class OrderStatusHistory {
 
     @Id
@@ -24,7 +22,7 @@ public class OrderStatusHistory {
     private String id;
 
     @ManyToOne
-    @JoinColumn(name = "orderId", nullable = false)
+    @JoinColumn(name = "order_id", nullable = false)
     private Orders order;
 
     @Enumerated(EnumType.STRING)
@@ -34,7 +32,7 @@ public class OrderStatusHistory {
     private OrderStatus toStatus;
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User changedBy;
 
     private String cause;
