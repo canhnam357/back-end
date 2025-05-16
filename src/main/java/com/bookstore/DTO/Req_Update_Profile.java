@@ -1,10 +1,13 @@
 package com.bookstore.DTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Getter
@@ -15,5 +18,6 @@ public class Req_Update_Profile {
     private String fullName;
     private String phoneNumber;
     private String gender;
-    private Date dateOfBirth;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    private LocalDate dateOfBirth;
 }

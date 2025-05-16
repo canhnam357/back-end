@@ -11,6 +11,8 @@ import com.bookstore.Repository.DiscountRepository;
 import com.bookstore.Service.DiscountService;
 import com.nimbusds.openid.connect.sdk.assurance.evidences.Voucher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +34,9 @@ public class DiscountServiceImpl implements DiscountService {
     private BookRepository bookRepository;
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "discountBooks", allEntries = true)
+    })
     public ResponseEntity<GenericResponse> createDiscount(Admin_Create_Discount discount) {
         try {
             if (discount.getStartDate() == null || discount.getEndDate() == null) {
@@ -41,7 +46,7 @@ public class DiscountServiceImpl implements DiscountService {
                         .success(false)
                         .build());
             }
-            if (discount.getEndDate().before(discount.getStartDate())) {
+            if (discount.getEndDate().isBefore(discount.getStartDate())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("Start date must be before end date!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
@@ -164,6 +169,9 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "discountBooks", allEntries = true)
+    })
     public ResponseEntity<GenericResponse> updateDiscount(String discountId, Admin_Update_Discount discount) {
         try {
 
@@ -174,7 +182,7 @@ public class DiscountServiceImpl implements DiscountService {
                         .success(false)
                         .build());
             }
-            if (discount.getEndDate().before(discount.getStartDate())) {
+            if (discount.getEndDate().isBefore(discount.getStartDate())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("Start date must be before end date!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())

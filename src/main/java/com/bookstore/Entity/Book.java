@@ -14,6 +14,9 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -44,17 +47,17 @@ public class Book {
     @Positive(message = "Number of page must be greater than 0")
     private int numberOfPage;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date publishedDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    private LocalDate publishedDate;
 
     @Positive(message = "Weight must be greater than 0")
     private int weight;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime createdAt;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date updatedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime updatedAt;
 
     @Column(columnDefinition = "boolean default false")
     private Boolean isDeleted = false;
@@ -120,12 +123,12 @@ public class Book {
 
     @PrePersist
     void createdAt() {
-        this.createdAt = new Date();
+        this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
     @PreUpdate
     void updatedAt() {
-        this.updatedAt = new Date();
+        this.updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
     public String getAuthorName() {

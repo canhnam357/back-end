@@ -15,6 +15,8 @@ import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.ReviewService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -50,6 +52,9 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "highRatingBooks", allEntries = true)
+    })
     public ResponseEntity<GenericResponse> addReview(String authorizationHeader, String bookId, Req_Create_Review review) {
         try {
             String accessToken = authorizationHeader.substring(7);
@@ -80,7 +85,7 @@ public class ReviewServiceImpl implements ReviewService {
                         .build());
             }
 
-            if (!reviews.isEmpty() && reviews.get(0).getCreatedAt().after(orderItems.get(0).getOrders().getOrderAt())) {
+            if (!reviews.isEmpty() && reviews.get(0).getCreatedAt().isAfter(orderItems.get(0).getOrders().getOrderAt())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
                         .message("You have already reviewed this book. Please purchase it again to submit another review!")
                         .statusCode(HttpStatus.BAD_REQUEST.value())
@@ -161,6 +166,9 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "highRatingBooks", allEntries = true)
+    })
     public ResponseEntity<GenericResponse> update(String reviewId, String token, Req_Create_Review review) {
         try {
             String accessToken = token.substring(7);

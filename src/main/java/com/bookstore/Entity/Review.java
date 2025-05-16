@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -36,8 +38,8 @@ public class Review {
     @JoinColumn(name = "userId", nullable = false)
     private User user;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime createdAt;
 
     @Min(1)
     @Max(5)
@@ -45,6 +47,6 @@ public class Review {
 
     @PrePersist
     void createdAt() {
-        this.createdAt = new Date();
+        this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
     List<Orders> findByPaymentMethodAndPaymentStatusAndExpireDatePaymentBefore(
             PaymentMethod paymentMethod,
             PaymentStatus paymentStatus,
-            Date now
+            ZonedDateTime now
     );
 
     @Query("SELECT o FROM Orders o WHERE " +
@@ -47,14 +48,14 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
             PaymentStatus paymentStatus,
             RefundStatus pendingRefund,
             RefundStatus refunded,
-            Date oneHourAgo);
+            ZonedDateTime oneHourAgo);
 
     @Query("SELECT COUNT(o) FROM Orders o " +
             "WHERE o.orderStatus = :status " +
             "AND o.orderAt >= :cutoffTime")
     long countCancelledOrdersWithinTime(
             @Param("status") OrderStatus status,
-            @Param("cutoffTime") Date cutoffTime
+            @Param("cutoffTime") ZonedDateTime cutoffTime
     );
 
     @Query(value = "SELECT MONTH(order_at) AS month, COALESCE(SUM(total_price), 0) AS total " +

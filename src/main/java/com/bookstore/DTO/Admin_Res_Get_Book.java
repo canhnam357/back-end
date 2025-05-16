@@ -3,12 +3,15 @@ package com.bookstore.DTO;
 import com.bookstore.Entity.Book;
 import com.bookstore.Entity.Category;
 import com.bookstore.Entity.Image;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -24,10 +27,13 @@ public class Admin_Res_Get_Book {
     private BigDecimal price;
     private String description;
     private int numberOfPage;
-    private Date publishedDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    private LocalDate publishedDate;
     private int weight;
-    private Date createdAt;
-    private Date updatedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime updatedAt;
     private Boolean isDeleted;
     private Admin_Res_Get_Author author;
     private Admin_Res_Get_Publisher publisher;
@@ -37,8 +43,10 @@ public class Admin_Res_Get_Book {
     private List<Admin_Res_Get_Image> images = new ArrayList<>();
     private String urlThumbnail;
     private Boolean newArrival;
+    private int soldQuantity;
 
     public void convert(Book book) {
+        this.soldQuantity = book.getSoldQuantity();
         this.bookId = book.getBookId();
         this.bookName = book.getBookName();
         this.inStock = book.getInStock();

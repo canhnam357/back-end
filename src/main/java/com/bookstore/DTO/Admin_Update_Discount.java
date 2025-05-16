@@ -1,5 +1,6 @@
 package com.bookstore.DTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Getter
@@ -14,11 +16,11 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Admin_Update_Discount {
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date startDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime startDate;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date endDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime endDate;
 
     private String discountType;
 

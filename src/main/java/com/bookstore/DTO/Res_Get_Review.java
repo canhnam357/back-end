@@ -1,11 +1,13 @@
 package com.bookstore.DTO;
 
 import com.bookstore.Entity.Review;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -20,8 +22,8 @@ public class Res_Get_Review {
     private String userReviewed;
     private String content;
     private int rating;
-    // format : dd-MM-yyyy HH:mm:ss
-    private Date createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime createdAt;
 
     public void convert(Review review) {
         reviewId = review.getReviewId();

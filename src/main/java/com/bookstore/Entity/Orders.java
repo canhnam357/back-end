@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -48,8 +50,8 @@ public class Orders {
     @JoinColumn(name = "userId", nullable = false)
     private User user;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date orderAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime orderAt;
 
     @Column(precision = 12, scale = 3)
     private BigDecimal totalPrice;
@@ -58,16 +60,19 @@ public class Orders {
     @JsonIgnore
     private List<OrderStatusHistory> statusHistories = new ArrayList<>();
 
-    private Date expireDatePayment;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime expireDatePayment;
 
     @Enumerated(EnumType.STRING)
     private RefundStatus refundStatus;
 
     private int refundTimesRemain = 3;
 
-    private Date lastCallRefund;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime lastCallRefund;
 
-    private Date refundAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime refundAt;
 
     private String transactionNo;
 
@@ -77,7 +82,7 @@ public class Orders {
 
     @PrePersist
     void createdAt() {
-        this.orderAt = new Date();
+        this.orderAt = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
 

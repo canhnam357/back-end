@@ -11,13 +11,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 public interface BookRepository extends JpaRepository<Book, String>, JpaSpecificationExecutor<Book> {
-    Page<Book> findAllByIsDeletedIsFalse(Pageable pageable);
-
     List<Book> findAllByIsDeletedIsFalseAndNewArrivalIsTrue();
     Page<Book> findAll(Pageable pageable);
 
@@ -42,7 +41,7 @@ public interface BookRepository extends JpaRepository<Book, String>, JpaSpecific
             "AND b.discount IS NOT NULL " +
             "AND b.discount.startDate <= :now " +
             "AND b.discount.endDate >= :now")
-    List<Book> findBooksWithActiveDiscount(Date now);
+    List<Book> findBooksWithActiveDiscount(ZonedDateTime now);
 
     @Query(value = """
         SELECT b.* FROM book b

@@ -51,9 +51,12 @@ public class PaymentController {
             return res;
         }
 
+        System.err.println("CARD , IP : ");
+
         // Tạo URL cho VNPay
-        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
-        String vnPayUrl = vnPayService.createOrder(baseUrl, res.getBody().getResult().toString());
+        String clientIp = request.getRemoteAddr();
+        System.err.println(clientIp);
+        String vnPayUrl = vnPayService.createOrder(clientIp, res.getBody().getResult().toString());
 
         System.err.println(vnPayUrl);
 

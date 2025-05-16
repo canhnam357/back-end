@@ -18,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -47,7 +49,7 @@ public class CartServiceImpl implements CartService {
             List<Req_Get_CartItem> cartItemList = new ArrayList<>();
             List<CartItem> newCartItems = new ArrayList<>();
             BigDecimal totalPrice = BigDecimal.ZERO;
-            Date now = new Date();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             // Xử lý từng CartItem
             for (CartItem cartItem : cartItems) {
                 // Kiểm tra và cập nhật quantity nếu vượt quá inStock
@@ -71,7 +73,7 @@ public class CartServiceImpl implements CartService {
                 BigDecimal priceAfterSale = null;
                 Book book = cartItem.getBook();
                 BigDecimal price = cartItem.getTotalPrice();
-                if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+                if (book.getDiscount() != null && book.getDiscount().getStartDate().isBefore(now) && book.getDiscount().getEndDate().isAfter(now)) {
                     if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
                         priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
                     }
@@ -229,9 +231,9 @@ public class CartServiceImpl implements CartService {
             CartItem cartItem = cartItemRepository.save(tempcartItem.get());
             BigDecimal priceAfterSale = null;
             Book book = cartItem.getBook();
-            Date now = new Date();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             BigDecimal price = cartItem.getTotalPrice();
-            if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+            if (book.getDiscount() != null && book.getDiscount().getStartDate().isBefore(now) && book.getDiscount().getEndDate().isAfter(now)) {
                 if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
                     priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
                 }
@@ -287,9 +289,9 @@ public class CartServiceImpl implements CartService {
             CartItem cartItem = cartItemRepository.save(tempcartItem.get());
             BigDecimal priceAfterSale = null;
             Book book = cartItem.getBook();
-            Date now = new Date();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             BigDecimal price = cartItem.getTotalPrice();
-            if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+            if (book.getDiscount() != null && book.getDiscount().getStartDate().isBefore(now) && book.getDiscount().getEndDate().isAfter(now)) {
                 if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
                     priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
                 }

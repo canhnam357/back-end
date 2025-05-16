@@ -1,12 +1,14 @@
 package com.bookstore.Entity;
 
 import com.bookstore.Constant.OrderStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Getter
@@ -37,5 +39,6 @@ public class OrderStatusHistory {
 
     private String cause;
 
-    private Date changedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime changedAt;
 }

@@ -14,6 +14,7 @@ import com.bookstore.Repository.RefundAttemptRepository;
 import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Utils.VNPayConfig;
 import com.bookstore.Service.VNPayService;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.servlet.http.HttpServletRequest;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -96,19 +101,22 @@ public class VNPayServiceImpl implements VNPayService {
         vnp_Params.put("vnp_ReturnUrl", vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", ipAddress);
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+        System.err.println("IP USER SEND ORDER : " + ipAddress);
 
-        cld.add(Calendar.MINUTE, 15);
-        String vnp_ExpireDate = formatter.format(cld.getTime());
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+        String vnp_CreateDate = now.format(formatter);
+        String vnp_ExpireDate = now.plusMinutes(15).format(formatter);
+        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+
 
         Orders order = ordersRepository.findById(orderId).get();
-        order.setExpireDatePayment(cld.getTime());
+        order.setExpireDatePayment(now.plusMinutes(15));
         ordersRepository.save(order);
 
-        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
         List fieldNames = new ArrayList(vnp_Params.keySet());
         Collections.sort(fieldNames);
@@ -137,14 +145,17 @@ public class VNPayServiceImpl implements VNPayService {
                 }
             }
         }
-        System.err.println(hashData.toString());
-        System.err.println(vnp_HashSecret);
+        System.err.println("HASH DATA " + hashData.toString());
+        System.err.println("VNP_HASHSECRET " + vnp_HashSecret);
         String queryUrl = query.toString();
         String vnp_SecureHash = vnPayConfig.hmacSHA512(vnp_HashSecret, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = vnPayConfig.vnp_PayUrl + "?" + queryUrl;
         return paymentUrl;
     }
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime refundAt;
 
     @Transactional
     public boolean refundOrder(String orderId, String txnRef, String transactionNo, String transactionDate, String createdBy, String amount, String ipAddress) {
@@ -227,17 +238,18 @@ public class VNPayServiceImpl implements VNPayService {
                 throw new IllegalStateException("Invalid response hash from VNPay");
             }
             System.err.println("VNPay returned PayDate = '" + PayDate + "'");
-            Date refundAt;
             try {
-                SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss");
-                refundAt = fmt.parse(PayDate);
-            } catch (ParseException pe) {
-                throw new IllegalStateException("Parse PayDate failed: " + PayDate, pe);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+                LocalDateTime localPayDate = LocalDateTime.parse(PayDate, formatter);
+
+                refundAt = localPayDate.atZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+            } catch (Exception ex) {
+                throw new IllegalStateException("Parse PayDate failed: " + PayDate);
             }
 
             Orders orders = ordersRepository.findById(orderId)
                     .orElseThrow(() -> new IllegalStateException("Order not found: " + orderId));
-            orders.setRefundAt(refundAt);
 
             try {
                 ordersRepository.flush();
@@ -326,7 +338,7 @@ public class VNPayServiceImpl implements VNPayService {
     @Scheduled(fixedRate = 15 * 60 * 1000)
     @Transactional
     public void cancelExpiredOrders() {
-        Date now = new Date();
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         List<Orders> expiredOrders = ordersRepository.findByPaymentMethodAndPaymentStatusAndExpireDatePaymentBefore(
                 PaymentMethod.CARD, PaymentStatus.PENDING, now
         );
@@ -347,11 +359,7 @@ public class VNPayServiceImpl implements VNPayService {
     @Scheduled(fixedRate = 1 * 60 * 1000)
     public void refundPendingOrders() {
         System.err.println("START REFUND PROCESSING!!!");
-        Date now = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(now);
-        calendar.add(Calendar.HOUR, -1);
-        Date oneHourAgo = calendar.getTime();
+        ZonedDateTime oneHourAgo = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusHours(1);
 
         List<Orders> ordersToRefund = ordersRepository.findOrdersForRefund(
                 OrderStatus.CANCELLED,
@@ -373,11 +381,11 @@ public class VNPayServiceImpl implements VNPayService {
             attempt.setCreatedBy("system");
             attempt.setIpAddress("127.0.0.1");
             attempt.setStatus(RefundStatus.PENDING_REFUND);
-            attempt.setAttemptTime(new Date());
+            attempt.setAttemptTime(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             attempt.setAttemptCount(refundAttemptRepository.countByOrderId(order.getOrderId()) + 1);
 
             order.setRefundStatus(RefundStatus.PENDING_REFUND);
-            order.setLastCallRefund(new Date());
+            order.setLastCallRefund(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             ordersRepository.save(order);
 
             try {
@@ -392,6 +400,13 @@ public class VNPayServiceImpl implements VNPayService {
                 );
 
                 attempt.setStatus(refundSuccess ? RefundStatus.REFUNDED : RefundStatus.FAILED_REFUND);
+                if (refundSuccess) {
+                    System.err.println("REFUNDED order : " + order.getOrderId() + " successfully!");
+                    order.setRefundAt(refundAt);
+                }
+                else {
+                    System.err.println("FAILED to refund order : " + order.getOrderId());
+                }
                 attempt.setErrorMessage(refundSuccess ? null : "VNPay refund failed");
                 order.setRefundStatus(attempt.getStatus());
             } catch (Exception e) {

@@ -10,6 +10,9 @@ import com.bookstore.Specification.BookSpecification;
 import com.bookstore.Utils.Normalized;
 import com.cloudinary.Cloudinary;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 
@@ -80,29 +85,15 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Cacheable("fetchAllBooks")
     public ResponseEntity<GenericResponse> getAllBookNotDeleted(int page, int size, BigDecimal leftBound, BigDecimal rightBound, String authorId, String publisherId, String distributorId, String bookName, String sort, String categoryIds) {
         try {
-            System.err.println(bookName);
-            System.err.println(bookName.length());
-            String pattern = "";
-            for (char c : bookName.toCharArray()) {
-                pattern += "%" + c + "%";
-            }
-            if (pattern.isEmpty()) {
-                pattern = "%%";
-            }
-
+            String pattern = Normalized.removeVietnameseAccents(bookName);
             List<String> authors = Arrays.asList(authorId.split(",", -1));
             List<String> publishers = Arrays.asList(publisherId.split(",", -1));
             List<String> distributors = Arrays.asList(distributorId.split(",", -1));
             List<String> categories = Arrays.asList(categoryIds.split(",", -1));
 
-            System.err.println("LIST AUTHOR_ID : ");
-            for (String s : authors) System.err.println(s + " ");
-            System.err.println("LIST PUBLISHER_ID : ");
-            for (String s : publishers) System.err.println(s + " ");
-            System.err.println("LIST DISTRIBUTOR_ID : ");
-            for (String s : distributors) System.err.println(s + " ");
             if (authorId.isEmpty()) {
                 authors = new ArrayList<>();
             }
@@ -119,7 +110,7 @@ public class BookServiceImpl implements BookService {
 
             Specification<Book> spec = BookSpecification.withFilters(leftBound, rightBound, authors, publishers, distributors, pattern, sort, categories);
 
-            Date now = new Date();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
 
             Page<Book> books = bookRepository.findAll(spec, PageRequest.of(page - 1, size));
             List<Res_Get_Books> res = new ArrayList<>();
@@ -129,7 +120,7 @@ public class BookServiceImpl implements BookService {
                 temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
                 res.add(temp);
             }
-
+            System.err.println("HAD DB QUERY!");
             Page<Res_Get_Books> dtoPage = new PageImpl<>(res, books.getPageable(), books.getTotalElements());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Retrieved all books successfully!")
@@ -158,7 +149,7 @@ public class BookServiceImpl implements BookService {
             }
             Book book = bookRepository.findByBookIdAndIsDeletedIsFalse(bookId).get();
             Res_Get_Books res = new Res_Get_Books();
-            Date now = new Date();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             res.convert(book, now);
             res.setRating(reviewRepository.findAverageRatingByBookId(bookId));
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
@@ -177,104 +168,65 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public ResponseEntity<GenericResponse> getNewArrivalsBook() {
-        try {
-            Date now = new Date();
-            List<Book> books = bookRepository.findAllByIsDeletedIsFalseAndNewArrivalIsTrue();
-            List<Res_Get_Books> res = new ArrayList<>();
-            for (Book book : books) {
-                Res_Get_Books temp = new Res_Get_Books();
-                temp.convert(book, now);
-                temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
-                res.add(temp);
-            }
-            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved new arrival books successfully!")
-                    .result(res)
-                    .statusCode(HttpStatus.OK.value())
-                    .success(true)
-                    .build());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve new arrival books, message = " + ex.getMessage())
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .success(false)
-                    .build());
-        }
-    }
-
-    @Override
     @Transactional(rollbackFor = Exception.class)
+    @Caching(evict = {
+            @CacheEvict(value = "newArrivals", allEntries = true),
+            @CacheEvict(value = "fetchAllBooks", allEntries = true)
+    })
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Book book) {
         try {
-            System.err.println(book.getBookTypeId());
-            System.err.println(book.getBookName());
-            System.err.println(book.getPublishedDate().toString());
-
             // Validate input
             if (book.getBookName() == null || book.getBookName().isBlank()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Book name must have at least 1 character and cannot be just spaces.!")
-                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .success(false)
-                        .build());
+                        .message("Book name must have at least 1 character and cannot be just spaces.!").statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value()).success(false).build());
             }
             if (authorRepository.findById(book.getAuthorId()).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Author must not be null!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
-                        .success(false)
-                        .build());
+                        .message("Author must not be null!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
             }
             if (publisherRepository.findById(book.getPublisherId()).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Publisher must not be null!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
-                        .success(false)
-                        .build());
+                        .message("Publisher must not be null!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
             }
             if (distributorRepository.findById(book.getDistributorId()).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Distributor must not be null!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
-                        .success(false)
-                        .build());
+                        .message("Distributor must not be null!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
             }
             if (bookTypeRepository.findById(book.getBookTypeId()).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Book type must not be null!")
-                        .statusCode(HttpStatus.NOT_FOUND.value())
-                        .success(false)
-                        .build());
+                        .message("Book type must not be null!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
             }
 
-            // Tạo Book
+            // Tạo Book entity
             Book res = new Book();
             List<Category> categories = categoryRepository.findAllById(book.getCategoriesId());
             res.setCategories(categories);
-
             for (Category category : categories) {
                 category.getBooks().add(res);
             }
+
             res.setBookName(book.getBookName());
             res.setInStock(book.getInStock());
             res.setPrice(book.getPrice());
             res.setDescription(book.getDescription());
             res.setNumberOfPage(book.getNumberOfPage());
-            res.setPublishedDate(book.getPublishedDate()); // Sử dụng publishedDate từ DTO
+            res.setPublishedDate(book.getPublishedDate());
             res.setWeight(book.getWeight());
             res.setAuthor(authorRepository.findById(book.getAuthorId()).get());
             res.setPublisher(publisherRepository.findById(book.getPublisherId()).get());
             res.setDistributor(distributorRepository.findById(book.getDistributorId()).get());
             res.setBookType(bookTypeRepository.findById(book.getBookTypeId()).get());
             res.setNewArrival(book.getNewArrival());
+            res.setNameNormalized(Normalized.remove(book.getBookName()));
+
+            // Lưu Book trước
+            res = bookRepository.save(res);
 
             // Upload ảnh
             List<MultipartFile> images = book.getImages();
             if (images == null) {
                 images = new ArrayList<>();
             }
-            String bookId = res.getBookId();
             int thumbnailIdx = book.getThumbnailIdx();
             List<Map<String, Object>> uploadResults = new ArrayList<>();
             List<String> uploadedUrls = new ArrayList<>();
@@ -295,9 +247,9 @@ public class BookServiceImpl implements BookService {
                     Map data = this.cloudinary.uploader().upload(file.getBytes(), Map.of());
                     String url = (String) data.get("url");
                     Image image = new Image();
-                    image.setBook(res);
+                    image.setBook(res); // Bây giờ res đã có ID
                     image.setUrl(url);
-                    res.addImage(image);
+                    res.addImage(image); // hoặc imageRepository.save(image) nếu muốn lưu riêng
                     uploadedUrls.add(url);
                     result.put("index", i);
                     result.put("url", url);
@@ -312,29 +264,24 @@ public class BookServiceImpl implements BookService {
             }
 
             // Đặt thumbnail
-            String thumbnailUrl = res.getUrlThumbnail();
             if (thumbnailIdx >= 0 && thumbnailIdx < uploadedUrls.size()) {
-                thumbnailUrl = uploadedUrls.get(thumbnailIdx);
-                res.setUrlThumbnail(thumbnailUrl);
-            } else if (thumbnailUrl == null && !uploadedUrls.isEmpty()) {
-                thumbnailUrl = uploadedUrls.get(0);
-                res.setUrlThumbnail(thumbnailUrl);
+                res.setUrlThumbnail(uploadedUrls.get(thumbnailIdx));
+            } else if (res.getUrlThumbnail() == null && !uploadedUrls.isEmpty()) {
+                res.setUrlThumbnail(uploadedUrls.get(0));
             }
 
-            // Chuẩn hóa tên sách
-            res.setNameNormalized(Normalized.remove(book.getBookName()));
-
-            // Lưu Book
+            // Lưu lại Book với images + thumbnail (nếu cần)
             res = bookRepository.save(res);
-
+            System.err.println("CREATE BOOK");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
                     .message("Book created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(res)
                     .success(true)
                     .build());
+
         } catch (Exception ex) {
-            System.err.println("Error creating book" + ex);
+            System.err.println("Error creating book: " + ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to create book, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -342,6 +289,7 @@ public class BookServiceImpl implements BookService {
                     .build());
         }
     }
+
 
     @Override
     public ResponseEntity<GenericResponse> adminGetBooksOfAuthor(int page, int size, String authorId) {
@@ -441,6 +389,14 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "newArrivals", allEntries = true),
+            @CacheEvict(value = "discountBooks", allEntries = true),
+            @CacheEvict(value = "highRatingBooks", allEntries = true),
+            @CacheEvict(value = "mostPurchasedBooks", allEntries = true),
+            @CacheEvict(value = "mostPurchasedCategories", allEntries = true),
+            @CacheEvict(value = "fetchAllBooks", allEntries = true)
+    })
     public ResponseEntity<GenericResponse> update(String bookId, Admin_Req_Update_Book book) {
         try {
             Optional<Book> _book = bookRepository.findById(bookId);
@@ -578,6 +534,7 @@ public class BookServiceImpl implements BookService {
 
             Admin_Res_Get_Book result = new Admin_Res_Get_Book();
             result.convert(res);
+            System.err.println("UPDATE BOOK!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Book updated successfully!")
                     .statusCode(HttpStatus.OK.value())
@@ -614,10 +571,39 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Cacheable("newArrivals")
+    public ResponseEntity<GenericResponse> getNewArrivalsBook() {
+        try {
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            List<Book> books = bookRepository.findAllByIsDeletedIsFalseAndNewArrivalIsTrue();
+            List<Res_Get_Books> res = new ArrayList<>();
+            for (Book book : books) {
+                Res_Get_Books temp = new Res_Get_Books();
+                temp.convert(book, now);
+                temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
+                res.add(temp);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Retrieved new arrival books successfully!")
+                    .result(res)
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Failed to retrieve new arrival books, message = " + ex.getMessage())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
+
+    @Override
+    @Cacheable("discountBooks")
     public ResponseEntity<GenericResponse> getDiscountBook() {
         try {
-            Date now = new Date();
-            List<Book> books = bookRepository.findBooksWithActiveDiscount(new Date());
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            List<Book> books = bookRepository.findBooksWithActiveDiscount(now);
             List<Res_Get_Books> res = new ArrayList<>();
             for (Book book : books) {
                 Res_Get_Books temp = new Res_Get_Books();
@@ -641,9 +627,10 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Cacheable("highRatingBooks")
     public ResponseEntity<GenericResponse> getHighRatingBook() {
         try {
-            Date now = new Date();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findTopBooksByAverageRating(10);
             List<Res_Get_Books> res = new ArrayList<>();
             for (Book book : books) {
@@ -668,9 +655,10 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Cacheable("mostPurchasedBooks")
     public ResponseEntity<GenericResponse> getMostPopularBooks() {
         try {
-            Date now = new Date();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findTopBooksBySoldQuantity(10);
             List<Res_Get_Books> res = new ArrayList<>();
             for (Book book : books) {
@@ -695,16 +683,16 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Cacheable("mostPurchasedCategories")
     public ResponseEntity<GenericResponse> getBooksInCategoriesMostSold() {
         try {
-            Date now = new Date();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
 
             List<Category> categories = categoryRepository.findTopCategoriesBySoldQuantity(3);
 
             List<Res_Get_Category_MostSold> res = new ArrayList<>();
 
             for (Category category : categories) {
-                System.err.println(category.getCategoryName());
                 Res_Get_Category_MostSold ele = new Res_Get_Category_MostSold();
                 ele.setCategoryId(category.getCategoryId());
                 ele.setCategoryName(category.getCategoryName());

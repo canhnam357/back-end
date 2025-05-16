@@ -10,8 +10,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -28,7 +31,9 @@ public class Res_Get_Books {
     private String description;
     private int numberOfPage;
     // "dd-MM-yyyy HH:mm:ss"
-    private Date publishedDate;
+    @DateTimeFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    private LocalDate publishedDate;
     private int weight;
     private Admin_Res_Get_Author author;
     private List<Admin_Res_Get_Category> categories;
@@ -42,7 +47,7 @@ public class Res_Get_Books {
     private int soldQuantity;
     private Boolean newArrival;
 
-    public void convert(Book book, Date now) {
+    public void convert(Book book, ZonedDateTime now) {
         newArrival = book.getNewArrival();
         soldQuantity = book.getSoldQuantity();
         bookId = book.getBookId();
@@ -89,7 +94,7 @@ public class Res_Get_Books {
             images.add(image.getUrl());
         }
 
-        if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+        if (book.getDiscount() != null && book.getDiscount().getStartDate().isBefore(now) && book.getDiscount().getEndDate().isAfter(now)) {
             if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
                 priceAfterSale = book.getPrice().subtract(book.getDiscount().getDiscount());
             }

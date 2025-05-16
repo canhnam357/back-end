@@ -25,7 +25,18 @@ public class BookController {
                                                       @RequestParam(required = false) String sort, // "asc" | "desc"
                                                       @RequestParam(defaultValue = "1") int index,
                                                       @RequestParam(defaultValue = "10") int size) {
-        System.err.println("Get all Book from general - default 10 / page");
+        String res = "Fetch all books : query=";
+        res += "minPrice=" + minPrice.toString();
+        res += "&maxPrice=" + maxPrice.toString();
+        res += ",authorId=" + authorId;
+        res += ",categoryId=" + categoryId;
+        res += ",publisherId=" + publisherId;
+        res += ",distributorId=" + distributorId;
+        res += ",sort=" + sort;
+        res += ",index=" + index;
+        res += ",size=" + size;
+        res += ",bookName=" + bookName;
+        System.err.println(res);
         return bookService.getAllBookNotDeleted(index, size, minPrice, maxPrice, authorId, publisherId, distributorId, bookName, sort, categoryId);
     }
 

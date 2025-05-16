@@ -1,11 +1,14 @@
 package com.bookstore.DTO;
 
 import com.bookstore.Constant.Gender;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Getter
@@ -17,7 +20,8 @@ public class Admin_Res_Get_Users {
     private String fullName;
     private String email;
     private String phoneNumber;
-    private Date dateOfBirth;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    private LocalDate dateOfBirth;
     private String gender;
     private boolean isActive;
     private boolean isVerified;

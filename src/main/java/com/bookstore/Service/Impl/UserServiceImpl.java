@@ -32,6 +32,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 @Service
@@ -327,7 +329,7 @@ public class UserServiceImpl implements UserService {
             tokenMap.put("refreshToken", token);
             tokenMap.put("username", user.getFullName());
 
-            user.setLastLoginAt(new Date());
+            user.setLastLoginAt(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             userRepository.save(user);
 
             return ResponseEntity.ok().body(GenericResponse.builder()
@@ -700,7 +702,7 @@ public class UserServiceImpl implements UserService {
         new_user.setRole(roleService.findByName("USER").get());
         new_user.setVerified(true);
         new_user.setActive(true);
-        new_user.setLastLoginAt(new Date());
+        new_user.setLastLoginAt(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         Cart cart = new Cart();
         cart = cartRepository.save(cart);
 

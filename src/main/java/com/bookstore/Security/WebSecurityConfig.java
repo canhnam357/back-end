@@ -110,7 +110,11 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3006", "http://localhost:3000", "http://localhost:3010", "http://localhost:3020")); // Chỉ định rõ origin
+        configuration.setAllowedOrigins(List.of("https://erotskoob.xyz", "https://www.erotskoob.xyz",
+                "https://shipper.erotskoob.xyz", "https://www.shipper.erotskoob.xyz",
+                "https://admin.erotskoob.xyz", "https://www.admin.erotskoob.xyz",
+                "https://employee.erotskoob.xyz", "https://www.employee.erotskoob.xyz",
+                "http://localhost:3006", "http://localhost:3000", "http://localhost:3010", "http://localhost:3020")); // Chỉ định rõ origin
         configuration.setAllowedMethods(List.of("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true); // Bật credentials

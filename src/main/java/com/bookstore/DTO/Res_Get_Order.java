@@ -1,11 +1,13 @@
 package com.bookstore.DTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Getter
@@ -19,9 +21,11 @@ public class Res_Get_Order {
     private String paymentStatus;
     private String address;
     private String phoneNumber;
-    private Date orderAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime orderAt;
     private BigDecimal totalPrice;
     private String refundStatus;
-    private Date refundAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime refundAt;
     private int refundTimesRemain;
 }

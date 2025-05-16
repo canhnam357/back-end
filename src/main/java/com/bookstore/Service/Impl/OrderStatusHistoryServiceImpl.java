@@ -14,6 +14,8 @@ import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.OrderStatusHistoryService;
 import com.bookstore.Utils.CheckCanChangeOrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +24,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -53,6 +57,10 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "mostPurchasedBooks", allEntries = true),
+            @CacheEvict(value = "mostPurchasedCategories", allEntries = true)
+    })
     public ResponseEntity<GenericResponse> changeOrderStatus(String userId, Req_ChangeOrderStatus reqChangeOrderStatus) {
         try {
 
@@ -235,7 +243,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             if (toStatus.equals("REJECTED") || toStatus.equals("CANCELLED") || toStatus.equals("FAILED_DELIVERY")) {
                 orderStatusHistory.setCause(reqChangeOrderStatus.getCause());
             }
-            orderStatusHistory.setChangedAt(new Date());
+            orderStatusHistory.setChangedAt(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             orderStatusHistoryRepository.save(orderStatusHistory);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
                     .message("Changed orderStatus from " + fromStatus + " to " + toStatus + " success!")

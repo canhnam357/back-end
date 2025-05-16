@@ -11,7 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'USER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'USER', 'SHIPPER')")
 @RequestMapping("/api/addresses")
 public class AddressController {
     @Autowired

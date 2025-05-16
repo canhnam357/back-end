@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'USER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'USER', 'SHIPPER')")
 @RequestMapping("/api/user")
 public class UserController {
     @Autowired

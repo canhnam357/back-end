@@ -1,6 +1,5 @@
 package com.bookstore.Entity;
 
-
 import com.bookstore.Constant.Gender;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -11,8 +10,10 @@ import lombok.*;
 import org.hibernate.annotations.Nationalized;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -39,8 +40,8 @@ public class User implements Serializable {
 
     private String avatar;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
-    private Date dateOfBirth;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    private LocalDate dateOfBirth;
 
     @Enumerated(EnumType.STRING)
     private Gender gender = Gender.OTHER;
@@ -48,11 +49,11 @@ public class User implements Serializable {
     @Column(columnDefinition = "boolean default true")
     private boolean isActive;
 
-    private Date createdAt;
+    private ZonedDateTime createdAt;
 
-    private Date updatedAt;
+    private ZonedDateTime updatedAt;
 
-    private Date lastLoginAt;
+    private ZonedDateTime lastLoginAt;
 
     @Column(nullable = true, columnDefinition = "boolean default false")
     private boolean isVerified;
@@ -83,11 +84,12 @@ public class User implements Serializable {
     private List<OrderStatusHistory> changedOrders = new ArrayList<>();
 
     @PrePersist
-    void createdAt() { this.createdAt = new Date();}
+    void createdAt() {
+        this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+    }
 
     @PreUpdate
     void updatedAt() {
-        this.updatedAt = new Date();
+        this.updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
     }
-
 }

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 @Service
@@ -92,11 +93,7 @@ public class OrderServiceImpl implements OrderService {
                         .build());
             }
 
-            LocalDateTime nowTime = LocalDateTime.now();
-            LocalDateTime cutoff = nowTime.minusHours(8);
-
-            // Chuyển sang java.util.Date
-            Date cutoffDate = Date.from(cutoff.atZone(ZoneId.systemDefault()).toInstant());
+            ZonedDateTime cutoffDate = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusHours(8);
 
             int LIMIT = 3;
 
@@ -165,7 +162,7 @@ public class OrderServiceImpl implements OrderService {
             order.setRefundStatus(RefundStatus.NONE);
             order = ordersRepository.save(order);
 
-            Date now = new Date();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
 
             for (CartItem cartItem : orderCartItem) {
                 OrderItem orderItem = new OrderItem();
@@ -177,7 +174,7 @@ public class OrderServiceImpl implements OrderService {
                 orderItem.setTotalPrice(cartItem.getTotalPrice());
                 orderItem.setUrlThumbnail(cartItem.getBook().getUrlThumbnail());
                 Book book = bookRepository.findById(cartItem.getBook().getBookId()).get();
-                if (book.getDiscount() != null && book.getDiscount().getStartDate().before(now) && book.getDiscount().getEndDate().after(now)) {
+                if (book.getDiscount() != null && book.getDiscount().getStartDate().isBefore(now) && book.getDiscount().getEndDate().isAfter(now)) {
                     if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
                         orderItem.setPriceAfterSales(book.getPrice().subtract(book.getDiscount().getDiscount()));
                     }

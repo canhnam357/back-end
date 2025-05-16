@@ -12,6 +12,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -36,8 +38,9 @@ public class Admin_Req_Update_Book {
     @Positive(message = "Number of page must be greater than 0")
     private int numberOfPage;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date publishedDate;
+    @DateTimeFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    private LocalDate publishedDate;
 
     @Positive(message = "Weight must be greater than 0")
     private int weight;

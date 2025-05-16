@@ -1,8 +1,10 @@
 package com.bookstore.DTO;
 
 import com.bookstore.Entity.OrderStatusHistory;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Setter
@@ -16,7 +18,8 @@ public class Res_Get_OrderStatusHistory {
     private String toStatus;
     private String changeBy;
     private String cause;
-    private Date changeAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime changeAt;
 
     public void convert(OrderStatusHistory ele) {
         id = ele.getId();

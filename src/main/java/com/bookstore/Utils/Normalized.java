@@ -21,14 +21,13 @@ public class Normalized {
                 result = result.replace(c, replacements[i].charAt(0));
             }
         }
-        String search_word = "";
+        String search_word = "%";
         for (char c : result.toCharArray()) {
-            search_word += "%" + c + "%";
+            search_word += c;
         }
 
-        if (search_word.length() == 0) {
-            search_word = "%%";
-        }
+        search_word += "%";
+
         return search_word;
     }
 

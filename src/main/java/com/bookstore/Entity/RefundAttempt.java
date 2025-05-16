@@ -1,12 +1,15 @@
 package com.bookstore.Entity;
 
 import com.bookstore.Constant.RefundStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Getter
@@ -47,8 +50,8 @@ public class RefundAttempt {
     private Integer attemptCount;
 
     @Column(nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date attemptTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")
+    private ZonedDateTime attemptTime;
 
     private String errorMessage;
 
@@ -58,6 +61,6 @@ public class RefundAttempt {
 
     @PrePersist
     void createdAt() {
-        this.attemptTime = new Date();
+        this.attemptTime = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 }
