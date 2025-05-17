@@ -1,12 +1,12 @@
 package com.bookstore.Service.Impl;
 
 import com.bookstore.Constant.Gender;
+import com.bookstore.Constant.Role;
 import com.bookstore.DTO.*;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.EmailVerificationService;
-import com.bookstore.Service.RoleService;
 import com.bookstore.Service.UserService;
 import com.bookstore.Specification.UserSpecification;
 import com.cloudinary.Cloudinary;
@@ -34,7 +34,6 @@ public class UserServiceImpl implements UserService {
     private final CartRepository cartRepository;
     private final EmailVerificationService emailVerificationService;
     private final EmailVerificationRepository emailVerificationRepository;
-    private final RoleService roleService;
     private final JwtTokenProvider jwtTokenProvider;
     private final Cloudinary cloudinary;
 
@@ -46,8 +45,8 @@ public class UserServiceImpl implements UserService {
                 String userId = jwtTokenProvider.getUserIdFromJwt(token);
                 assert (userRepository.findById(userId).isPresent());
                 User user = userRepository.findById(userId).get();
-                System.err.println("ROLE " + user.getRole().getName());
-                if (user.getRole().getName().equals("ADMIN")) {
+                System.err.println("ROLE " + user.getRole().name());
+                if (user.getRole() == Role.ADMIN) {
                     System.err.println("ADMIN");
                     return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                             .success(false)
@@ -84,8 +83,8 @@ public class UserServiceImpl implements UserService {
                 String userId = jwtTokenProvider.getUserIdFromJwt(token);
                 assert (userRepository.findById(userId).isPresent());
                 User user = userRepository.findById(userId).get();
-                System.err.println("ROLE " + user.getRole().getName());
-                if (user.getRole().getName().equals("ADMIN") || (user.isVerified() && user.isActive())) {
+                System.err.println("ROLE " + user.getRole().name());
+                if (user.getRole() == Role.ADMIN || (user.isVerified() && user.isActive())) {
                     System.err.println("VERIFIED");
                     return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                             .success(false)
@@ -145,7 +144,7 @@ public class UserServiceImpl implements UserService {
                         gender,
                         user.isActive(),
                         user.isVerified(),
-                        user.getRole().getName()
+                        user.getRole().name()
                 ));
             }
 
@@ -185,7 +184,7 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
-            if (adminUpdateUserDTO.getRole() == null || roleService.findByName(adminUpdateUserDTO.getRole()).isEmpty()) {
+            if (adminUpdateUserDTO.getRole() == null || Arrays.stream(Role.values()).noneMatch(e -> e.name().equals(adminUpdateUserDTO.getRole()))) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .message("Role not found!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
@@ -198,7 +197,7 @@ public class UserServiceImpl implements UserService {
             User _user = user.get();
             _user.setActive(Boolean.parseBoolean(adminUpdateUserDTO.getActive()));
             _user.setVerified(Boolean.parseBoolean(adminUpdateUserDTO.getVerified()));
-            _user.setRole(roleService.findByName(adminUpdateUserDTO.getRole()).get());
+            _user.setRole(Role.valueOf(adminUpdateUserDTO.getRole()));
             userRepository.save(_user);
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("User status updated successfully!!!")
@@ -286,8 +285,7 @@ public class UserServiceImpl implements UserService {
             new_user.setUserId(UUID.randomUUID().toString().split("-")[0]);
             new_user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
             new_user.setPhoneNumber(registerRequest.getPhoneNumber());
-            assert (roleService.findByName("USER").isPresent());
-            new_user.setRole(roleService.findByName("USER").get());
+            new_user.setRole(Role.USER);
 
             Cart cart = new Cart();
 
@@ -532,8 +530,7 @@ public class UserServiceImpl implements UserService {
         new_user.setFullName(fullName);
         new_user.setEmail(email);
         new_user.setUserId(UUID.randomUUID().toString().split("-")[0]);
-        assert (roleService.findByName("USER").isPresent());
-        new_user.setRole(roleService.findByName("USER").get());
+        new_user.setRole(Role.USER);
         new_user.setVerified(true);
         new_user.setActive(true);
         new_user.setLastLoginAt(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
@@ -644,7 +641,7 @@ public class UserServiceImpl implements UserService {
                         user.get().getGender().toString(),
                         user.get().isActive(),
                         user.get().isVerified(),
-                        user.get().getRole().getName()
+                        user.get().getRole().name()
                 );
             }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()

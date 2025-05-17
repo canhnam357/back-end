@@ -1,6 +1,5 @@
 package com.bookstore.Security;
 
-import com.bookstore.Entity.Permission;
 import com.bookstore.Entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,10 +20,7 @@ public class UserDetail implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        for(Permission permission:user.getRole().getPermissions()){
-            authorities.add(new SimpleGrantedAuthority(permission.getName()));
-        }
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
         return authorities;
     }
 
@@ -49,7 +45,7 @@ public class UserDetail implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return user.isActive();
     }
 
     @Override
@@ -58,5 +54,5 @@ public class UserDetail implements UserDetails {
     }
 
     @Override
-    public boolean isEnabled() { return user.isActive();}
+    public boolean isEnabled() { return user.isVerified();}
 }
