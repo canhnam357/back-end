@@ -258,7 +258,7 @@ public class OrderServiceImpl implements OrderService {
 
             Orders order = ordersRepository.findById(orderId).get();
 
-            if (!userId.equals(order.getUser().getUserId()) && user.getRole().getName().equals("USER")) {
+            if (!userId.equals(order.getUser().getUserId()) && user.getRole() == Role.USER) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .message("User doesn't have permission to view this order!")
                         .statusCode(HttpStatus.FORBIDDEN.value())

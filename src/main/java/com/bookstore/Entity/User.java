@@ -1,6 +1,7 @@
 package com.bookstore.Entity;
 
 import com.bookstore.Constant.Gender;
+import com.bookstore.Constant.Role;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -58,9 +59,7 @@ public class User implements Serializable {
     @Column(columnDefinition = "boolean default false")
     private boolean verified;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JsonBackReference
-    @ToString.Exclude
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     @OneToOne(cascade = CascadeType.ALL)
