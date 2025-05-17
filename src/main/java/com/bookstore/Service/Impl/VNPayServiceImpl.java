@@ -255,7 +255,7 @@ public class VNPayServiceImpl implements VNPayService {
                 order.setRefundStatus(attempt.getStatus());
             } catch (Exception e) {
                 attempt.setStatus(RefundStatus.FAILED_REFUND);
-                attempt.setErrorMessage("Refund failed: " + e.getMessage());
+                attempt.setErrorMessage(e.getMessage());
                 order.setRefundStatus(RefundStatus.FAILED_REFUND);
             }
 

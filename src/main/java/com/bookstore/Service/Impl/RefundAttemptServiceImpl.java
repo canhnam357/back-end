@@ -158,12 +158,16 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
                     TransactionStatus + "|" + OrderInfo;
 
             System.err.println("DATA Response from VNPAY Refund: " + data);
-
             String computedHash = vnPayConfig.hmacSHA512(vnp_HashSecret, data);
             if (!computedHash.equals(SecureHash)) {
                 throw new IllegalStateException("Invalid response hash from VNPay");
             }
             System.err.println("VNPay returned PayDate = '" + PayDate + "'");
+
+            if (!"00".equals(ResponseCode)) {
+                throw new IllegalStateException("Refund failed : " + Message);
+            }
+
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -171,11 +175,11 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
 
                 refundAt = localPayDate.atZone(ZoneId.of("Asia/Ho_Chi_Minh"));
             } catch (Exception ex) {
-                throw new IllegalStateException("Parse PayDate failed: " + PayDate);
+                throw new IllegalStateException("Parse PayDate failed : " + PayDate);
             }
 
             Orders orders = ordersRepository.findById(orderId)
-                    .orElseThrow(() -> new IllegalStateException("Order not found: " + orderId));
+                    .orElseThrow(() -> new IllegalStateException("Order not found : " + orderId));
 
             try {
                 ordersRepository.flush();
@@ -192,16 +196,13 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
                 System.err.println("Warning: refund notification failed: " + e.getMessage());
             }
 
-            if ("00".equals(ResponseCode)) {
-                orders.setRefundAt(refundAt);
-                ordersRepository.save(orders);
-            }
-
-            return "00".equals(ResponseCode);
+            orders.setRefundAt(refundAt);
+            ordersRepository.save(orders);
+            return true;
         } catch (Exception ex) {
             // ex.getMessage() giờ đã là chi tiết lỗi parse hoặc order not found,
             // nếu ex do VNPay thì Message = vnp_Message ban đầu
-            throw new IllegalStateException("Refund failed: " + ex.getMessage(), ex);
+            throw new IllegalStateException(ex.getMessage(), ex);
         }
     }
 }
