@@ -18,6 +18,7 @@ public class Res_Get_Order {
     private String orderStatus;
     private String paymentMethod;
     private String paymentStatus;
+    private String fullName;
     private String address;
     private String phoneNumber;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy", timezone = "Asia/Ho_Chi_Minh")

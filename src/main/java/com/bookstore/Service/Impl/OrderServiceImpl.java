@@ -82,9 +82,19 @@ public class OrderServiceImpl implements OrderService {
 
             int LIMIT = 3;
 
-            if (ordersRepository.countCancelledOrdersWithinTime(OrderStatus.CANCELLED, cutoffDate) >= LIMIT) {
+            if (ordersRepository.countCancelledOrdersWithinTime(userId, OrderStatus.CANCELLED, cutoffDate) >= LIMIT) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                        .message("You have canceled too many orders recently. Please wait a few hours before placing a new one!")
+                        .message("You have canceled / failed payment too many orders recently. Please wait a few hours before placing a new one!")
+                        .statusCode(HttpStatus.CONFLICT.value())
+                        .success(false)
+                        .build());
+            }
+
+            int PENDING = 30;
+
+            if (ordersRepository.countPendingOrder(userId, OrderStatus.PENDING, PaymentStatus.PENDING) >= PENDING) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
+                        .message("You have multiple orders pending payment. Please complete your payments before placing new orders!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
@@ -218,6 +228,7 @@ public class OrderServiceImpl implements OrderService {
                         order.getOrderStatus().name(),
                         order.getPaymentMethod().name(),
                         order.getPaymentStatus().name(),
+                        order.getUser().getFullName(),
                         order.getAddress(),
                         order.getPhoneNumber(),
                         order.getOrderAt(),
@@ -320,6 +331,7 @@ public class OrderServiceImpl implements OrderService {
                         order.getOrderStatus().name(),
                         order.getPaymentMethod().name(),
                         order.getPaymentStatus().name(),
+                        order.getUser().getFullName(),
                         order.getAddress(),
                         order.getPhoneNumber(),
                         order.getOrderAt(),
@@ -370,6 +382,7 @@ public class OrderServiceImpl implements OrderService {
                         order.getOrderStatus().name(),
                         order.getPaymentMethod().name(),
                         order.getPaymentStatus().name(),
+                        order.getUser().getFullName(),
                         order.getAddress(),
                         order.getPhoneNumber(),
                         order.getOrderAt(),

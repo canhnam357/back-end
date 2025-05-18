@@ -23,7 +23,7 @@ public interface ReviewRepository extends JpaRepository<Review, String> {
     );
 
     @Query("SELECT r FROM Review r " +
-            "WHERE r.book.bookId = :bookId " +
+            "WHERE r.book.bookId = :bookId AND r.user.userId = :userId " +
             "ORDER BY r.createdAt DESC")
-    List<Review> findReviewsByBookIdOrderedByCreatedAtDesc(@Param("bookId") String bookId);
+    List<Review> findReviewsByBookIdOrderedByCreatedAtDesc(@Param("userId") String userId, @Param("bookId") String bookId);
 }
