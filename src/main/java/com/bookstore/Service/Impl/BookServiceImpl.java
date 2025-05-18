@@ -40,22 +40,41 @@ public class BookServiceImpl implements BookService {
     private final ReviewRepository reviewRepository;
     private final CategoryRepository categoryRepository;
 
+    public Page<Admin_Res_Get_Book> convertPageToPage(Page<Book> books) {
+        List<Admin_Res_Get_Book> res = new ArrayList<>();
+        for (Book book : books) {
+            Admin_Res_Get_Book ele = new Admin_Res_Get_Book();
+            ele.convert(book);
+            res.add(ele);
+        }
+        return new PageImpl<>(res, books.getPageable(), books.getTotalElements());
+    }
+
+    public Page<Res_Get_Books> convertPageToPageHaveTime(Page<Book> books, ZonedDateTime now) {
+        List<Res_Get_Books> res = convertListToListHaveTime(books.getContent(), now);
+        return new PageImpl<>(res, books.getPageable(), books.getTotalElements());
+    }
+
+    public List<Res_Get_Books> convertListToListHaveTime(List<Book> books, ZonedDateTime now) {
+        List<Res_Get_Books> res = new ArrayList<>();
+        for (Book book : books) {
+            Res_Get_Books temp = new Res_Get_Books();
+            temp.convert(book, now);
+            temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
+            res.add(temp);
+        }
+        return res;
+    }
+
     @Override
     public ResponseEntity<GenericResponse> getAll(int page, int size, String keyword) {
         try {
 
             String search_word = Normalized.removeVietnameseAccents(keyword);
             Page<Book> books = bookRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
-            List<Admin_Res_Get_Book> res = new ArrayList<>();
-            for (Book book : books) {
-                Admin_Res_Get_Book ele = new Admin_Res_Get_Book();
-                ele.convert(book);
-                res.add(ele);
-            }
-            Page<Admin_Res_Get_Book> dtoPage = new PageImpl<>(res, books.getPageable(), books.getTotalElements());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Retrieved all books successfully!")
-                    .result(dtoPage)
+                    .result(convertPageToPage(books))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
@@ -97,18 +116,10 @@ public class BookServiceImpl implements BookService {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
 
             Page<Book> books = bookRepository.findAll(spec, PageRequest.of(page - 1, size));
-            List<Res_Get_Books> res = new ArrayList<>();
-            for (Book book : books) {
-                Res_Get_Books temp = new Res_Get_Books();
-                temp.convert(book, now);
-                temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
-                res.add(temp);
-            }
             System.err.println("HAD DB QUERY!");
-            Page<Res_Get_Books> dtoPage = new PageImpl<>(res, books.getPageable(), books.getTotalElements());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Retrieved all books successfully!")
-                    .result(dtoPage)
+                    .result(convertPageToPageHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
@@ -203,10 +214,8 @@ public class BookServiceImpl implements BookService {
             res.setNewArrival(book.getNewArrival());
             res.setNameNormalized(Normalized.remove(book.getBookName()));
 
-            // Lưu Book trước
             res = bookRepository.save(res);
 
-            // Upload ảnh
             List<MultipartFile> images = book.getImages();
             if (images == null) {
                 images = new ArrayList<>();
@@ -223,9 +232,9 @@ public class BookServiceImpl implements BookService {
                     Map<?, ?> data = this.cloudinary.uploader().upload(file.getBytes(), Map.of());
                     String url = (String) data.get("url");
                     Image image = new Image();
-                    image.setBook(res); // Bây giờ res đã có ID
+                    image.setBook(res);
                     image.setUrl(url);
-                    res.addImage(image); // hoặc imageRepository.save(image) nếu muốn lưu riêng
+                    res.addImage(image);
                     uploadedUrls.add(url);
                 } catch (IOException io) {
                     System.err.println("Upload failed for index " + i + ": " + io.getMessage());
@@ -266,29 +275,10 @@ public class BookServiceImpl implements BookService {
         try {
             System.err.println(authorId);
             Page<Book> books = bookRepository.findAllByAuthorAuthorId(PageRequest.of(page - 1, size), authorId);
-            List<Admin_Res_Get_BooksOfAuthor> res = new ArrayList<>();
-            for (Book book : books) {
-                String thumbnail = null;
-                if (book.getUrlThumbnail() != null) {
-                    thumbnail = book.getUrlThumbnail();
-                }
-                res.add(new Admin_Res_Get_BooksOfAuthor(
-                        book.getBookId(),
-                        book.getBookName(),
-                        book.getPrice(),
-                        book.getNumberOfPage(),
-                        book.getPublisherName(),
-                        book.getDistributorName(),
-                        book.getBookType().getBookTypeName(),
-                        thumbnail
-                ));
-            }
-
-            Page<Admin_Res_Get_BooksOfAuthor> dtoPage = new PageImpl<>(res, books.getPageable(), books.getTotalElements());
             return ResponseEntity.status(HttpStatus.OK).body(
                     GenericResponse.builder()
                             .message("Retrieved books of the author successfully!")
-                            .result(dtoPage)
+                            .result(convertPageToPage(books))
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
                             .build());
@@ -296,6 +286,76 @@ public class BookServiceImpl implements BookService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     GenericResponse.builder()
                             .message("Failed to retrieve books of the author, message = " + ex.getMessage())
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> adminGetBooksOfPublisher(int page, int size, String publisherId) {
+        try {
+            Page<Book> books = bookRepository.findAllByPublisherPublisherId(PageRequest.of(page - 1, size), publisherId);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    GenericResponse.builder()
+                            .message("Retrieved books of the publisher successfully!")
+                            .result(convertPageToPage(books))
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    GenericResponse.builder()
+                            .message("Failed to retrieve books of the publisher, message = " + ex.getMessage())
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> adminGetBooksOfDistributor(int page, int size, String distributorId) {
+        try {
+            Page<Book> books = bookRepository.findAllByDistributorDistributorId(PageRequest.of(page - 1, size), distributorId);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    GenericResponse.builder()
+                            .message("Retrieved books of the distributor successfully!")
+                            .result(convertPageToPage(books))
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    GenericResponse.builder()
+                            .message("Failed to retrieve books of the distributor, message = " + ex.getMessage())
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .success(false)
+                            .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<GenericResponse> adminGetBooksOfCategory(int page, int size, String categoryId) {
+        try {
+            Page<Book> books = bookRepository.findAllByCategoriesCategoryId(PageRequest.of(page - 1, size), categoryId);
+            List<Admin_Res_Get_Book> res = new ArrayList<>();
+            for (Book book : books) {
+                Admin_Res_Get_Book ele = new Admin_Res_Get_Book();
+                ele.convert(book);
+                res.add(ele);
+            }
+            Page<Admin_Res_Get_Book> dtoPage = new PageImpl<>(res, books.getPageable(), books.getTotalElements());
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    GenericResponse.builder()
+                            .message("Retrieved books of the category successfully!")
+                            .result(dtoPage)
+                            .statusCode(HttpStatus.OK.value())
+                            .success(true)
+                            .build());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    GenericResponse.builder()
+                            .message("Failed to retrieve books of the category, message = " + ex.getMessage())
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build());
@@ -396,7 +456,6 @@ public class BookServiceImpl implements BookService {
 
             Book res = _book.get();
 
-            // Cập nhật category
             for (Category category : res.getCategories()) {
                 category.getBooks().remove(res);
             }
@@ -409,7 +468,6 @@ public class BookServiceImpl implements BookService {
                 }
             }
 
-            // Cập nhật các trường còn lại
             res.setBookName(book.getBookName());
             res.setInStock(book.getInStock());
             res.setPrice(book.getPrice());
@@ -424,7 +482,6 @@ public class BookServiceImpl implements BookService {
             res.setNewArrival(book.getNewArrival());
             res.setDeleted(book.getIsDeleted());
 
-            // Xóa ảnh không còn giữ lại
             res.getImages().removeIf(image -> !book.getRemainImages().contains(image.getImageId()));
 
             // Upload ảnh mới
@@ -453,7 +510,6 @@ public class BookServiceImpl implements BookService {
                 res.setUrlThumbnail(res.getImages().get(0).getUrl());
             }
 
-            // Chuẩn hóa tên
             res.setNameNormalized(Normalized.remove(book.getBookName()));
 
             // Lưu book
@@ -504,16 +560,9 @@ public class BookServiceImpl implements BookService {
         try {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findAllByDeletedIsFalseAndNewArrivalIsTrue();
-            List<Res_Get_Books> res = new ArrayList<>();
-            for (Book book : books) {
-                Res_Get_Books temp = new Res_Get_Books();
-                temp.convert(book, now);
-                temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
-                res.add(temp);
-            }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Retrieved new arrival books successfully!")
-                    .result(res)
+                    .result(convertListToListHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
@@ -532,16 +581,9 @@ public class BookServiceImpl implements BookService {
         try {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findBooksWithActiveDiscount(now);
-            List<Res_Get_Books> res = new ArrayList<>();
-            for (Book book : books) {
-                Res_Get_Books temp = new Res_Get_Books();
-                temp.convert(book, now);
-                temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
-                res.add(temp);
-            }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Retrieved discount books successfully!")
-                    .result(res)
+                    .result(convertListToListHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
@@ -560,16 +602,9 @@ public class BookServiceImpl implements BookService {
         try {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findTopBooksByAverageRating(10);
-            List<Res_Get_Books> res = new ArrayList<>();
-            for (Book book : books) {
-                Res_Get_Books temp = new Res_Get_Books();
-                temp.convert(book, now);
-                temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
-                res.add(temp);
-            }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Retrieved high-rating books successfully!")
-                    .result(res)
+                    .result(convertListToListHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
@@ -588,16 +623,9 @@ public class BookServiceImpl implements BookService {
         try {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findTopBooksBySoldQuantity(10);
-            List<Res_Get_Books> res = new ArrayList<>();
-            for (Book book : books) {
-                Res_Get_Books temp = new Res_Get_Books();
-                temp.convert(book, now);
-                temp.setRating(reviewRepository.findAverageRatingByBookId(book.getBookId()));
-                res.add(temp);
-            }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Retrieved most purchased books successfully!")
-                    .result(res)
+                    .result(convertListToListHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());

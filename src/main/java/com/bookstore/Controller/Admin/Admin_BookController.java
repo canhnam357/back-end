@@ -36,6 +36,27 @@ public class Admin_BookController {
         return bookService.adminGetBooksOfAuthor(index, size, authorId);
     }
 
+    @GetMapping("/publisher_book/{publisherId}") // OK
+    public ResponseEntity<GenericResponse> getAllBooksOfPublisher (@RequestParam(defaultValue = "1") int index,
+                                                                @RequestParam(defaultValue = "10") int size,
+                                                                @PathVariable String publisherId) {
+        return bookService.adminGetBooksOfPublisher(index, size, publisherId);
+    }
+
+    @GetMapping("/distributor_books/{distributorId}") // OK
+    public ResponseEntity<GenericResponse> getAllBooksOfDistributor (@RequestParam(defaultValue = "1") int index,
+                                                                @RequestParam(defaultValue = "10") int size,
+                                                                @PathVariable String distributorId) {
+        return bookService.adminGetBooksOfDistributor(index, size, distributorId);
+    }
+
+    @GetMapping("/category_books/{categoryId}") // OK
+    public ResponseEntity<GenericResponse> getAllBooksOfCategory (@RequestParam(defaultValue = "1") int index,
+                                                                @RequestParam(defaultValue = "10") int size,
+                                                                @PathVariable String categoryId) {
+        return bookService.adminGetBooksOfCategory(index, size, categoryId);
+    }
+
     @PutMapping("/{bookId}") // OK
     public ResponseEntity<GenericResponse> updateBook (@PathVariable String bookId, @ModelAttribute Admin_Req_Update_Book book) {
         return bookService.update(bookId, book);

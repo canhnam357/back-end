@@ -21,6 +21,12 @@ public interface BookService {
 
     ResponseEntity<GenericResponse> adminGetBooksOfAuthor(int page, int size, String authorId);
 
+    ResponseEntity<GenericResponse> adminGetBooksOfPublisher(int page, int size, String publisherId);
+
+    ResponseEntity<GenericResponse> adminGetBooksOfDistributor(int page, int size, String distributorId);
+
+    ResponseEntity<GenericResponse> adminGetBooksOfCategory(int page, int size, String categoryId);
+
     ResponseEntity<GenericResponse> getPriceRange();
 
     ResponseEntity<GenericResponse> delete(String bookId);

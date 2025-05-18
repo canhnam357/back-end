@@ -22,6 +22,12 @@ public interface BookRepository extends JpaRepository<Book, String>, JpaSpecific
 
     Page<Book> findAllByAuthorAuthorId(Pageable pageable, String authorId);
 
+    Page<Book> findAllByPublisherPublisherId(Pageable pageable, String publisherId);
+
+    Page<Book> findAllByDistributorDistributorId(Pageable pageable, String distributorId);
+
+    Page<Book> findAllByCategoriesCategoryId(Pageable pageable, String categoryId);
+
     @Query("SELECT DISTINCT b.price FROM Book b WHERE b.deleted = false ORDER BY b.price ASC")
     List<BigDecimal> findAllDistinctPricesOrderByAsc();
 
