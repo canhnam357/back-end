@@ -7,6 +7,7 @@ import com.bookstore.Service.OrderService;
 import com.bookstore.Service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.Objects;
 
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentController {
 
     private final VNPayService vnPayService;
@@ -34,13 +36,11 @@ public class PaymentController {
     public ResponseEntity<GenericResponse> createOrderCARD(@RequestHeader("Authorization") String authorizationHeader, HttpServletRequest request, @RequestBody Req_Create_Order order) {
         ResponseEntity<GenericResponse> res = orderService.createOrder(order, authorizationHeader);
 
-        System.err.println(authorizationHeader);
-
         if (!Objects.requireNonNull(res.getBody()).getSuccess()) {
             return res;
         }
 
-        System.err.println("SEND CREATED ORDER NOTIFICATION");
+        log.info("SEND CREATED ORDER NOTIFICATION");
 
         emailVerificationService.createdOrderNotification(res.getBody().getResult().toString());
 
@@ -49,14 +49,11 @@ public class PaymentController {
             return res;
         }
 
-        System.err.println("CARD , IP : ");
-
         // Tạo URL cho VNPay
         String clientIp = request.getRemoteAddr();
-        System.err.println(clientIp);
         String vnPayUrl = vnPayService.createOrder(clientIp, res.getBody().getResult().toString());
 
-        System.err.println(vnPayUrl);
+        log.info(vnPayUrl);
 
         res.getBody().setResult(vnPayUrl);
 
@@ -67,9 +64,9 @@ public class PaymentController {
     public ResponseEntity<Void> paymentCompleted(HttpServletRequest request) {
         int paymentStatus = vnPayService.orderReturn(request);
 
-        System.err.println("PAYMENT STATUS " + paymentStatus);
+        log.info("PAYMENT STATUS " + paymentStatus);
 
-        System.err.println("REQUEST " + request.toString());
+        log.info("REQUEST " + request.toString());
 
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String paymentTime = request.getParameter("vnp_PayDate");
@@ -82,7 +79,7 @@ public class PaymentController {
             totalPrice = amount.toString();
         }
 
-        System.err.println(paymentTime);
+        log.info(paymentTime);
 
         // Tạo URL redirect về frontend với query parameters
         String redirectUrl = userUrl + "/payment-return" +

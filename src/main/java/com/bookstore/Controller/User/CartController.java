@@ -32,7 +32,6 @@ public class CartController {
                                                      @RequestBody Req_Add_Cart addToCart) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        System.err.println("add to cart" + userId);
         return cartService.addToCart(addToCart, userId);
     }
 
@@ -41,7 +40,6 @@ public class CartController {
                                                           @PathVariable String bookId) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        System.err.println("Remove from cart" + userId);
         return cartService.removeFromCart(bookId, userId);
     }
 
@@ -50,7 +48,6 @@ public class CartController {
                                                      @RequestBody Req_Update_QuantityOfCartItem changeQuantity) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        System.err.println("Change quantity " + userId + " bookId " + changeQuantity.getBookId());
         return cartService.changeQuantity(changeQuantity.getBookId(), userId, changeQuantity.getQuantity());
     }
 
@@ -59,7 +56,6 @@ public class CartController {
                                                           @RequestBody Req_Change_QuantityOfCartItem updateQuantity) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        System.err.println("Update quantity " + userId + " bookId " + updateQuantity.getBookId());
         return cartService.updateQuantity(updateQuantity.getBookId(), userId, updateQuantity.getQuantity());
     }
 }
