@@ -12,9 +12,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, String> {
     @Query("SELECT oi FROM OrderItem oi " +
             "JOIN oi.orders o " +
             "WHERE oi.bookId = :bookId " +
-            "AND o.orderStatus = :orderStatus " +
+            "AND o.orderStatus = :orderStatus AND o.user.userId = :userId " +
             "ORDER BY o.orderAt DESC")
     List<OrderItem> findOrderItemByBookIdAndStatus(
+            @Param("userId") String userId,
             @Param("bookId") String bookId,
             @Param("orderStatus") OrderStatus orderStatus);
 }

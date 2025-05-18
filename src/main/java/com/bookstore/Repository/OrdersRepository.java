@@ -49,10 +49,20 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
 
     @Query("SELECT COUNT(o) FROM Orders o " +
             "WHERE o.orderStatus = :status " +
-            "AND o.orderAt >= :cutoffTime")
+            "AND o.orderAt >= :cutoffTime AND o.user.userId = :userId")
     long countCancelledOrdersWithinTime(
+            @Param("userId") String userId,
             @Param("status") OrderStatus status,
             @Param("cutoffTime") ZonedDateTime cutoffTime
+    );
+
+    @Query("SELECT COUNT(o) FROM Orders o " +
+            "WHERE o.orderStatus = :status " +
+            "AND o.paymentStatus = :paymentStatus AND o.user.userId = :userId")
+    long countPendingOrder(
+            @Param("userId") String userId,
+            @Param("status") OrderStatus status,
+            @Param("paymentStatus") PaymentStatus paymentStatus
     );
 
     @Query(value = "SELECT MONTH(order_at) AS month, COALESCE(SUM(total_price), 0) AS total " +

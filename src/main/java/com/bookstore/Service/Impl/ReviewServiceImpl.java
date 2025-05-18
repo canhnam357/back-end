@@ -51,9 +51,9 @@ public class ReviewServiceImpl implements ReviewService {
             String accessToken = authorizationHeader.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(accessToken);
 
-            List<OrderItem> orderItems = orderItemRepository.findOrderItemByBookIdAndStatus(bookId, OrderStatus.DELIVERED);
+            List<OrderItem> orderItems = orderItemRepository.findOrderItemByBookIdAndStatus(userId, bookId, OrderStatus.DELIVERED);
 
-            List<Review> reviews = reviewRepository.findReviewsByBookIdOrderedByCreatedAtDesc(bookId);
+            List<Review> reviews = reviewRepository.findReviewsByBookIdOrderedByCreatedAtDesc(userId, bookId);
             if (orderItems.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
                         .message("You must purchase the book in order to leave a review!")
