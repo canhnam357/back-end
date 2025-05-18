@@ -29,8 +29,6 @@ public interface BookService {
 
     ResponseEntity<GenericResponse> getPriceRange();
 
-    ResponseEntity<GenericResponse> delete(String bookId);
-
     ResponseEntity<GenericResponse> update(String bookId, Admin_Req_Update_Book bookDto);
 
     ResponseEntity<GenericResponse> search(String keyword);

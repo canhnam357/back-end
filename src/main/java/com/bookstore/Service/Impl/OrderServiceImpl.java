@@ -11,6 +11,7 @@ import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final UserRepository userRepository;
@@ -39,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public ResponseEntity<GenericResponse> createOrder(Req_Create_Order orderDTO, String authorizationHeader) {
         try {
+            log.info("Bắt đầu tạo đơn hàng!");
             String token = authorizationHeader.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(token);
 
@@ -180,7 +183,7 @@ public class OrderServiceImpl implements OrderService {
                 cart.getCartItems().add(cartItem);
             }
             cartRepository.save(cart);
-
+            log.info("Tạo đơn hàng thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
                     .message("Order created successfully!")
                     .result(order.getOrderId())
@@ -188,6 +191,7 @@ public class OrderServiceImpl implements OrderService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Tạo đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to create order, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -234,6 +238,7 @@ public class OrderServiceImpl implements OrderService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách đơn hàng của người dùng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve all orders, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -288,6 +293,7 @@ public class OrderServiceImpl implements OrderService {
                     .build());
 
         } catch (Exception ex) {
+            log.error("Lấy chi tiết đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve order details, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -331,6 +337,7 @@ public class OrderServiceImpl implements OrderService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Failed to retrieve all orders, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -380,6 +387,7 @@ public class OrderServiceImpl implements OrderService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách đơn hàng cho Shipper thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Failed to retrieve all orders, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -414,6 +422,7 @@ public class OrderServiceImpl implements OrderService {
                     .build());
 
         } catch (Exception ex) {
+            log.error("Lấy thống kê doanh thu của tháng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Failed to retrieve monthly revenue, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -448,6 +457,7 @@ public class OrderServiceImpl implements OrderService {
                     .build());
 
         } catch (Exception ex) {
+            log.error("Lấy thống kê số lượng đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Failed to get order count by status, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())

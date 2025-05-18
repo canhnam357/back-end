@@ -29,11 +29,6 @@ public class Admin_DistributorController {
         return distributorService.create(createDistributor);
     }
 
-    @DeleteMapping("") // not used
-    public ResponseEntity<GenericResponse> deleteDistributor (@RequestParam String distributorId) {
-        return distributorService.delete(distributorId);
-    }
-
     @PutMapping("/{distributorId}") // OK
     public ResponseEntity<GenericResponse> updateDistributor (@PathVariable String distributorId, @RequestBody Admin_Req_Update_Distributor distributor) {
         return distributorService.update(distributorId, distributor);

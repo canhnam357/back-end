@@ -15,6 +15,7 @@ import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.ReviewService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
@@ -45,6 +47,7 @@ public class ReviewServiceImpl implements ReviewService {
     })
     public ResponseEntity<GenericResponse> addReview(String authorizationHeader, String bookId, Req_Create_Review review) {
         try {
+            log.info("Bắt đầu thêm đánh giá!");
             String accessToken = authorizationHeader.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(accessToken);
 
@@ -91,6 +94,7 @@ public class ReviewServiceImpl implements ReviewService {
             Review temp = reviewRepository.save(new_review);
             Res_Get_Review res = new Res_Get_Review();
             res.convert(temp);
+            log.info("Thêm đánh giá thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
                     .message("Review created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
@@ -98,6 +102,7 @@ public class ReviewServiceImpl implements ReviewService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Thêm đánh giá thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to create review, message =  " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -146,6 +151,7 @@ public class ReviewServiceImpl implements ReviewService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách đánh giá thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve all reviews, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -160,6 +166,7 @@ public class ReviewServiceImpl implements ReviewService {
     })
     public ResponseEntity<GenericResponse> update(String reviewId, String token, Req_Create_Review review) {
         try {
+            log.info("Bắt đầu cập nhật đánh giá!");
             String accessToken = token.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(accessToken);
             Optional<User> user = userRepository.findById(userId);
@@ -216,7 +223,7 @@ public class ReviewServiceImpl implements ReviewService {
             Res_Get_Review res = new Res_Get_Review();
             Review temp = reviewRepository.save(ele.get());
             res.convert(temp);
-
+            log.info("Cập nhật đánh giá thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Review updated successfully!")
                     .statusCode(HttpStatus.OK.value())
@@ -225,6 +232,7 @@ public class ReviewServiceImpl implements ReviewService {
                     .build());
 
         } catch (Exception ex) {
+            log.error("Cập nhật đánh giá thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to update review, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())

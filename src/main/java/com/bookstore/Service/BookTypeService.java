@@ -10,7 +10,5 @@ public interface BookTypeService {
 
     ResponseEntity<GenericResponse> getAll(int page, int size);
 
-    ResponseEntity<GenericResponse> delete(String bookTypeId);
-
     ResponseEntity<GenericResponse> update(String bookTypeId, Admin_Req_Update_BookType bookTypeDto);
 }

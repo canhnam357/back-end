@@ -27,11 +27,6 @@ public class Admin_CategoryController {
         return categoryService.create(createCategory);
     }
 
-    @DeleteMapping("") // delete? not
-    public ResponseEntity<GenericResponse> deleteCategory (@RequestParam String categoryId) {
-        return categoryService.delete(categoryId);
-    }
-
     @PutMapping("/{categoryId}") // OK
     public ResponseEntity<GenericResponse> updateCategory (@PathVariable String categoryId, @RequestBody Admin_Req_Update_Category category) {
         return categoryService.update(categoryId, category);

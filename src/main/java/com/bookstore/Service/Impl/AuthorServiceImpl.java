@@ -8,6 +8,7 @@ import com.bookstore.Repository.AuthorRepository;
 import com.bookstore.Service.AuthorService;
 import com.bookstore.Utils.Normalized;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -17,15 +18,18 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthorServiceImpl implements AuthorService {
     private final AuthorRepository authorRepository;
 
     @Override
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Author createAuthor) {
         try {
+            log.info("Bắt đầu tạo tác giả!");
             Author author = new Author();
             author.setAuthorName(createAuthor.getAuthorName());
             author.setNameNormalized(Normalized.remove(createAuthor.getAuthorName()));
+            log.info("Tạo tác giả thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
                     .message("Author created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
@@ -33,6 +37,7 @@ public class AuthorServiceImpl implements AuthorService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Tạo tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to create author, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -52,6 +57,7 @@ public class AuthorServiceImpl implements AuthorService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve all authors, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -74,6 +80,7 @@ public class AuthorServiceImpl implements AuthorService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Tìm kiếm tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to search authors, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -85,7 +92,7 @@ public class AuthorServiceImpl implements AuthorService {
     @Override
     public ResponseEntity<GenericResponse> update(String authorId, Admin_Req_Update_Author updateAuthor) {
         try {
-
+            log.info("Bắt đầu cập nhật tác giả!");
             if (authorRepository.findById(authorId).isEmpty()) {
                 return ResponseEntity.status(404).body(GenericResponse.builder()
                         .message("Author not found!")
@@ -97,6 +104,7 @@ public class AuthorServiceImpl implements AuthorService {
             Author author = authorRepository.findById(authorId).get();
             author.setAuthorName(updateAuthor.getAuthorName());
             author.setNameNormalized(Normalized.remove(updateAuthor.getAuthorName()));
+            log.info("Cập nhật tác giả thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Author updated successfully!")
                     .statusCode(HttpStatus.OK.value())
@@ -104,6 +112,7 @@ public class AuthorServiceImpl implements AuthorService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Cập nhật tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to update author, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -115,6 +124,7 @@ public class AuthorServiceImpl implements AuthorService {
     @Override
     public ResponseEntity<GenericResponse> delete(String authorId) {
         try {
+            log.info("Bắt đầu xoá tác giả!");
             if (authorRepository.findById(authorId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .message("Author not found!")
@@ -123,12 +133,14 @@ public class AuthorServiceImpl implements AuthorService {
                         .build());
             }
             authorRepository.deleteById(authorId);
+            log.info("Xoá tác giả thành công!");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
                     .message("Deleted author successfully!")
                     .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Xoá tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to delete author, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -151,6 +163,7 @@ public class AuthorServiceImpl implements AuthorService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to search authors, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())

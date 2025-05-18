@@ -10,6 +10,7 @@ import com.bookstore.Repository.BookRepository;
 import com.bookstore.Repository.DiscountRepository;
 import com.bookstore.Service.DiscountService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DiscountServiceImpl implements DiscountService {
     private final DiscountRepository discountRepository;
     private final BookRepository bookRepository;
@@ -33,6 +35,7 @@ public class DiscountServiceImpl implements DiscountService {
     })
     public ResponseEntity<GenericResponse> createDiscount(Admin_Create_Discount discount) {
         try {
+            log.info("Bắt đầu tạo khuyến mãi!");
             if (discount.getStartDate() == null || discount.getEndDate() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("Start date and end date must be provided!")
@@ -125,7 +128,7 @@ public class DiscountServiceImpl implements DiscountService {
             // Liên kết ngược lại từ Book sang Discount
             book.setDiscount(ele);
             bookRepository.save(book);
-
+            log.info("Tạo khuyến mãi thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
                     .message("Discount created successfully!")
                     .result(ele)
@@ -134,6 +137,7 @@ public class DiscountServiceImpl implements DiscountService {
                     .build());
 
         } catch (Exception ex) {
+            log.error("Tạo khuyến mãi thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to create discount, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -154,6 +158,7 @@ public class DiscountServiceImpl implements DiscountService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách khuyến mãi thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve all discounts, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -168,7 +173,7 @@ public class DiscountServiceImpl implements DiscountService {
     })
     public ResponseEntity<GenericResponse> updateDiscount(String discountId, Admin_Update_Discount discount) {
         try {
-
+            log.info("Bắt đầu cập nhật khuyến mãi!");
             if (discount.getStartDate() == null || discount.getEndDate() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("Start date and end date must be provided!")
@@ -240,7 +245,7 @@ public class DiscountServiceImpl implements DiscountService {
             ele.setActive(discount.getIsActive());
             discountRepository.save(ele);
             bookRepository.save(book);
-
+            log.info("Cập nhật khuyến mãi thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Discount updated successfully!")
                     .result(ele)
@@ -248,6 +253,7 @@ public class DiscountServiceImpl implements DiscountService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Cập nhật khuyến mãi thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to update discount, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -276,6 +282,7 @@ public class DiscountServiceImpl implements DiscountService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách khuyến mãi của sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve discount of book, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())

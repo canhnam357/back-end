@@ -11,6 +11,7 @@ import com.bookstore.Service.UserService;
 import com.bookstore.Specification.UserSpecification;
 import com.cloudinary.Cloudinary;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -45,9 +47,7 @@ public class UserServiceImpl implements UserService {
                 String userId = jwtTokenProvider.getUserIdFromJwt(token);
                 assert (userRepository.findById(userId).isPresent());
                 User user = userRepository.findById(userId).get();
-                System.err.println("ROLE " + user.getRole().name());
                 if (user.getRole() == Role.ADMIN) {
-                    System.err.println("ADMIN");
                     return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                             .success(false)
                             .result(user.getFullName())
@@ -67,6 +67,7 @@ public class UserServiceImpl implements UserService {
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception ex) {
+            log.error("Xác thực ADMIN thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to verify ADMIN, message = " + ex.getMessage())
@@ -83,9 +84,7 @@ public class UserServiceImpl implements UserService {
                 String userId = jwtTokenProvider.getUserIdFromJwt(token);
                 assert (userRepository.findById(userId).isPresent());
                 User user = userRepository.findById(userId).get();
-                System.err.println("ROLE " + user.getRole().name());
                 if (user.getRole() == Role.ADMIN || (user.isVerified() && user.isActive())) {
-                    System.err.println("VERIFIED");
                     return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                             .success(false)
                             .result(user.getFullName())
@@ -105,6 +104,7 @@ public class UserServiceImpl implements UserService {
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception ex) {
+            log.error("Xác thực thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to verified, message = " + ex.getMessage())
@@ -120,8 +120,6 @@ public class UserServiceImpl implements UserService {
         try {
             if (isActive != 0 && isActive != 1) isActive = 2;
             if (isVerified != 0 && isVerified != 1) isVerified = 2;
-            System.err.println("isActive " + isActive);
-            System.err.println("isVerified " + isVerified);
             StringBuilder pattern = new StringBuilder();
             for (char c : email.toCharArray()) {
                 pattern.append("%").append(c).append("%");
@@ -157,6 +155,7 @@ public class UserServiceImpl implements UserService {
                     .success(true)
                     .build());
         } catch (Exception e) {
+            log.error("Lấy danh sách người dùng thất bại, lỗi : " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve all users, message = " + e.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -168,6 +167,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<GenericResponse> updateUserStatus(String userId, Admin_Req_Update_UserStatus adminUpdateUserDTO) {
         try {
+            log.info("Bắt đầu cập nhật trạng thái Người dùng!");
             Optional<User> user = userRepository.findById(userId);
             if (user.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
@@ -191,20 +191,19 @@ public class UserServiceImpl implements UserService {
                         .success(false)
                         .build());
             }
-
-            System.out.println(Boolean.parseBoolean(adminUpdateUserDTO.getActive()));
-            System.out.println(Boolean.parseBoolean(adminUpdateUserDTO.getVerified()));
             User _user = user.get();
             _user.setActive(Boolean.parseBoolean(adminUpdateUserDTO.getActive()));
             _user.setVerified(Boolean.parseBoolean(adminUpdateUserDTO.getVerified()));
             _user.setRole(Role.valueOf(adminUpdateUserDTO.getRole()));
             userRepository.save(_user);
+            log.info("Cập nhật trạng thái người dùng thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("User status updated successfully!!!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Cập nhật trạng thái người dùng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to update user status, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -302,6 +301,7 @@ public class UserServiceImpl implements UserService {
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception ex) {
+            log.error("Đăng ký thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to register, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -335,6 +335,7 @@ public class UserServiceImpl implements UserService {
                     .success(true)
                     .build());
         } catch (Exception e) {
+            log.error("Lấy thông tin cá nhân thất bại, lỗi : " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve user profile, message = " + e.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -354,8 +355,6 @@ public class UserServiceImpl implements UserService {
             if (otp == null) {
                 otp = "";
             }
-            System.err.println("EMAIL : " + email);
-            System.err.println("OTP : " + otp);
             Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(otp, email);
             if (emailVerification.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
@@ -376,6 +375,7 @@ public class UserServiceImpl implements UserService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Xác thực tài khoản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to verify account, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -449,6 +449,7 @@ public class UserServiceImpl implements UserService {
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception ex) {
+            log.error("Đổi mật khẩu thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to change password, message = " + ex.getMessage())
@@ -463,7 +464,6 @@ public class UserServiceImpl implements UserService {
             Map data = this.cloudinary.uploader().upload(file.getBytes(), Map.of());
             String url = (String) data.get("url");
             Optional<User> user = userRepository.findById(userId);
-            System.err.println(url);
             assert (user.isPresent());
             user.get().setAvatar(url);
             userRepository.save(user.get());
@@ -474,6 +474,7 @@ public class UserServiceImpl implements UserService {
                     .success(true)
                     .build());
         } catch (IOException io) {
+            log.error("Cập nhật avatar thất bại, lỗi : " + io.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to change avatar, message = " + io.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -514,6 +515,7 @@ public class UserServiceImpl implements UserService {
                     .build());
 
         } catch (Exception ex) {
+            log.error("Cập nhật thông tin cá nhân thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to change profile, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -618,6 +620,7 @@ public class UserServiceImpl implements UserService {
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception ex) {
+            log.error("Đặt lại mật khẩu thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to reset password, message = " + ex.getMessage())
@@ -651,6 +654,7 @@ public class UserServiceImpl implements UserService {
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy thông tin người dùng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to retrieve user, message = " + ex.getMessage())
@@ -685,6 +689,7 @@ public class UserServiceImpl implements UserService {
                     .build());
 
         } catch (Exception ex) {
+            log.error("Lấy thông kê người dùng mới thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Failed to count verified user by month, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
