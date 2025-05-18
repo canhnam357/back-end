@@ -11,6 +11,7 @@ import com.bookstore.Security.UserDetail;
 import com.bookstore.Security.UserDetailService;
 import com.bookstore.Service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +24,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
@@ -68,6 +70,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception e) {
+            log.error("Thất bại khi làm mới AT, lỗi : " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to reset access token, message = " + e.getMessage())
@@ -92,6 +95,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 refreshTokenRepository.saveAll(refreshTokens);
             }
         }catch (Exception e){
+            log.error("Thất bại khi xoá RT, lỗi : " + e.getMessage());
             e.printStackTrace();
         }
     }

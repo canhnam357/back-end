@@ -11,6 +11,7 @@ import com.bookstore.Service.RefundAttemptService;
 import com.bookstore.Utils.VNPayConfig;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -29,6 +30,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RefundAttemptServiceImpl implements RefundAttemptService {
     private final RefundAttemptRepository refundAttemptRepository;
 
@@ -87,6 +89,7 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
     public boolean refundOrder(String orderId, String txnRef, String transactionNo, String transactionDate, String createdBy, String amount, String ipAddress) {
         String Message;
         try {
+            log.info("Bắt đầu refund!");
             String vnp_Version = "2.1.0";
             String vnp_Command = "refund";
             String vnp_RequestId = UUID.randomUUID().toString();
@@ -121,12 +124,11 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
                     vnpParams.get("vnp_IpAddr") + "|" +
                     vnpParams.get("vnp_OrderInfo");
 
-            System.err.println("vnp_data: " + vnp_data);
+            log.info("vnp_data: " + vnp_data);
 
             String vnp_SecureHash = vnPayConfig.hmacSHA512(vnp_HashSecret, vnp_data);
             vnpParams.put("vnp_SecureHash", vnp_SecureHash);
 
-            System.err.println("vnp_SecureHash = " + vnp_SecureHash);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, String>> request = new HttpEntity<>(vnpParams, headers);
@@ -157,13 +159,11 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
                     "|" + Amount + "|" + BankCode + "|" + PayDate + "|" + TransactionNo + "|" + TransactionType + "|" +
                     TransactionStatus + "|" + OrderInfo;
 
-            System.err.println("DATA Response from VNPAY Refund: " + data);
+            log.info("DATA Response from VNPAY Refund: " + data);
             String computedHash = vnPayConfig.hmacSHA512(vnp_HashSecret, data);
             if (!computedHash.equals(SecureHash)) {
                 throw new IllegalStateException("Invalid response hash from VNPay");
             }
-            System.err.println("VNPay returned PayDate = '" + PayDate + "'");
-
             if (!"00".equals(ResponseCode)) {
                 throw new IllegalStateException("Refund failed : " + Message);
             }
@@ -183,9 +183,8 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
 
             try {
                 ordersRepository.flush();
-                System.err.println(">> flush() thành công");
             } catch (Exception e) {
-                System.err.println("!!! Error on flush(): " + e.getMessage());
+                log.error("flush order thất bại, lỗi : " + e.getMessage());
                 throw e;
             }
 
@@ -193,15 +192,17 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
             try {
                 emailVerificationService.refundOrderNotification(orders, refundAt);
             } catch (Exception e) {
-                System.err.println("Warning: refund notification failed: " + e.getMessage());
+                log.error("Warning: refund notification failed: " + e.getMessage());
             }
 
             orders.setRefundAt(refundAt);
             ordersRepository.save(orders);
+            log.info("Refund cho order : " + orderId + " , thành công!");
             return true;
         } catch (Exception ex) {
             // ex.getMessage() giờ đã là chi tiết lỗi parse hoặc order not found,
             // nếu ex do VNPay thì Message = vnp_Message ban đầu
+            log.error("REFUND Thất bại, lỗi : " + ex.getMessage());
             throw new IllegalStateException(ex.getMessage(), ex);
         }
     }

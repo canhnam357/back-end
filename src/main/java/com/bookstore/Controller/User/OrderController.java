@@ -25,7 +25,6 @@ public class OrderController {
                                                   @RequestParam(defaultValue = "") String orderStatus) {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
-        System.err.println("getAll order " + userId);
         return orderService.getAllOfUser(userId, orderStatus, index, size);
     }
 

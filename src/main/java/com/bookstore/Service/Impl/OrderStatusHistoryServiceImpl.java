@@ -15,6 +15,7 @@ import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.OrderStatusHistoryService;
 import com.bookstore.Utils.CheckCanChangeOrderStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -33,6 +34,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService {
 
     private final UserRepository userRepository;
@@ -57,7 +59,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
     })
     public ResponseEntity<GenericResponse> changeOrderStatus(String userId, Req_ChangeOrderStatus reqChangeOrderStatus) {
         try {
-
+            log.info("Bắt đầu thay đổi trạng thái đơn hàng!");
             if (reqChangeOrderStatus.getOrderId() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .message("OrderId must not be null!")
@@ -241,12 +243,14 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
             orderStatusHistory.setChangedAt(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             orderStatusHistoryRepository.save(orderStatusHistory);
+            log.info("Thay đổi trạng thái đơn hàng thành công, từ " + fromStatus + " -> " + toStatus);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
                     .message("Changed orderStatus from " + fromStatus + " to " + toStatus + " success!")
                     .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Thay đổi trạng thái đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to change orderStatus, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -273,6 +277,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
                     .success(false)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách trạng thái đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve order status history, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -305,6 +310,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
                     .success(false)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách trạng thái đơn hàng theo OrderId thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve order status history, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())

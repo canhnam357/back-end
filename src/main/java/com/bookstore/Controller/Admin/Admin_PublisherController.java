@@ -28,11 +28,6 @@ public class Admin_PublisherController {
         return publisherService.create(createPublisher);
     }
 
-    @DeleteMapping("") // not used
-    public ResponseEntity<GenericResponse> deletePublisher (@RequestParam String publisherId) {
-        return publisherService.delete(publisherId);
-    }
-
     @PutMapping("/{publisherId}") // OK
     public ResponseEntity<GenericResponse> updatePublisher (@PathVariable String publisherId, @RequestBody Admin_Req_Update_Publisher publisher) {
         return publisherService.update(publisherId, publisher);

@@ -10,6 +10,7 @@ import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.EmailVerificationService;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -30,6 +31,7 @@ import java.util.Random;
 @Service
 @EnableScheduling
 @RequiredArgsConstructor
+@Slf4j
 public class EmailVerificationServiceImpl implements EmailVerificationService {
     private final JavaMailSender mailSender;
     private final EmailVerificationRepository emailVerificationRepository;
@@ -69,6 +71,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             emailVerificationRepository.save(emailVerification);
         } catch (Exception e) {
             e.printStackTrace();
+            log.error("Gửi OTP Đăng ký thất bại, lỗi : " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -125,6 +128,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             emailVerificationRepository.save(emailVerification);
         } catch (Exception e) {
             e.printStackTrace();
+            log.error("Gửi OTP đổi mật khẩu thất bại, lỗi : " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -181,6 +185,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
                     .success(true)
                     .build());
         } catch (Exception e) {
+            log.error("Gửi OTP quên mật khẩu thất bại, lỗi : " + e.getMessage());
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
                     .message("Failed to send OTP for password reset, message = " + e.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -218,7 +223,6 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             context.setVariable("phone", order.getPhoneNumber());
             context.setVariable("paymentMethod", order.getPaymentMethod().name());
             context.setVariable("orderDetails", order.getOrderDetails());
-            System.err.println("No OrderItems : " + order.getOrderDetails().size());
             context.setVariable("totalOrderValue", order.getTotalPrice());
             context.setVariable("orderAt", order.getOrderAt());
             String mailContent = templateEngine.process("order-confirmation", context);
@@ -227,6 +231,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             mailSender.send(message);
 
         } catch (Exception e) {
+            log.error("Gửi mail xác nhận đơn hàng thất bại, lỗi : " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
         }
@@ -262,7 +267,6 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             else if (order.getOrderStatus().equals(OrderStatus.RETURNED)) {
                 reason_for_refund = "Giao hàng thất bại!";
             }
-            System.err.println("Refund AT " + refundAt);
             context.setVariable("estimatedRefundTime", refundAt);
             context.setVariable("refundReason", reason_for_refund);
             String mailContent = templateEngine.process("refund-notification", context);
@@ -272,6 +276,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
         } catch (Exception e) {
             e.printStackTrace();
+            log.error("Gửi mail hoàn tiền đơn hàng thất bại, lỗi : " + e.getMessage());
             throw new RuntimeException(e);
         }
     }

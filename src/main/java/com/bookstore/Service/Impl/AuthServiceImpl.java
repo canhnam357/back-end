@@ -11,6 +11,7 @@ import com.bookstore.Security.UserDetail;
 import com.bookstore.Service.AuthService;
 import com.bookstore.Service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,6 +29,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
@@ -127,6 +129,7 @@ public class AuthServiceImpl implements AuthService {
                     .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                     .build());
         } catch (Exception ex) {
+            log.error("Đăng nhập thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to log in, message = " + ex.getMessage())
@@ -153,6 +156,7 @@ public class AuthServiceImpl implements AuthService {
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception ex) {
+            log.error("Đăng xuất thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
                     .message("Failed to log out, message = " + ex.getMessage())

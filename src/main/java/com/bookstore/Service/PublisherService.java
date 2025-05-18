@@ -12,7 +12,5 @@ public interface PublisherService {
     ResponseEntity<GenericResponse> search(int page, int size, String keyword);
     ResponseEntity<GenericResponse> update(String publisherId, Admin_Req_Update_Publisher publisher);
 
-    ResponseEntity<GenericResponse> delete(String publisherId);
-
     ResponseEntity<GenericResponse> getAllNotPageable(String keyword);
 }

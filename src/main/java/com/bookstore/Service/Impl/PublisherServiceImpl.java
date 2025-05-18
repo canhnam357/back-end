@@ -8,6 +8,7 @@ import com.bookstore.Repository.PublisherRepository;
 import com.bookstore.Service.PublisherService;
 import com.bookstore.Utils.Normalized;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -18,15 +19,18 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PublisherServiceImpl implements PublisherService {
     private final PublisherRepository publisherRepository;
 
     @Override
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Publisher createPublisher) {
         try {
+            log.info("Bắt đầu tạo nhà xuất bản!");
             Publisher publisher = new Publisher();
             publisher.setPublisherName(createPublisher.getPublisherName());
             publisher.setNameNormalized(Normalized.remove(createPublisher.getPublisherName()));
+            log.info("Tạo nhà xuất bản thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
                     .message("Publisher created successfully!")
                     .statusCode(HttpStatus.CREATED.value())
@@ -34,6 +38,7 @@ public class PublisherServiceImpl implements PublisherService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Tạo nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to create publisher, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -53,6 +58,7 @@ public class PublisherServiceImpl implements PublisherService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to retrieve all publishers, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -75,6 +81,7 @@ public class PublisherServiceImpl implements PublisherService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Tìm kiếm nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to search publishers, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -86,6 +93,7 @@ public class PublisherServiceImpl implements PublisherService {
     @Override
     public ResponseEntity<GenericResponse> update(String publisherId, Admin_Req_Update_Publisher publisher) {
         try {
+            log.info("Bắt đầu cập nhật nhà xuất bản!");
             if (publisherRepository.findById(publisherId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .message("Publisher not found!")
@@ -96,6 +104,7 @@ public class PublisherServiceImpl implements PublisherService {
             Publisher _publisher = publisherRepository.findById(publisherId).get();
             _publisher.setPublisherName(publisher.getPublisherName());
             _publisher.setNameNormalized(Normalized.remove(publisher.getPublisherName()));
+            log.info("Cập nhật nhà xuất bản thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Publisher updated successfully!")
                     .statusCode(HttpStatus.OK.value())
@@ -103,26 +112,9 @@ public class PublisherServiceImpl implements PublisherService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Cập nhật nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to update publisher, message = " + ex.getMessage())
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .success(false)
-                    .build());
-        }
-    }
-
-    @Override
-    public ResponseEntity<GenericResponse> delete(String publisherId) {
-        try {
-            publisherRepository.deleteById(publisherId);
-            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Publisher deleted successfully!")
-                    .statusCode(HttpStatus.OK.value())
-                    .success(true)
-                    .build());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to delete publisher, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -143,6 +135,7 @@ public class PublisherServiceImpl implements PublisherService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
+            log.error("Lấy danh sách nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .message("Failed to search publishers, message = " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())

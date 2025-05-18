@@ -11,8 +11,6 @@ public interface CategoryService {
 
     ResponseEntity<GenericResponse> getAll(String keyword);
 
-    ResponseEntity<GenericResponse> delete(String categoryId);
-
     ResponseEntity<GenericResponse> update(String categoryId, Admin_Req_Update_Category category);
 
     ResponseEntity<GenericResponse> getAllNotPageable(String keyword);
