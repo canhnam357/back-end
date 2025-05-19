@@ -47,7 +47,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     if(!token.get().getToken().equals(reqVerify.getToken())){
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                                 .success(false)
-                                .message("RefreshToken is not present. Please log in again!")
+                                .message("Không tìm thấy RefreshToken. Vui lòng đăng nhập lại!")
                                 .statusCode(HttpStatus.UNAUTHORIZED.value())
                                 .build());
                     }
@@ -66,14 +66,14 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Unauthorized. Please log in again!")
+                    .message("Xác thực thất bại. Vui lòng đăng nhập lại!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception e) {
             log.error("Thất bại khi làm mới AT, lỗi : " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to reset access token, message = " + e.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -113,28 +113,28 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
                     ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                             .success(true)
-                            .message("Logged out successfully!")
+                            .message("Đăng xuất thành công!")
                             .statusCode(HttpStatus.OK.value())
                             .build());
                     return;
                 }
                 ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                         .success(false)
-                        .message("Failed to log out!")
+                        .message("Đăng xuất thất bại!")
                         .statusCode(HttpStatus.UNAUTHORIZED.value())
                         .build());
                 return;
             }
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to log out!")
+                    .message("Đăng xuất thất bại!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
 
         }catch(Exception e){
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to log out, message = " + e.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }

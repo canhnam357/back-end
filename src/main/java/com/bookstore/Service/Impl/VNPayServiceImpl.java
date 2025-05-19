@@ -130,7 +130,7 @@ public class VNPayServiceImpl implements VNPayService {
 
     public int orderReturn(HttpServletRequest request){
         Map fields = new HashMap();
-        String data = "";
+        StringBuilder data = new StringBuilder();
         for (Enumeration params = request.getParameterNames(); params.hasMoreElements();) {
             String fieldName;
             String fieldValue;
@@ -138,8 +138,8 @@ public class VNPayServiceImpl implements VNPayService {
             fieldValue = URLEncoder.encode(request.getParameter(fieldName), StandardCharsets.US_ASCII);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
                 fields.put(fieldName, fieldValue);
-                if (data.length() > 0) data += ",";
-                data += fieldName + "=" + fieldValue;
+                if (data.length() > 0) data.append(",");
+                data.append(fieldName).append("=").append(fieldValue);
             }
         }
 

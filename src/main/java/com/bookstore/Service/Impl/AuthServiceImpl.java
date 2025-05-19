@@ -43,15 +43,15 @@ public class AuthServiceImpl implements AuthService {
             if (login.getEmail() == null || login.getEmail().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Email must be provided!")
+                        .message("Email không được để trống!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
-            if (login.getEmail().length() > 300) {
+            if (login.getEmail().length() > 255) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Email length must be less than or equal to 300!")
+                        .message("Độ dài của email tối đa 255 ký tự!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -59,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
             if (login.getPassword() == null || login.getPassword().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password must be provided!")
+                        .message("Mật khẩu không được để trống!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
             if (login.getPassword().length() < 8 || login.getPassword().length() > 32) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password length must be between 8 and 32 characters!")
+                        .message("Độ dài của mật khẩu phải có từ 8 tới 32 ký tự!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -75,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
             Optional<User> userOptional = userRepository.findByEmail(login.getEmail());
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Account does not exist!")
+                        .message("Tài khoản không tồn tại!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -85,14 +85,14 @@ public class AuthServiceImpl implements AuthService {
             if (!user.isVerified()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
-                        .message("Account is not verified!")
+                        .message("Tài khoản chưa xác thực, vui lòng đăng ký lại!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
             if (!user.isActive()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
-                        .message("Account is not active!")
+                        .message("Tài khoản đang bị khoá!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
@@ -116,23 +116,23 @@ public class AuthServiceImpl implements AuthService {
             user.setLastLoginAt(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             userRepository.save(user);
 
-            return ResponseEntity.ok().body(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .success(true)
-                    .message("Logged in successfully!")
+                    .message("Đăng nhập thành công!")
                     .result(tokenMap)
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                     .success(false)
-                    .message("Incorrect password!")
+                    .message("Mật khẩu không chính xác!")
                     .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                     .build());
         } catch (Exception ex) {
             log.error("Đăng nhập thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to log in, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -146,20 +146,20 @@ public class AuthServiceImpl implements AuthService {
                 refreshTokenService.logout(refreshToken);
                 return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                         .success(true)
-                        .message("Logged out successfully!")
+                        .message("Đăng xuất thành công!")
                         .statusCode(HttpStatus.OK.value())
                         .build());
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to log out, please log in before logging out!")
+                    .message("Đăng xuất thất bại, vui lòng đăng nhập trước khi đăng xuất!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception ex) {
             log.error("Đăng xuất thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to log out, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }

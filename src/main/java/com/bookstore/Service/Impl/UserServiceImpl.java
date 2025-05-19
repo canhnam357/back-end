@@ -49,28 +49,28 @@ public class UserServiceImpl implements UserService {
                 User user = userRepository.findById(userId).get();
                 if (user.getRole() == Role.ADMIN) {
                     return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                            .success(false)
+                            .success(true)
                             .result(user.getFullName())
-                            .message("Verified ADMIN successfully!")
+                            .message("Xác thực Quản trị viên thành công!")
                             .statusCode(HttpStatus.OK.value())
                             .build());
                 }
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                         .success(false)
-                        .message("User is not an ADMIN!")
+                        .message("Người dùng không phải Quản trị viên!")
                         .statusCode(HttpStatus.UNAUTHORIZED.value())
                         .build());
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Incorrect token!")
+                    .message("AccessToken không chính xác!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         } catch (Exception ex) {
             log.error("Xác thực ADMIN thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to verify ADMIN, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         }
@@ -107,7 +107,7 @@ public class UserServiceImpl implements UserService {
             log.error("Xác thực thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to verified, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .build());
         }
@@ -157,7 +157,7 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             log.error("Lấy danh sách người dùng thất bại, lỗi : " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all users, message = " + e.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -205,7 +205,7 @@ public class UserServiceImpl implements UserService {
         } catch (Exception ex) {
             log.error("Cập nhật trạng thái người dùng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to update user status, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -219,23 +219,23 @@ public class UserServiceImpl implements UserService {
             if (registerRequest.getFullName() == null || registerRequest.getEmail() == null || registerRequest.getPhoneNumber() == null || registerRequest.getPassword() == null || registerRequest.getConfirmPassword() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("All fields must be provided!")
+                        .message("Thông tin không được để trống!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
-            if (registerRequest.getFullName().length() > 300) {
+            if (registerRequest.getFullName().length() > 50) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Full name length must be less than or equal to 300!")
+                        .message("Họ và tên có độ dài tối đa 50 ký tự!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
-            if (registerRequest.getEmail().length() > 300) {
+            if (registerRequest.getEmail().length() > 255) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Email length must be less than or equal to 300!")
+                        .message("Email có độ dài tối đa 255 ký tự!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -243,7 +243,7 @@ public class UserServiceImpl implements UserService {
             if (registerRequest.getPhoneNumber().length() < 10 || registerRequest.getPhoneNumber().length() > 11 || isNumericInput(registerRequest.getPhoneNumber())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Phone must be 10-11 digits long!")
+                        .message("Số điện thoại phải có từ 10-11 số!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -252,7 +252,7 @@ public class UserServiceImpl implements UserService {
             if (registerRequest.getPassword().length() < 8 || registerRequest.getPassword().length() > 32) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password must be between 8 and 32 characters long!")
+                        .message("Độ dài của mật khẩu phải có từ 8-32 ký tự!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -261,7 +261,7 @@ public class UserServiceImpl implements UserService {
             if (user.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
                         .success(false)
-                        .message("Email already exists!")
+                        .message("Email đã tồn tại!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .build());
             }
@@ -273,7 +273,7 @@ public class UserServiceImpl implements UserService {
             if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password and confirm password must be the same!")
+                        .message("Mật khẩu và xác nhận mật khẩu không khớp!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -297,13 +297,13 @@ public class UserServiceImpl implements UserService {
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .success(true)
-                    .message("Registered successfully. Please check your email and verify using the OTP!")
+                    .message("Đăng ký thành công. Vui lòng kiểm tra Emaild dể nhận OTP xác thực tài khoản!")
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception ex) {
             log.error("Đăng ký thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to register, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -314,9 +314,9 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<GenericResponse> getProfile(String userId) {
         try {
             Optional<User> user = userRepository.findByUserIdAndActiveIsTrue(userId);
-            if (user.isEmpty()) {
+            if (user.isEmpty() || !user.get().isVerified()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("User is not active!!!")
+                        .message("Tài khoản đang bị khoá hoặc chưa xác thực!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -329,7 +329,7 @@ public class UserServiceImpl implements UserService {
             profile.setGender(user.get().getGender().name());
             profile.setDateOfBirth(user.get().getDateOfBirth());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("User profile retrieved successfully!")
+                    .message("Lấy thông tin cá nhân thành công!")
                     .result(profile)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -337,7 +337,7 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             log.error("Lấy thông tin cá nhân thất bại, lỗi : " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve user profile, message = " + e.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -358,7 +358,7 @@ public class UserServiceImpl implements UserService {
             Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(otp, email);
             if (emailVerification.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Incorrect OTP, please try again!")
+                        .message("OTP không chính xác, vui lòng thử lại!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -370,14 +370,14 @@ public class UserServiceImpl implements UserService {
             user.setActive(true);
             userRepository.save(user);
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Account verified successfully. Please log in!")
+                    .message("Xác thực tài khoản thành công, vui lòng đăng nhập!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Xác thực tài khoản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to verify account, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -395,7 +395,7 @@ public class UserServiceImpl implements UserService {
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .success(false)
-                        .message("Account does not exist!")
+                        .message("Tài khoản không tồn tại!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .build());
             }
@@ -403,7 +403,7 @@ public class UserServiceImpl implements UserService {
             if (reqUpdatePassword.getNewPassword().length() < 8 || reqUpdatePassword.getNewPassword().length() > 32) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password must be between 8 and 32 characters long")
+                        .message("Độ dài của mật khẩu phải có từ 8-32 ký tự")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -415,7 +415,7 @@ public class UserServiceImpl implements UserService {
             if (!passwordEncoder.matches(reqUpdatePassword.getPassword(), user.getPassword())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
-                        .message("Incorrect current password!")
+                        .message("Mật khẩu hiện tại không chính xác!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
@@ -423,7 +423,7 @@ public class UserServiceImpl implements UserService {
             if (reqUpdatePassword.getPassword().equals(reqUpdatePassword.getNewPassword())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password and new password must not be the same!")
+                        .message("OTP không chính xác , vui lòng thử lại!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .build());
             }
@@ -445,14 +445,14 @@ public class UserServiceImpl implements UserService {
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .success(true)
-                    .message("Changed password successfully!")
+                    .message("Đổi mật khẩu thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception ex) {
             log.error("Đổi mật khẩu thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to change password, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -468,7 +468,7 @@ public class UserServiceImpl implements UserService {
             user.get().setAvatar(url);
             userRepository.save(user.get());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Changed avatar successfully!")
+                    .message("Thay đổi Ảnh đại diện thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(url)
                     .success(true)
@@ -476,7 +476,7 @@ public class UserServiceImpl implements UserService {
         } catch (IOException io) {
             log.error("Cập nhật avatar thất bại, lỗi : " + io.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to change avatar, message = " + io.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -488,7 +488,7 @@ public class UserServiceImpl implements UserService {
         try {
             if (userRepository.findById(userId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Account does not exist!")
+                        .message("Tài khoản không tồn tại!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -508,7 +508,7 @@ public class UserServiceImpl implements UserService {
             res.setGender(user.getGender().toString());
             res.setDateOfBirth(user.getDateOfBirth());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Changed profile successfully!")
+                    .message("Thay đổi thông tin cá nhân thành công!")
                     .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -517,7 +517,7 @@ public class UserServiceImpl implements UserService {
         } catch (Exception ex) {
             log.error("Cập nhật thông tin cá nhân thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to change profile, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -557,7 +557,7 @@ public class UserServiceImpl implements UserService {
             if (password.getOtp() == null || password.getEmail() == null || password.getNewPassword() == null || password.getConfirmPassword() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("All fields must be provided!")
+                        .message("Không được để trống thông tin!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -565,7 +565,7 @@ public class UserServiceImpl implements UserService {
             if (password.getOtp().length() != 6 || isNumericInput(password.getOtp())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("OTP length must be 6 digits long!")
+                        .message("OTP có chính xác 6 chữ số, vui lòng thử lại!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -574,7 +574,7 @@ public class UserServiceImpl implements UserService {
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
                         .success(false)
-                        .message("Account does not exist!")
+                        .message("Tài khoản không tồn tại!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .build());
             }
@@ -582,7 +582,7 @@ public class UserServiceImpl implements UserService {
             if (password.getNewPassword().length() < 8 || password.getNewPassword().length() > 32) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password must be between 8 and 32 characters long!")
+                        .message("Độ dài của mật khẩu phải có từ 8-32 ký tự!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -591,7 +591,7 @@ public class UserServiceImpl implements UserService {
             if (!password.getNewPassword().equals(password.getConfirmPassword())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Password and confirm password must be the same!")
+                        .message("Mật khẩu mới và xác nhận mật khẩu mới không khớp!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
@@ -604,7 +604,7 @@ public class UserServiceImpl implements UserService {
             if (emailVerification.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
                         .success(false)
-                        .message("Incorrect OTP, please try again!")
+                        .message("OTP Không chính xác, vui lòng thử lại!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .build());
             }
@@ -616,14 +616,14 @@ public class UserServiceImpl implements UserService {
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .success(true)
-                    .message("Password reset successfully!")
+                    .message("Đặt lại mật khẩu thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception ex) {
             log.error("Đặt lại mật khẩu thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to reset password, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -649,7 +649,7 @@ public class UserServiceImpl implements UserService {
             }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .success(true)
-                    .message("Retrieved user successfully!")
+                    .message("Lấy thông tin người dùng thành công!")
                     .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .build());
@@ -657,7 +657,7 @@ public class UserServiceImpl implements UserService {
             log.error("Lấy thông tin người dùng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
                     .success(false)
-                    .message("Failed to retrieve user, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());
         }
@@ -682,7 +682,7 @@ public class UserServiceImpl implements UserService {
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Counted verified user by month successfully!")
+                    .message("Lấy thống kê người dùng mới của năm thành công!")
                     .result(result)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -690,8 +690,8 @@ public class UserServiceImpl implements UserService {
 
         } catch (Exception ex) {
             log.error("Lấy thông kê người dùng mới thất bại, lỗi : " + ex.getMessage());
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Failed to count verified user by month, message = " + ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

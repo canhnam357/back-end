@@ -32,7 +32,7 @@ public class DistributorServiceImpl implements DistributorService {
             distributor.setNameNormalized(Normalized.remove(createDistributor.getDistributorName()));
             log.info("Tạo nhà phát hành thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Distributor created successfully!")
+                    .message("Tạo Nhà phát hành thành công!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(distributorRepository.save(distributor))
                     .success(true)
@@ -40,7 +40,7 @@ public class DistributorServiceImpl implements DistributorService {
         } catch (Exception ex) {
             log.error("Tạo nhà phát hành thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to create distributor, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -52,7 +52,7 @@ public class DistributorServiceImpl implements DistributorService {
         try {
             Page<Distributor> contributors = distributorRepository.findAll(PageRequest.of(page - 1, size));
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all distributors successfully!")
+                    .message("Lấy danh sách Nhà phát hành thành công!")
                     .result(contributors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -60,7 +60,7 @@ public class DistributorServiceImpl implements DistributorService {
         } catch (Exception ex) {
             log.error("Lấy danh sách nhà phát hành thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all distributors, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -75,7 +75,7 @@ public class DistributorServiceImpl implements DistributorService {
             Page<Distributor> distributors = distributorRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Searched distributors Successfully!")
+                    .message("Tìm kiếm Nhà phát hành thành công!")
                     .result(distributors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -83,7 +83,7 @@ public class DistributorServiceImpl implements DistributorService {
         } catch (Exception ex) {
             log.error("Tìm kiếm nhà phát hành thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to search distributors, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -96,7 +96,7 @@ public class DistributorServiceImpl implements DistributorService {
             log.info("Bắt đầu cập nhật thông tin nhà phát hành!");
             if (distributorRepository.findById(distributorId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Distributor not found!")
+                        .message("Không tìm thấy Nhà phát hành!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -106,7 +106,7 @@ public class DistributorServiceImpl implements DistributorService {
             _distributor.setNameNormalized(Normalized.remove(distributor.getDistributorName()));
             log.info("Cập nhật thông tin nhà phát hành thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Distributor updated successfully!")
+                    .message("Cập nhật thông tin Nhà phát hành thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(distributorRepository.save(_distributor))
                     .success(true)
@@ -114,7 +114,7 @@ public class DistributorServiceImpl implements DistributorService {
         } catch (Exception ex) {
             log.error("Cập nhật thông tin nhà phát hành thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to update distributor, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -129,7 +129,7 @@ public class DistributorServiceImpl implements DistributorService {
             List<Distributor> distributors = distributorRepository.findListByNameContainingSubsequence(search_word);
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Searched distributors successfully!")
+                    .message("Tìm kiếm Nhà phát hành thành công!")
                     .result(distributors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -137,7 +137,7 @@ public class DistributorServiceImpl implements DistributorService {
         } catch (Exception ex) {
             log.error("Lấy danh sách nhà phát hành thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to search distributors, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

@@ -29,7 +29,7 @@ public class BookTypeServiceImpl implements BookTypeService {
             bookType.setBookTypeName(createBookType.getBookTypeName());
             log.info("Tạo loại sách thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Book type created successfully!")
+                    .message("Tạo Loại sách mới thành công!")
                     .statusCode(HttpStatus.CREATED.value())
                      .result(bookTypeRepository.save(bookType))
                     .success(true)
@@ -37,7 +37,7 @@ public class BookTypeServiceImpl implements BookTypeService {
         } catch (Exception ex) {
             log.error("Tạo loại sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to create book type, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -49,7 +49,7 @@ public class BookTypeServiceImpl implements BookTypeService {
         try {
             List<BookType> bookTypes = bookTypeRepository.findAll();
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all book types successfully!")
+                    .message("Lấy danh sách Loại sách thành công!")
                     .result(bookTypes)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -57,7 +57,7 @@ public class BookTypeServiceImpl implements BookTypeService {
         } catch (Exception ex) {
             log.error("Lấy danh sách loại sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all book types, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -71,7 +71,7 @@ public class BookTypeServiceImpl implements BookTypeService {
             Optional<BookType> bookType = bookTypeRepository.findById(bookTypeId);
             if (bookType.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Book type not found!")
+                        .message("Loại sách không tìm thấy!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -79,7 +79,7 @@ public class BookTypeServiceImpl implements BookTypeService {
             bookType.get().setBookTypeName(bookTypeDto.getBookTypeName());
             log.info("Cập nhật loại sách thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Book type updated successfully!")
+                    .message("Cập nhật thông tin Loại sách thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(bookTypeRepository.save(bookType.get()))
                     .success(true)
@@ -87,7 +87,7 @@ public class BookTypeServiceImpl implements BookTypeService {
         } catch (Exception ex) {
             log.error("Cập nhật loại sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to update book type, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

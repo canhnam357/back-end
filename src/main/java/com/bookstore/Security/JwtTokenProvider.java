@@ -75,13 +75,13 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException ex) {
-            System.out.println("Expired token : " + ex.getMessage());
+            log.error("Expired token : " + ex.getMessage());
         } catch (UnsupportedJwtException ex) {
-            System.out.println("Token not supported : " + ex.getMessage());
+            log.error("Token not supported : " + ex.getMessage());
         } catch (MalformedJwtException ex) {
-            System.out.println("Incorrect format token : " + ex.getMessage());
+            log.error("Incorrect format token : " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            System.out.println("Token is empty or null : " + ex.getMessage());
+            log.error("Token is empty or null : " + ex.getMessage());
         }
         return false;
     }

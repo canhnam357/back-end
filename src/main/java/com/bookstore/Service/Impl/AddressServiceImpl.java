@@ -38,7 +38,7 @@ public class AddressServiceImpl implements AddressService {
                 ));
             }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all addresses successfully!")
+                    .message("Lấy danh sách tác giả thành công!")
                     .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -46,7 +46,7 @@ public class AddressServiceImpl implements AddressService {
         } catch (Exception ex) {
             log.error("Lấy danh sách địa chỉ thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all addresses, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -57,9 +57,9 @@ public class AddressServiceImpl implements AddressService {
     public ResponseEntity<GenericResponse> create(Req_Create_Address createAddress, String userId) {
         try {
             log.info("Bắt đầu tạo địa chỉ!");
-            if (addressRepository.findAllByUserUserId(userId).size() == 10) {
+            if (addressRepository.findAllByUserUserId(userId).size() >= 10) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                        .message("You can only save up to 10 addresses. Please delete another address before adding a new one!")
+                        .message("Bạn chỉ có thể lưu tối đa 10 địa chỉ, vui lòng xoá địa chỉ khác trước khi tạo địa chỉ mới!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
@@ -78,7 +78,7 @@ public class AddressServiceImpl implements AddressService {
             Address address = addressRepository.save(tempAddress);
             log.info("Tạo địa chỉ thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Address created successfully!")
+                    .message("Tạo địa chỉ mới thành công!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(new Res_Get_Address(
                             address.getAddressId(),
@@ -93,7 +93,7 @@ public class AddressServiceImpl implements AddressService {
         } catch (Exception ex) {
             log.error("Tạo địa chỉ thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to create address, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -107,7 +107,7 @@ public class AddressServiceImpl implements AddressService {
             Optional<Address> address = addressRepository.findByAddressIdAndUserUserId(addressId, userId);
             if (address.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Address not found!")
+                        .message("Không tìm thấy địa chỉ!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -115,7 +115,7 @@ public class AddressServiceImpl implements AddressService {
 
             if (address.get().isDefaultAddress()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                        .message("Cannot delete default address. Please set another address as default first!")
+                        .message("Không thể xoá địa chỉ mặc định, vui lòng chọn địa chỉ khác làm mặc định trước khi xoá địa chỉ này!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
@@ -124,14 +124,14 @@ public class AddressServiceImpl implements AddressService {
             addressRepository.delete(address.get());
             log.info("Xoá địa chỉ thành công!");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
-                    .message("Address deleted successfully!")
+                    .message("Xoá địa chỉ thành công!")
                     .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Xoá đa chỉ thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                .message("Failed to delete address, message = " + ex.getMessage())
+                .message("Lỗi hệ thống!")
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .success(false)
                 .build());
@@ -145,7 +145,7 @@ public class AddressServiceImpl implements AddressService {
             Optional<Address> _address = addressRepository.findByAddressIdAndUserUserId(addressId, userId);
             if (_address.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Address not found!")
+                        .message("Không tìm thấy địa chỉ!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -169,7 +169,7 @@ public class AddressServiceImpl implements AddressService {
             Address address = addressRepository.save(_address.get());
             log.info("Cập nhật địa chỉ thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Address updated successfully!")
+                    .message("Cập nhật địa chỉ thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(new Res_Get_Address(
                             address.getAddressId(),
@@ -184,7 +184,7 @@ public class AddressServiceImpl implements AddressService {
         } catch (Exception ex) {
             log.error("Cập nhật địa chỉ thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to update address, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -197,7 +197,7 @@ public class AddressServiceImpl implements AddressService {
             log.info("Bắt đầu cập nhật địa chỉ làm mặc định!");
             if (addressRepository.findByAddressIdAndUserUserId(addressId, userId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Address not found!")
+                        .message("Không tìm thấy địa chỉ!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -205,7 +205,7 @@ public class AddressServiceImpl implements AddressService {
             if (addressRepository.findDefaultAddressOfUser(userId).isPresent()) {
                 if (addressRepository.findDefaultAddressOfUser(userId).get().getAddressId().equals(addressId)) {
                     return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                            .message("Address is already the default!")
+                            .message("Địa chỉ đã là mặc định rồi!")
                             .statusCode(HttpStatus.CONFLICT.value())
                             .success(false)
                             .build());
@@ -220,14 +220,14 @@ public class AddressServiceImpl implements AddressService {
             addressRepository.save(address);
             log.info("Cập nhật địa chỉ làm mặc định thành công!");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
-                    .message("Set Address as default successfully!")
+                    .message("Đặt làm địa chỉ mặc định thành công!")
                     .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Cập nhật địa chỉ làm mặc định thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to set address as default, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
