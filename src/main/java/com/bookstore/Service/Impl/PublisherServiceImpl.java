@@ -32,7 +32,7 @@ public class PublisherServiceImpl implements PublisherService {
             publisher.setNameNormalized(Normalized.remove(createPublisher.getPublisherName()));
             log.info("Tạo nhà xuất bản thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Publisher created successfully!")
+                    .message("Tạo Nhà xuất bản mới thành công!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(publisherRepository.save(publisher))
                     .success(true)
@@ -40,7 +40,7 @@ public class PublisherServiceImpl implements PublisherService {
         } catch (Exception ex) {
             log.error("Tạo nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to create publisher, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -52,7 +52,7 @@ public class PublisherServiceImpl implements PublisherService {
         try {
             Page<Publisher> publishers = publisherRepository.findAll(PageRequest.of(page - 1, size));
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all publishers successfully!")
+                    .message("Lấy danh sách Nhà xuất bản thành công!")
                     .result(publishers)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -60,7 +60,7 @@ public class PublisherServiceImpl implements PublisherService {
         } catch (Exception ex) {
             log.error("Lấy danh sách nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all publishers, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -75,7 +75,7 @@ public class PublisherServiceImpl implements PublisherService {
             Page<Publisher> publishers = publisherRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Searched publishers successfully!")
+                    .message("Tìm kiếm Nhà xuất bản thành công!")
                     .result(publishers)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -83,7 +83,7 @@ public class PublisherServiceImpl implements PublisherService {
         } catch (Exception ex) {
             log.error("Tìm kiếm nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to search publishers, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -96,7 +96,7 @@ public class PublisherServiceImpl implements PublisherService {
             log.info("Bắt đầu cập nhật nhà xuất bản!");
             if (publisherRepository.findById(publisherId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Publisher not found!")
+                        .message("Không tìm thấy Nhà xuất bản!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -106,7 +106,7 @@ public class PublisherServiceImpl implements PublisherService {
             _publisher.setNameNormalized(Normalized.remove(publisher.getPublisherName()));
             log.info("Cập nhật nhà xuất bản thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Publisher updated successfully!")
+                    .message("Cập nhật thông tin Nhà xuất bản thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(publisherRepository.save(_publisher))
                     .success(true)
@@ -114,7 +114,7 @@ public class PublisherServiceImpl implements PublisherService {
         } catch (Exception ex) {
             log.error("Cập nhật nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to update publisher, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -129,7 +129,7 @@ public class PublisherServiceImpl implements PublisherService {
             List<Publisher> publishers = publisherRepository.findListByNameContainingSubsequence(search_word);
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Searched publishers successfully!")
+                    .message("Tìm kiếm Nhà xuất bản thành công!")
                     .result(publishers)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -137,7 +137,7 @@ public class PublisherServiceImpl implements PublisherService {
         } catch (Exception ex) {
             log.error("Lấy danh sách nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to search publishers, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

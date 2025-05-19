@@ -62,7 +62,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             log.info("Bắt đầu thay đổi trạng thái đơn hàng!");
             if (reqChangeOrderStatus.getOrderId() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("OrderId must not be null!")
+                        .message("OrderId không được để trống!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -72,7 +72,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
             if (ordersRepository.findById(orderId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Order not found!")
+                        .message("Không tìm thấy Đơn hàng!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -80,7 +80,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
             if (reqChangeOrderStatus.getFromStatus() == null || reqChangeOrderStatus.getToStatus() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("fromStatus and toStatus must not be null!")
+                        .message("fromStatus và toStatus không được để trống!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -94,7 +94,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             Orders order = ordersRepository.findById(orderId).get();
             if (Arrays.stream(OrderStatus.values()).noneMatch(e -> e.name().equals(fromStatus)) || Arrays.stream(OrderStatus.values()).noneMatch(e -> e.name().equals(toStatus))) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("fromStatus or toStatus not in OrderStatus!")
+                        .message(fromStatus + " hoặc " + toStatus + " không nằm trong danh sách trạng thái Đơn hàng!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -102,7 +102,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
             if (!CheckCanChangeOrderStatus.check(fromStatus, toStatus)) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Can't change fromStatus to toStatus!")
+                        .message("Không thể thay đổi trạng thái Đơn hàng từ " + fromStatus + " -> " + toStatus + "!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -111,7 +111,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             // User CANCELLED Order
             if (toStatus.equals(OrderStatus.CANCELLED.name()) && (!order.getUser().getUserId().equals(userId))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("Users can't cancel orders that are not theirs!")
+                        .message("Người dùng không thể Huỷ đơn hàng không phải của họ!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -119,7 +119,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
             if (toStatus.equals(OrderStatus.CANCELLED.name()) && order.getPaymentMethod().equals(PaymentMethod.CARD) && order.getPaymentStatus().equals(PaymentStatus.PENDING)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("Can't CANCELLED order while PaymentStatus is PENDING, wait 30 minutes and try again!")
+                        .message("Không thể chuyển Đơn hàng sang CANCELLED khi trạng thái thanh toán vẫn đang PENDING, chờ 30 phút sau và thử lại!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -131,7 +131,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
             if (order.getPaymentMethod().equals(PaymentMethod.CARD) && order.getPaymentStatus().equals(PaymentStatus.PENDING) && toStatus.equals(OrderStatus.REJECTED.name())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Can't REJECTED order while PaymentStatus is PENDING!")
+                        .message("Không thể chuyển Đơn hàng sang REJECTED khi trạng thái thanh toán vẫn đang PENDING!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -139,7 +139,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
             if (order.getPaymentMethod().equals(PaymentMethod.CARD) && order.getPaymentStatus().equals(PaymentStatus.PENDING) && toStatus.equals(OrderStatus.IN_PREPARATION.name())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Can't IN_PREPARATION order while PaymentStatus is PENDING!")
+                        .message("Không thể chuyển Đơn hàng sang IN_PREPARATION khi trạng thái thanh toán vẫn đang PENDING!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -148,7 +148,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             // PENDING -> REJECTED
             if (EMPLOYEEPermission(user.getRole()) && toStatus.equals(OrderStatus.REJECTED.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("Must have EMPLOYEE Permission to change from PENDING -> REJECTED!")
+                        .message("Phải có quyền EMPLOYEE để thay đổi đơn hàng từ PENDING -> REJECTED!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -157,7 +157,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             // PENDING -> IN_PREPARATION
             if (EMPLOYEEPermission(user.getRole()) && toStatus.equals(OrderStatus.IN_PREPARATION.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("Must have EMPLOYEE Permission to change from PENDING -> IN_PREPARATION!")
+                        .message("Phải có quyền EMPLOYEE để thay đổi đơn hàng từ PENDING -> IN_PREPARATION!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -166,7 +166,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             // IN_PREPARATION -> READY_TO_SHIP
             if (EMPLOYEEPermission(user.getRole()) && toStatus.equals(OrderStatus.READY_TO_SHIP.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("Must have EMPLOYEE Permission to change from IN_PREPARATION -> READY_TO_SHIP!")
+                        .message("Phải có quyền EMPLOYEE để thay đổi đơn hàng từ IN_PREPARATION -> READY_TO_SHIP!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -175,7 +175,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             // FAILED_DELIVERY -> RETURNED
             if (EMPLOYEEPermission(user.getRole()) && toStatus.equals(OrderStatus.RETURNED.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("Must have EMPLOYEE Permission to change from FAILED_DELIVERY -> RETURNED!")
+                        .message("Phải có quyền EMPLOYEE để thay đổi đơn hàng từ FAILED_DELIVERY -> RETURNED!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -184,7 +184,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             // READY_TO_SHIP -> DELIVERING
             if (SHIPPERPermission(user.getRole()) && toStatus.equals(OrderStatus.DELIVERING.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("Must have SHIPPER Permission to change from READY_TO_SHIP -> DELIVERING!")
+                        .message("Phải có quyền SHIPPER để thay đổi Đơn hàng từ READY_TO_SHIP -> DELIVERING!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -193,7 +193,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             // DELIVERING -> DELIVERED
             if (SHIPPERPermission(user.getRole()) && toStatus.equals(OrderStatus.DELIVERED.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("Must have SHIPPER Permission to change from DELIVERING -> DELIVERED!")
+                        .message("Phải có quyền EMPLOYEE để thay đổi đơn hàng từ DELIVERING -> DELIVERED!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -202,7 +202,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             // DELIVERING -> FAILED_DELIVERY
             if (SHIPPERPermission(user.getRole()) && toStatus.equals(OrderStatus.FAILED_DELIVERY.name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("Must have SHIPPER Permission to change from DELIVERING -> FAILED_DELIVERY!")
+                        .message("Phải có quyền SHIPPER để thay đổi Đơn hàng từ DELIVERING -> FAILED_DELIVERY!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -245,14 +245,14 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             orderStatusHistoryRepository.save(orderStatusHistory);
             log.info("Thay đổi trạng thái đơn hàng thành công, từ " + fromStatus + " -> " + toStatus);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
-                    .message("Changed orderStatus from " + fromStatus + " to " + toStatus + " success!")
+                    .message("Thay đổi trạng thái Đơn hàng từ " + fromStatus + " sang " + toStatus + " thành công!")
                     .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Thay đổi trạng thái đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to change orderStatus, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -271,15 +271,15 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
             Page<Res_Get_OrderStatusHistory> dtoPage = new PageImpl<>(res, orderStatusHistories.getPageable(), orderStatusHistories.getTotalElements());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Retrieved all order status history successfully!")
+                    .message("Lấy danh sách Lịch sử thay đổi trạng thái đơn hàng thành công!")
                     .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
-                    .success(false)
+                    .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Lấy danh sách trạng thái đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve order status history, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -304,15 +304,15 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
             }
             Page<Res_Get_OrderStatusHistory> dtoPage = new PageImpl<>(res, orderStatusHistories.getPageable(), orderStatusHistories.getTotalElements());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all order status history successfully!")
+                    .message("Lấy danh sách Lịch sử thay đổi trạng thái đơn hàng thành công!")
                     .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
-                    .success(false)
+                    .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Lấy danh sách trạng thái đơn hàng theo OrderId thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve order status history, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

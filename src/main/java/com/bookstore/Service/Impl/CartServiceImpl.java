@@ -109,7 +109,7 @@ public class CartServiceImpl implements CartService {
             Req_Get_Cart res = new Req_Get_Cart(cartItemList);
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved cart successfully!")
+                    .message("Lấy thông tin giỏ hàng thành công!")
                     .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -117,7 +117,7 @@ public class CartServiceImpl implements CartService {
         } catch (Exception ex) {
             log.error("Lấy thông tin giỏ hàng thất bại : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve cart, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -146,7 +146,7 @@ public class CartServiceImpl implements CartService {
             _cartItem.reCalTotalPrice();
             if (_cartItem.getQuantity() <= 0) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Quantity must be greater than 0!")
+                        .message("Số lượng sản phẩm phải > 0!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -154,7 +154,7 @@ public class CartServiceImpl implements CartService {
 
             if (_cartItem.getQuantity() > _cartItem.getBook().getInStock()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Total quantity must be less than or equal to in stock!")
+                        .message("Số lượng sản phẩm trong giỏ hàng không được nhiều hơn số lượng tồn kho!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -163,7 +163,7 @@ public class CartServiceImpl implements CartService {
             CartItem cartItem = cartItemRepository.save(_cartItem);
             log.info("Thêm vào giỏ hàng thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Added to cart successfully!")
+                    .message("Thêm sản phẩm vào giỏ hàng thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(new Req_Get_CartItem(
                             cartItem.getBook().getBookId(),
@@ -179,7 +179,7 @@ public class CartServiceImpl implements CartService {
         } catch (Exception ex) {
             log.info("Thêm vào giỏ hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to add to cart, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -193,7 +193,7 @@ public class CartServiceImpl implements CartService {
             Optional<CartItem> cartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
             if (cartItem.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Cart item not found!")
+                        .message("Không tìm thấy sản phẩm trong giỏ hàng!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -201,14 +201,14 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.delete(cartItem.get());
             log.info("Xoá khỏi giỏ hàng thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Removed from cart successfully!")
+                    .message("Xoá sản phẩm khỏi giỏ hàng thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Xoá khỏi giỏ hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to remove from cart, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -222,14 +222,14 @@ public class CartServiceImpl implements CartService {
             Optional<CartItem> tempcartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
             if (tempcartItem.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Cart item not found!")
+                        .message("Không tìm thấy sản phẩm trong giỏ hàng!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             if (tempcartItem.get().getQuantity() + quantity <= 0) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Can't set quantity to less than or equal to 0!")
+                        .message("Không để thay đổi số lượng sản phẩm <= 0!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -253,7 +253,7 @@ public class CartServiceImpl implements CartService {
             }
             log.info("Thay đổi số lượng sản phẩm trong giỏ hàng thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Quantity changed successfully!")
+                    .message("Thay đổi số lượng sản phẩm trong giỏ hàng thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(new Req_Get_CartItem(
                             cartItem.getBook().getBookId(),
@@ -269,7 +269,7 @@ public class CartServiceImpl implements CartService {
         } catch (Exception ex) {
             log.error("Thay đổi số lượng sản phẩm trong giỏ hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to change quantity, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -283,7 +283,7 @@ public class CartServiceImpl implements CartService {
             Optional<CartItem> tempCartItem = cartItemRepository.findByBookBookIdAndCartUserUserId(bookId, userId);
             if (tempCartItem.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Cart item not found!")
+                        .message("Không tìm thấy sản phẩm trong giỏ hàng!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -291,7 +291,7 @@ public class CartServiceImpl implements CartService {
 
             if (quantity <= 0 || tempCartItem.get().getBook().getInStock() == 0) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Can't set quantity to less than or equal to 0!")
+                        .message("Không để cập nhật số lượng sản phẩm <= 0!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -315,7 +315,7 @@ public class CartServiceImpl implements CartService {
             }
             log.info("Cập nhật số lượng sản phẩm trong giỏ hàng thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Quantity updated successfully!")
+                    .message("Cập nhật số lượng sản phẩm trong giỏ hàng thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(new Req_Get_CartItem(
                             cartItem.getBook().getBookId(),
@@ -330,8 +330,8 @@ public class CartServiceImpl implements CartService {
                     .build());
         } catch (Exception ex) {
             log.error("Cập nhật số lượng sản phẩm trong giỏ hàng thất bại, lỗi : " + ex.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                    .message("Failed to update quantity, message = " + ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

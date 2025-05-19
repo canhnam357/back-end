@@ -31,7 +31,7 @@ public class EmailVerificationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(GenericResponse.builder()
                             .success(false)
-                            .message("An error occurred while sending OTP.")
+                            .message("Có lỗi trong quá trình gửi OTP!")
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .build());
         }

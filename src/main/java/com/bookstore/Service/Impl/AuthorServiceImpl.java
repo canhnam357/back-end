@@ -31,7 +31,7 @@ public class AuthorServiceImpl implements AuthorService {
             author.setNameNormalized(Normalized.remove(createAuthor.getAuthorName()));
             log.info("Tạo tác giả thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Author created successfully!")
+                    .message("Tạo tác giả mới thành công!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(authorRepository.save(author))
                     .success(true)
@@ -39,7 +39,7 @@ public class AuthorServiceImpl implements AuthorService {
         } catch (Exception ex) {
             log.error("Tạo tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to create author, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -51,7 +51,7 @@ public class AuthorServiceImpl implements AuthorService {
         try {
             Page<Author> authors = authorRepository.findAll(PageRequest.of(page - 1, size));
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all authors successfully!")
+                    .message("Lấy danh sách tác giả thành công!")
                     .result(authors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -59,7 +59,7 @@ public class AuthorServiceImpl implements AuthorService {
         } catch (Exception ex) {
             log.error("Lấy danh sách tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all authors, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -74,7 +74,7 @@ public class AuthorServiceImpl implements AuthorService {
             Page<Author> authors = authorRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Authors searched successfully!")
+                    .message("Tìm kiếm tác giả thành công!")
                     .result(authors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -82,7 +82,7 @@ public class AuthorServiceImpl implements AuthorService {
         } catch (Exception ex) {
             log.error("Tìm kiếm tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to search authors, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -94,8 +94,8 @@ public class AuthorServiceImpl implements AuthorService {
         try {
             log.info("Bắt đầu cập nhật tác giả!");
             if (authorRepository.findById(authorId).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Author not found!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Không tìm thấy tác giả!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -106,7 +106,7 @@ public class AuthorServiceImpl implements AuthorService {
             author.setNameNormalized(Normalized.remove(updateAuthor.getAuthorName()));
             log.info("Cập nhật tác giả thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Author updated successfully!")
+                    .message("Cập nhật thông tin tác giả thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(authorRepository.save(author))
                     .success(true)
@@ -114,7 +114,7 @@ public class AuthorServiceImpl implements AuthorService {
         } catch (Exception ex) {
             log.error("Cập nhật tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to update author, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -127,7 +127,7 @@ public class AuthorServiceImpl implements AuthorService {
             log.info("Bắt đầu xoá tác giả!");
             if (authorRepository.findById(authorId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Author not found!")
+                        .message("Không tìm thấy tác giả!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -135,14 +135,14 @@ public class AuthorServiceImpl implements AuthorService {
             authorRepository.deleteById(authorId);
             log.info("Xoá tác giả thành công!");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(GenericResponse.builder()
-                    .message("Deleted author successfully!")
+                    .message("Xoá tác giả thành công!")
                     .statusCode(HttpStatus.NO_CONTENT.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Xoá tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to delete author, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -157,7 +157,7 @@ public class AuthorServiceImpl implements AuthorService {
             List<Author> authors = authorRepository.findListByNameContainingSubsequence(search_word);
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Searched authors successfully!")
+                    .message("Tìm kiếm tác giả thành công!")
                     .result(authors)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -165,7 +165,7 @@ public class AuthorServiceImpl implements AuthorService {
         } catch (Exception ex) {
             log.error("Lấy danh sách tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to search authors, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

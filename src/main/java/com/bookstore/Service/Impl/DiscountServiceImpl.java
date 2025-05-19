@@ -38,14 +38,14 @@ public class DiscountServiceImpl implements DiscountService {
             log.info("Bắt đầu tạo khuyến mãi!");
             if (discount.getStartDate() == null || discount.getEndDate() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Start date and end date must be provided!")
+                        .message("Thời gian bắt đầu và thời gian kết thúc không được để trống!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
             }
             if (discount.getEndDate().isBefore(discount.getStartDate())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Start date must be before end date!")
+                        .message("Thời gian bắt đầu phải đứng trước thời gian kết thúc!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -53,7 +53,7 @@ public class DiscountServiceImpl implements DiscountService {
             if (!discount.getDiscountType().equals(DiscountType.FIXED.name()) &&
                     !discount.getDiscountType().equals(DiscountType.PERCENTAGE.name())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Discount type not found!")
+                        .message("Không tìm thấy Loại khuyến mãi!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -61,7 +61,7 @@ public class DiscountServiceImpl implements DiscountService {
 
             if (discount.getBookId() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("BookId must not be null!")
+                        .message("BookId không được để trống!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -70,7 +70,7 @@ public class DiscountServiceImpl implements DiscountService {
             Optional<Book> bookOpt = bookRepository.findById(discount.getBookId());
             if (bookOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Book not found!")
+                        .message("Không tìm thấy Sách!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -80,7 +80,7 @@ public class DiscountServiceImpl implements DiscountService {
 
             if (discount.getDiscount() == null) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Amount or percentage must provided!")
+                        .message("Số tiền hoặc phần trăm không được để trống!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -97,7 +97,7 @@ public class DiscountServiceImpl implements DiscountService {
 
             if (price.compareTo(BigDecimal.ZERO) <= 0 || price.compareTo(book.getPrice()) >= 0) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Price after sales must be greater than 0 and less than the current price!")
+                        .message("Giá sách sau khi khuyến mãi phải > 0 và nhỏ hơn giá hiện tại!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -130,7 +130,7 @@ public class DiscountServiceImpl implements DiscountService {
             bookRepository.save(book);
             log.info("Tạo khuyến mãi thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Discount created successfully!")
+                    .message("Tạo khuyến mãi thành công!")
                     .result(ele)
                     .statusCode(HttpStatus.CREATED.value())
                     .success(true)

@@ -38,8 +38,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
-        System.err.println("HERE");
-
         // find or create user in database
         User user = userService.findOrCreateUser(email, name);
 

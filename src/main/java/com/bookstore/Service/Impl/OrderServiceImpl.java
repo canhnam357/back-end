@@ -47,22 +47,22 @@ public class OrderServiceImpl implements OrderService {
 
             if (userRepository.findByUserIdAndActiveIsTrue(userId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("User does not exist or is not active!")
+                        .message("Tài khoản không tồn tại hoặc đang bị khoá!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
             }
 
             if (addressRepository.findByAddressId(orderDTO.getAddressId()).isEmpty()) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Address not found!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Không tìm thấy Địa chỉ!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
             }
             if (Arrays.stream(PaymentMethod.values()).noneMatch(e -> e.name().equals(orderDTO.getPaymentMethod()))) {
-                return ResponseEntity.status(404).body(GenericResponse.builder()
-                        .message("Payment method does not exist!")
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .message("Không tìm thấy Phương thức thanh toán!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -72,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (cart.getCartItems().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Cart is empty!")
+                        .message("Giỏ hàng đang rỗng!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -80,11 +80,11 @@ public class OrderServiceImpl implements OrderService {
 
             ZonedDateTime cutoffDate = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusHours(8);
 
-            int LIMIT = 3;
+            int LIMIT = 10;
 
             if (ordersRepository.countCancelledOrdersWithinTime(userId, OrderStatus.CANCELLED, cutoffDate) >= LIMIT) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                        .message("You have canceled / failed payment too many orders recently. Please wait a few hours before placing a new one!")
+                        .message("Bạn đã huỷ đơn / thanh toán thất bại nhiều đơn hàng gần đây. Vui lòng chờ thêm vài tiếng trước khi đặt thêm đơn hàng mới!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
@@ -94,7 +94,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (ordersRepository.countPendingOrder(userId, OrderStatus.PENDING, PaymentStatus.PENDING) >= PENDING) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                        .message("You have multiple orders pending payment. Please complete your payments before placing new orders!")
+                        .message("Bạn có nhiều đơn hàng đang chờ Thanh toán, vui lòng thanh toán trước khi đặt thêm đơn hàng!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
@@ -121,7 +121,7 @@ public class OrderServiceImpl implements OrderService {
                 cart.setCartItems(cartItems);
                 cartRepository.save(cart);
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
-                        .message("Cart has items with quantity greater than in stock. Quantity has been reset to in stock value!")
+                        .message("Đơn hàng có sản phẩm có số lượng lớn hơn số lượng tồn kho, số lượng đã được đặt lại bằng số lượng tồn kho!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .success(false)
                         .build());
@@ -141,7 +141,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (orderCartItem.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Must have at least 1 book in the order!")
+                        .message("Phải có ít nhất 1 quyển sách trong Đơn hàng!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false)
                         .build());
@@ -195,7 +195,7 @@ public class OrderServiceImpl implements OrderService {
             cartRepository.save(cart);
             log.info("Tạo đơn hàng thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Order created successfully!")
+                    .message("Tạo Đơn hàng thành công!")
                     .result(order.getOrderId())
                     .statusCode(HttpStatus.CREATED.value())
                     .success(true)
@@ -203,7 +203,7 @@ public class OrderServiceImpl implements OrderService {
         } catch (Exception ex) {
             log.error("Tạo đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to create order, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -243,7 +243,7 @@ public class OrderServiceImpl implements OrderService {
 
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all orders successfully!")
+                    .message("Lấy danh sách đơn hàng thành công!")
                     .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -251,7 +251,7 @@ public class OrderServiceImpl implements OrderService {
         } catch (Exception ex) {
             log.error("Lấy danh sách đơn hàng của người dùng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all orders, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -266,7 +266,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (ordersRepository.findById(orderId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Order not found!")
+                        .message("Không tìm thấy Đơn hàng!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -276,7 +276,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (!userId.equals(order.getUser().getUserId()) && user.getRole() == Role.USER) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("User doesn't have permission to view this order!")
+                        .message("Người dùng không có quyền xem chi tiết đơn hàng này!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -297,7 +297,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved order details successfully!")
+                    .message("Lấy chi tiết đơn hàng thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(res)
                     .success(true)
@@ -306,7 +306,7 @@ public class OrderServiceImpl implements OrderService {
         } catch (Exception ex) {
             log.error("Lấy chi tiết đơn hàng thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve order details, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -343,15 +343,15 @@ public class OrderServiceImpl implements OrderService {
             }
             Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all orders successfully!!!")
+                    .message("Lấy danh sách đơn hàng thành công!!!")
                     .statusCode(HttpStatus.OK.value())
                     .result(dtoPage)
                     .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Lấy danh sách đơn hàng thất bại, lỗi : " + ex.getMessage());
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Failed to retrieve all orders, message = " + ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -394,15 +394,15 @@ public class OrderServiceImpl implements OrderService {
             }
             Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all orders successfully!")
+                    .message("Lấy danh sách đơn hàng thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(dtoPage)
                     .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Lấy danh sách đơn hàng cho Shipper thất bại, lỗi : " + ex.getMessage());
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Failed to retrieve all orders, message = " + ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -428,7 +428,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved month revenue successfully!")
+                    .message("Lấy doanh thu của năm thành công!")
                     .result(result)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -436,8 +436,8 @@ public class OrderServiceImpl implements OrderService {
 
         } catch (Exception ex) {
             log.error("Lấy thống kê doanh thu của tháng thất bại, lỗi : " + ex.getMessage());
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Failed to retrieve monthly revenue, message = " + ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -463,7 +463,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved count order statuses successfully!")
+                    .message("Lấy thống kê đơn hàng thành công!")
                     .result(result)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -471,8 +471,8 @@ public class OrderServiceImpl implements OrderService {
 
         } catch (Exception ex) {
             log.error("Lấy thống kê số lượng đơn hàng thất bại, lỗi : " + ex.getMessage());
-            return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Failed to get order count by status, message = " + ex.getMessage())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

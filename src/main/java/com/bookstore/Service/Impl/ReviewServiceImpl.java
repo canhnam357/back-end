@@ -56,7 +56,7 @@ public class ReviewServiceImpl implements ReviewService {
             List<Review> reviews = reviewRepository.findReviewsByBookIdOrderedByCreatedAtDesc(userId, bookId);
             if (orderItems.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
-                        .message("You must purchase the book in order to leave a review!")
+                        .message("Vui lòng mua sách này để thực hiện đánh giá!")
                         .statusCode(HttpStatus.BAD_REQUEST.value())
                         .success(false)
                         .build());
@@ -69,7 +69,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             if (reviewCreateDeadline.isBefore(LocalDate.now())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
-                        .message("It has been over a month since you purchased this book. Please purchase it again in order to leave a review!")
+                        .message("Đã được 1 tháng từ khi bạn mua sách này. Vui lòng mua lại để đánh giá!")
                         .statusCode(HttpStatus.BAD_REQUEST.value())
                         .success(false)
                         .build());
@@ -77,7 +77,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             if (!reviews.isEmpty() && reviews.get(0).getCreatedAt().isAfter(orderItems.get(0).getOrders().getOrderAt())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
-                        .message("You have already reviewed this book. Please purchase it again to submit another review!")
+                        .message("Bạn đã đánh giá sách này rồi. Vui lòng mua lại để đánh giá tiếp!")
                         .statusCode(HttpStatus.BAD_REQUEST.value())
                         .success(false)
                         .build());
@@ -96,7 +96,7 @@ public class ReviewServiceImpl implements ReviewService {
             res.convert(temp);
             log.info("Thêm đánh giá thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Review created successfully!")
+                    .message("Tạo đánh giá mới thành công!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(res)
                     .success(true)
@@ -104,7 +104,7 @@ public class ReviewServiceImpl implements ReviewService {
         } catch (Exception ex) {
             log.error("Thêm đánh giá thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to create review, message =  " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -145,7 +145,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             Page<Res_Get_Review> dtoPage = new PageImpl<>(res, reviews.getPageable(), reviews.getTotalElements());
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all reviews successfully!")
+                    .message("Lấy danh sách đánh giá thành công!")
                     .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -153,7 +153,7 @@ public class ReviewServiceImpl implements ReviewService {
         } catch (Exception ex) {
             log.error("Lấy danh sách đánh giá thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all reviews, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -173,7 +173,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             if (user.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("User not found!")
+                        .message("Không tìm thấy Người dùng!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -183,7 +183,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             if (ele.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Review not found!")
+                        .message("Không tìm thấy Đánh giá!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -191,7 +191,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             if (ele.get().getUser() != user.get()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("This review does not belong to the user!")
+                        .message("Đánh giá này không phải của bạn!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -204,7 +204,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             if (reviewUpdateDeadline.isBefore(LocalDate.now())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("You cannot edit a review after 30 days from the date it was created!")
+                        .message("Bạn không thể sửa đánh giá sau 30 ngày từ khi nó được tạo!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -212,7 +212,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             if (review.getContent() == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
-                        .message("The Content must not be null!")
+                        .message("Nội dung không được để trống!")
                         .statusCode(HttpStatus.FORBIDDEN.value())
                         .success(false)
                         .build());
@@ -225,7 +225,7 @@ public class ReviewServiceImpl implements ReviewService {
             res.convert(temp);
             log.info("Cập nhật đánh giá thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Review updated successfully!")
+                    .message("Cập nhật đánh giá thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(res)
                     .success(true)
@@ -234,7 +234,7 @@ public class ReviewServiceImpl implements ReviewService {
         } catch (Exception ex) {
             log.error("Cập nhật đánh giá thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to update review, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

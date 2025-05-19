@@ -74,7 +74,7 @@ public class BookServiceImpl implements BookService {
             String search_word = Normalized.removeVietnameseAccents(keyword);
             Page<Book> books = bookRepository.findByNameContainingSubsequence(PageRequest.of(page - 1, size), search_word);
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all books successfully!")
+                    .message("Lấy danh sách sách thành công!")
                     .result(convertPageToPage(books))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -82,7 +82,7 @@ public class BookServiceImpl implements BookService {
         } catch (Exception ex) {
             log.error("Lấy danh sách sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all books, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -119,7 +119,7 @@ public class BookServiceImpl implements BookService {
 
             Page<Book> books = bookRepository.findAll(spec, PageRequest.of(page - 1, size));
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all books successfully!")
+                    .message("Lấy danh sách sách thành công!")
                     .result(convertPageToPageHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -127,7 +127,7 @@ public class BookServiceImpl implements BookService {
         } catch (Exception ex) {
             log.error("Lấy danh sách sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all books, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -139,7 +139,7 @@ public class BookServiceImpl implements BookService {
         try {
             if (bookRepository.findByBookIdAndDeletedIsFalse(bookId).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Book is deleted or does not exist!")
+                        .message("Không tìm thấy sách!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -150,7 +150,7 @@ public class BookServiceImpl implements BookService {
             res.convert(book, now);
             res.setRating(reviewRepository.findAverageRatingByBookId(bookId));
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved book details successfully!")
+                    .message("Lấy chi tiết sách thành công!")
                     .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -158,7 +158,7 @@ public class BookServiceImpl implements BookService {
         } catch (Exception ex) {
             log.error("Lấy chi tiết sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve book details, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -177,23 +177,23 @@ public class BookServiceImpl implements BookService {
             // Validate input
             if (book.getBookName() == null || book.getBookName().isBlank()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Book name must have at least 1 character and cannot be just spaces.!").statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value()).success(false).build());
+                        .message("Tên sách phải có ít nhất 1 ký tự khác khoảng trắng!").statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value()).success(false).build());
             }
             if (authorRepository.findById(book.getAuthorId()).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Author must not be null!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
+                        .message("Tác giả không được để trống!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
             }
             if (publisherRepository.findById(book.getPublisherId()).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Publisher must not be null!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
+                        .message("Nhà xuất bản không được để trống!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
             }
             if (distributorRepository.findById(book.getDistributorId()).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Distributor must not be null!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
+                        .message("Nhà phát hành không được để trống!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
             }
             if (bookTypeRepository.findById(book.getBookTypeId()).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Book type must not be null!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
+                        .message("Loại sách không được để trống!").statusCode(HttpStatus.NOT_FOUND.value()).success(false).build());
             }
 
             // Tạo Book entity
@@ -256,7 +256,7 @@ public class BookServiceImpl implements BookService {
             res = bookRepository.save(res);
             log.info("Tạo sách thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Book created successfully!")
+                    .message("Tạo sách mới thành công!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(res)
                     .success(true)
@@ -265,7 +265,7 @@ public class BookServiceImpl implements BookService {
         } catch (Exception ex) {
             log.error("Tạo sách mới thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to create book, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -280,7 +280,7 @@ public class BookServiceImpl implements BookService {
             Page<Book> books = bookRepository.findAllByAuthorAuthorId(PageRequest.of(page - 1, size), authorId);
             return ResponseEntity.status(HttpStatus.OK).body(
                     GenericResponse.builder()
-                            .message("Retrieved books of the author successfully!")
+                            .message("Lấy danh sách sách của tác giả thành công!")
                             .result(convertPageToPage(books))
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
@@ -289,7 +289,7 @@ public class BookServiceImpl implements BookService {
             log.info("Lấy danh sách sách của tác giả thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     GenericResponse.builder()
-                            .message("Failed to retrieve books of the author, message = " + ex.getMessage())
+                            .message("Lỗi hệ thống!")
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build());
@@ -302,7 +302,7 @@ public class BookServiceImpl implements BookService {
             Page<Book> books = bookRepository.findAllByPublisherPublisherId(PageRequest.of(page - 1, size), publisherId);
             return ResponseEntity.status(HttpStatus.OK).body(
                     GenericResponse.builder()
-                            .message("Retrieved books of the publisher successfully!")
+                            .message("Lấy danh sách sách của nhà xuất bản thành công!")
                             .result(convertPageToPage(books))
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
@@ -311,7 +311,7 @@ public class BookServiceImpl implements BookService {
             log.info("Lấy danh sách sách của nhà xuất bản thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     GenericResponse.builder()
-                            .message("Failed to retrieve books of the publisher, message = " + ex.getMessage())
+                            .message("Lỗi hệ thống!")
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build());
@@ -324,7 +324,7 @@ public class BookServiceImpl implements BookService {
             Page<Book> books = bookRepository.findAllByDistributorDistributorId(PageRequest.of(page - 1, size), distributorId);
             return ResponseEntity.status(HttpStatus.OK).body(
                     GenericResponse.builder()
-                            .message("Retrieved books of the distributor successfully!")
+                            .message("Lấy danh sách sách của nhà phát hành thành công!")
                             .result(convertPageToPage(books))
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
@@ -333,7 +333,7 @@ public class BookServiceImpl implements BookService {
             log.info("Lấy danh sách sách của nhà phát hành thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     GenericResponse.builder()
-                            .message("Failed to retrieve books of the distributor, message = " + ex.getMessage())
+                            .message("Lỗi hệ thống!")
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build());
@@ -353,7 +353,7 @@ public class BookServiceImpl implements BookService {
             Page<Admin_Res_Get_Book> dtoPage = new PageImpl<>(res, books.getPageable(), books.getTotalElements());
             return ResponseEntity.status(HttpStatus.OK).body(
                     GenericResponse.builder()
-                            .message("Retrieved books of the category successfully!")
+                            .message("Lấy danh sách sách của thể loại thành công!")
                             .result(dtoPage)
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
@@ -362,7 +362,7 @@ public class BookServiceImpl implements BookService {
             log.info("Lấy danh sách sách của thể loại thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     GenericResponse.builder()
-                            .message("Failed to retrieve books of the category, message = " + ex.getMessage())
+                            .message("Lỗi hệ thống!")
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build());
@@ -375,7 +375,7 @@ public class BookServiceImpl implements BookService {
             List<BigDecimal> res = bookRepository.findAllDistinctPricesOrderByAsc();
             return ResponseEntity.status(HttpStatus.OK).body(
                     GenericResponse.builder()
-                            .message("Retrieved price range successfully!")
+                            .message("Lấy khoảng giá sách thành công!")
                             .result(res)
                             .statusCode(HttpStatus.OK.value())
                             .success(true)
@@ -384,7 +384,7 @@ public class BookServiceImpl implements BookService {
             log.info("Lấy khoảng giá sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     GenericResponse.builder()
-                            .message("Failed to retrieve price range, message = " + ex.getMessage())
+                            .message("Lỗi hệ thống!")
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .success(false)
                             .build());
@@ -406,7 +406,7 @@ public class BookServiceImpl implements BookService {
             Optional<Book> _book = bookRepository.findById(bookId);
             if (_book.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Book not found!")
+                        .message("Không tìm thấy sách!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -414,7 +414,7 @@ public class BookServiceImpl implements BookService {
 
             if (book.getBookName() == null || book.getBookName().isBlank()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
-                        .message("Book name must have at least 1 character and cannot be just spaces.!")
+                        .message("Tên sách phải có ít nhất 1 ký tự khác khoảng trắng!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .success(false).build());
             }
@@ -424,7 +424,7 @@ public class BookServiceImpl implements BookService {
                     || distributorRepository.findById(book.getDistributorId()).isEmpty()
                     || bookTypeRepository.findById(book.getBookTypeId()).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Author/Publisher/Distributor/Book type not found!")
+                        .message("Tác giả / Nhà xuất bản / Nhà phát hành / Loại sách không tồn tại!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -496,7 +496,7 @@ public class BookServiceImpl implements BookService {
             log.info("Cập nhật sách thành công!");
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Book updated successfully!")
+                    .message("Cập nhật thông tin sách thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(result)
                     .success(true)
@@ -505,7 +505,7 @@ public class BookServiceImpl implements BookService {
         } catch (Exception ex) {
             log.error("Cập nhật sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to update book, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -518,15 +518,15 @@ public class BookServiceImpl implements BookService {
             String search_word = Normalized.removeVietnameseAccents(keyword);
             List<Book> books = bookRepository.search(search_word, 5);
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Searched books successfully!")
+                    .message("Tìm kiếm sách thành công!")
                     .result(books)
                     .statusCode(HttpStatus.OK.value())
-                    .success(false)
+                    .success(true)
                     .build());
         } catch (Exception ex) {
             log.error("Tìm kiếm sách thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to search books, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -540,15 +540,15 @@ public class BookServiceImpl implements BookService {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findAllByDeletedIsFalseAndNewArrivalIsTrue();
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved new arrival books successfully!")
+                    .message("Lấy danh sách sách mới thành công!")
                     .result(convertListToListHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            log.info("Lách danh sách sách mới thất bại, lỗi : " + ex.getMessage());
+            log.info("Lấy danh sách sách mới thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve new arrival books, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -562,15 +562,15 @@ public class BookServiceImpl implements BookService {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findBooksWithActiveDiscount(now);
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved discount books successfully!")
+                    .message("Lấy danh sách sách được khuyến mãi thành công!")
                     .result(convertListToListHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            log.info("Lách danh sách sách khuyến mãi thất bại, lỗi : " + ex.getMessage());
+            log.info("Lấy danh sách sách khuyến mãi thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve discount books, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -584,15 +584,15 @@ public class BookServiceImpl implements BookService {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findTopBooksByAverageRating(10);
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved high-rating books successfully!")
+                    .message("Lấy danh sách sách được đánh giá cao thành công!")
                     .result(convertListToListHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            log.info("Lách danh sách sách được đánh giá cao thất bại, lỗi : " + ex.getMessage());
+            log.info("Lấy danh sách sách được đánh giá cao thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Filed to retrieve high-rating books, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -606,15 +606,15 @@ public class BookServiceImpl implements BookService {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             List<Book> books = bookRepository.findTopBooksBySoldQuantity(10);
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved most purchased books successfully!")
+                    .message("Lấy danh sách sách bán chạy thành công!")
                     .result(convertListToListHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            log.info("Lách danh sách sách bán chạy thất bại, lỗi : " + ex.getMessage());
+            log.info("Lấy danh sách sách bán chạy thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieved most purchased books, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -644,15 +644,15 @@ public class BookServiceImpl implements BookService {
                 res.add(ele);
             }
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved bestseller categories and their books successfully.!")
+                    .message("Lấy danh sách sách của các thể loại bán chạy thành công!")
                     .result(res)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            log.info("Lách danh sách sách của các thể loại bán chạy thất bại, lỗi : " + ex.getMessage());
+            log.info("Lấy danh sách sách của các thể loại bán chạy thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve bestseller categories and their books successfully, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

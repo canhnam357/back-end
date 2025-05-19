@@ -137,17 +137,17 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     public ResponseEntity<GenericResponse> sendOTPResetPassword(String email) {
         try {
 
-            if (email.length() > 300) {
+            if (email.length() > 255) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
-                        .message("Email length must be less than or equal to 300!")
+                        .message("Email có độ dài tối đa 255 ký tự!")
                         .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
             if (userRepository.findByEmail(email).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("No account exists with this email!")
+                        .message("Không tồn tại tài khoản với email này!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -180,14 +180,14 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             emailVerificationRepository.save(emailVerification);
 
             return ResponseEntity.status(200).body(GenericResponse.builder()
-                    .message("OTP for password reset sent successfully!")
+                    .message("Gửi OTP Đặt lại mật khẩu thành công, vui lòng kiểm tra Email!")
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception e) {
             log.error("Gửi OTP quên mật khẩu thất bại, lỗi : " + e.getMessage());
             return ResponseEntity.internalServerError().body(GenericResponse.builder()
-                    .message("Failed to send OTP for password reset, message = " + e.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());

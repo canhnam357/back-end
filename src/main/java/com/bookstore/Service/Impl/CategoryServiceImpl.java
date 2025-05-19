@@ -32,7 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
             category.setNameNormalized(Normalized.remove(category.getCategoryName()));
             log.info("Tạo thể loại thành công!");
             return ResponseEntity.status(HttpStatus.CREATED).body(GenericResponse.builder()
-                    .message("Category created successfully!")
+                    .message("Tạo Thể loại mới thành công!")
                     .statusCode(HttpStatus.CREATED.value())
                     .result(categoryRepository.save(category))
                     .success(true)
@@ -40,7 +40,7 @@ public class CategoryServiceImpl implements CategoryService {
         } catch (Exception ex) {
             log.error("Tạo thể loại thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to create category, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -52,7 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
         try {
             List<Category> categories = categoryRepository.findAll();
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Retrieved all categories successfully!")
+                    .message("Lấy danh sách Thể loại thành công!")
                     .result(categories)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -60,7 +60,7 @@ public class CategoryServiceImpl implements CategoryService {
         } catch (Exception ex) {
             log.error("Lấy danh sách thể loại thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to retrieve all categories, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -74,7 +74,7 @@ public class CategoryServiceImpl implements CategoryService {
             Optional<Category> ele = categoryRepository.findById(categoryId);
             if (ele.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
-                        .message("Category not found!")
+                        .message("Không tìm thấy Thể loại!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .success(false)
                         .build());
@@ -83,7 +83,7 @@ public class CategoryServiceImpl implements CategoryService {
             ele.get().setNameNormalized(Normalized.remove(category.getCategoryName()));
             log.info("Tạo thể loại mới thành công!");
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Category updated successfully!")
+                    .message("Cập nhật thông tin Thể loại thành công!")
                     .statusCode(HttpStatus.OK.value())
                     .result(categoryRepository.save(ele.get()))
                     .success(true)
@@ -91,7 +91,7 @@ public class CategoryServiceImpl implements CategoryService {
         } catch (Exception ex) {
             log.error("Tạo thể loại mới thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to update category, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -106,7 +106,7 @@ public class CategoryServiceImpl implements CategoryService {
             List<Category> categories = categoryRepository.findListByNameContainingSubsequence(search_word);
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                    .message("Searched categories successfully!")
+                    .message("Tìm kiếm Thể loại thành công!")
                     .result(categories)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
@@ -114,7 +114,7 @@ public class CategoryServiceImpl implements CategoryService {
         } catch (Exception ex) {
             log.error("Tìm kiếm thể loại thất bại, lỗi : " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Failed to search categories, message = " + ex.getMessage())
+                    .message("Lỗi hệ thống!")
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
