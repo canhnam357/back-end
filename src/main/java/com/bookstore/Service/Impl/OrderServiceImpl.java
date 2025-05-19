@@ -1,14 +1,12 @@
 package com.bookstore.Service.Impl;
 
 import com.bookstore.Constant.*;
-import com.bookstore.DTO.GenericResponse;
-import com.bookstore.DTO.Req_Create_Order;
-import com.bookstore.DTO.Res_Get_Order;
-import com.bookstore.DTO.Res_Get_OrderDetail;
+import com.bookstore.DTO.*;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.OrderService;
+import com.bookstore.Service.VNPayService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
     private final AddressRepository addressRepository;
     private final BookRepository bookRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final VNPayService vnPayService;
 
     @Override
     @Transactional
@@ -221,9 +220,9 @@ public class OrderServiceImpl implements OrderService {
                 orders = ordersRepository.findAllByUserUserIdOrderByOrderAtDesc(userId, PageRequest.of(page - 1, size));
             }
 
-            List<Res_Get_Order> res = new ArrayList<>();
+            List<Res_Get_OrderOfUser> res = new ArrayList<>();
             for (Orders order : orders) {
-                res.add(new Res_Get_Order(
+                res.add(new Res_Get_OrderOfUser(
                         order.getOrderId(),
                         order.getOrderStatus().name(),
                         order.getPaymentMethod().name(),
@@ -235,11 +234,12 @@ public class OrderServiceImpl implements OrderService {
                         order.getTotalPrice(),
                         order.getRefundStatus().name(),
                         order.getRefundAt(),
-                        order.getRefundTimesRemain()
+                        order.getRefundTimesRemain(),
+                        order.getPaymentUrl()
                 ));
             }
 
-            Page<Res_Get_Order> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
+            Page<Res_Get_OrderOfUser> dtoPage = new PageImpl<>(res, orders.getPageable(), orders.getTotalElements());
 
 
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
@@ -478,6 +478,4 @@ public class OrderServiceImpl implements OrderService {
                     .build());
         }
     }
-
-
 }

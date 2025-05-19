@@ -18,5 +18,4 @@ public interface OrderService {
     ResponseEntity<GenericResponse> getMonthlyRevenue(int year);
 
     ResponseEntity<GenericResponse> getOrderCountByStatus();
-
 }

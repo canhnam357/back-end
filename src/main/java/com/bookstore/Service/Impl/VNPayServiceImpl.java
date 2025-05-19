@@ -4,6 +4,8 @@ import com.bookstore.Constant.OrderStatus;
 import com.bookstore.Constant.PaymentMethod;
 import com.bookstore.Constant.PaymentStatus;
 import com.bookstore.Constant.RefundStatus;
+import com.bookstore.DTO.GenericResponse;
+import com.bookstore.DTO.Res_PaymentInfo;
 import com.bookstore.Entity.Book;
 import com.bookstore.Entity.OrderItem;
 import com.bookstore.Entity.Orders;
@@ -18,12 +20,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -48,6 +55,10 @@ public class VNPayServiceImpl implements VNPayService {
     private final BookRepository bookRepository;
     private final RefundAttemptRepository refundAttemptRepository;
     private final RefundAttemptService refundAttemptService;
+    @Value("${vnpay.apiUrl}")
+    private String vnp_ApiUrl;
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
 
     public String createOrder(String ipAddress, String orderId){
@@ -93,7 +104,6 @@ public class VNPayServiceImpl implements VNPayService {
 
         Orders order = ordersRepository.findById(orderId).get();
         order.setExpireDatePayment(now.plusMinutes(15));
-        ordersRepository.save(order);
 
 
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
@@ -125,6 +135,8 @@ public class VNPayServiceImpl implements VNPayService {
         String vnp_SecureHash = vnPayConfig.hmacSHA512(vnp_HashSecret, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         log.info("Tạo thanh toán VNPay thành công!");
+        order.setPaymentUrl(vnPayConfig.vnp_PayUrl + "?" + queryUrl);
+        ordersRepository.save(order);
         return vnPayConfig.vnp_PayUrl + "?" + queryUrl;
     }
 
@@ -187,7 +199,144 @@ public class VNPayServiceImpl implements VNPayService {
         }
     }
 
-    @Scheduled(fixedRate = 15 * 60 * 1000)
+    @Override
+    public ResponseEntity<GenericResponse> getPaymentDetail(String userId, String orderId) {
+        try {
+            if (ordersRepository.findById(orderId).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Đơn hàng không tồn tại!")
+                        .statusCode(HttpStatus.NOT_FOUND.value())
+                        .build());
+            }
+            Orders order = ordersRepository.findById(orderId).get();
+
+            if (!order.getUser().getUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Đơn hàng này không phải của bạn!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+            if (order.getPaymentMethod() != PaymentMethod.CARD) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Phương thức thanh toán không phải Thẻ tín dụng!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
+            if (order.getPaymentStatus() != PaymentStatus.SUCCESS) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Trạng thái thanh toán chưa thành công!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+            log.info("Bắt đầu refund!");
+            String vnp_Version = "2.1.0";
+            String vnp_Command = "querydr";
+            String vnp_RequestId = UUID.randomUUID().toString();
+            String txnRef = order.getTxnRef();
+            String transactionNo = order.getTransactionNo();
+            String transactionDate = order.getTransactionDate();
+            String ipAddress = "127.0.0.1";
+
+
+            Map<String, String> vnpParams = new HashMap<>();
+            vnpParams.put("vnp_RequestId", vnp_RequestId);
+            vnpParams.put("vnp_Version", vnp_Version);
+            vnpParams.put("vnp_Command", vnp_Command);
+            vnpParams.put("vnp_TmnCode", vnp_TmnCode);
+            vnpParams.put("vnp_TxnRef", txnRef);
+            vnpParams.put("vnp_OrderInfo", "Refund for order " + orderId);
+            vnpParams.put("vnp_TransactionNo", transactionNo);
+            vnpParams.put("vnp_TransactionDate", transactionDate);
+            vnpParams.put("vnp_CreateDate", new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+            vnpParams.put("vnp_IpAddr", ipAddress);
+
+            String vnp_data = vnpParams.get("vnp_RequestId") + "|" +
+                    vnpParams.get("vnp_Version") + "|" +
+                    vnpParams.get("vnp_Command") + "|" +
+                    vnpParams.get("vnp_TmnCode") + "|" +
+                    vnpParams.get("vnp_TxnRef") + "|" +
+                    vnpParams.get("vnp_TransactionDate") + "|" +
+                    vnpParams.get("vnp_CreateDate") + "|" +
+                    vnpParams.get("vnp_IpAddr") + "|" +
+                    vnpParams.get("vnp_OrderInfo");
+
+            log.info("vnp_data: " + vnp_data);
+
+            String vnp_SecureHash = vnPayConfig.hmacSHA512(vnp_HashSecret, vnp_data);
+            vnpParams.put("vnp_SecureHash", vnp_SecureHash);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(vnpParams, headers);
+
+            Map<String, String> response = restTemplate.postForObject(vnp_ApiUrl, request, Map.class);
+
+            if (response == null || !response.containsKey("vnp_ResponseCode")) {
+                throw new IllegalStateException("Invalid response from VNPay");
+            }
+
+
+            String ResponseId = response.getOrDefault("vnp_ResponseId", "");
+            String Command = response.getOrDefault("vnp_Command", "");
+            String ResponseCode = response.getOrDefault("vnp_ResponseCode", "");
+            String Message = response.getOrDefault("vnp_Message", "");
+            String TmnCode = response.getOrDefault("vnp_TmnCode", "");
+            String TxnRef = response.getOrDefault("vnp_TxnRef", "");
+            String Amount = response.getOrDefault("vnp_Amount", "");
+            String BankCode = response.getOrDefault("vnp_BankCode", "");
+            String PayDate = response.getOrDefault("vnp_PayDate", "");
+            String TransactionNo = response.getOrDefault("vnp_TransactionNo", "");
+            String TransactionType = response.getOrDefault("vnp_TransactionType", "");
+            String TransactionStatus = response.getOrDefault("vnp_TransactionStatus", "");
+            String OrderInfo = response.getOrDefault("vnp_OrderInfo", "");
+            String PromotionCode = response.getOrDefault("vnp_PromotionCode", "");
+            String PromotionAmount = response.getOrDefault("vnp_PromotionAmount", "");
+            String SecureHash = response.get("vnp_SecureHash");
+
+            String data = ResponseId + "|" + Command + "|" + ResponseCode + "|" + Message + "|" + TmnCode + "|" + TxnRef +
+                    "|" + Amount + "|" + BankCode + "|" + PayDate + "|" + TransactionNo + "|" + TransactionType + "|" +
+                    TransactionStatus + "|" + OrderInfo + "|" + PromotionCode + "|" + PromotionAmount;
+
+            log.info("DATA Response from VNPAY Querydr: " + data);
+            String computedHash = vnPayConfig.hmacSHA512(vnp_HashSecret, data);
+            if (!computedHash.equals(SecureHash)) {
+                throw new IllegalStateException("Invalid response hash from VNPay");
+            }
+            if (!"00".equals(ResponseCode)) {
+                throw new IllegalStateException("Refund failed : " + Message);
+            }
+
+            BigDecimal amount = new BigDecimal(Amount);
+            amount = amount.divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);
+
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                    .message("Lấy thông tin thanh toán thành công!")
+                            .result(new Res_PaymentInfo(
+                                    amount,
+                                    BankCode,
+                                    PayDate
+                            ))
+                    .statusCode(HttpStatus.OK.value())
+                    .success(true)
+                    .build());
+
+        } catch (Exception ex) {
+            log.error("Xem chi tiết thanh toán thất bại, lỗi : " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .message("Lỗi : " + ex.getMessage())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .success(false)
+                    .build());
+        }
+    }
+
+    @Scheduled(fixedRate = 60 * 1000)
     @Transactional
     public void cancelExpiredOrders() {
         log.info("START DELETE Order Payment with card expired");

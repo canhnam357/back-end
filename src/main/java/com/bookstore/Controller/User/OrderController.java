@@ -5,6 +5,7 @@ import com.bookstore.DTO.Req_ChangeOrderStatus;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.OrderService;
 import com.bookstore.Service.OrderStatusHistoryService;
+import com.bookstore.Service.VNPayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +19,7 @@ public class OrderController {
     private final OrderService orderService;
     private final JwtTokenProvider jwtTokenProvider;
     private final OrderStatusHistoryService orderStatusHistoryService;
+    private final VNPayService vnPayService;
     @GetMapping("")
     public ResponseEntity<GenericResponse> getAll(@RequestParam(defaultValue = "1") int index,
                                                   @RequestParam(defaultValue = "10") int size,
@@ -42,6 +44,14 @@ public class OrderController {
         String token = authorizationHeader.substring(7);
         String userId = jwtTokenProvider.getUserIdFromJwt(token);
         return orderService.orderDetail(userId, orderId);
+    }
+
+    @GetMapping("/payment-detail/{orderId}")
+    public ResponseEntity<GenericResponse> paymentDetail(@RequestHeader("Authorization") String authorizationHeader,
+                                                       @PathVariable String orderId) {
+        String token = authorizationHeader.substring(7);
+        String userId = jwtTokenProvider.getUserIdFromJwt(token);
+        return vnPayService.getPaymentDetail(userId, orderId);
     }
 
 }

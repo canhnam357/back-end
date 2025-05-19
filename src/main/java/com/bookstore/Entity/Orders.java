@@ -79,6 +79,9 @@ public class Orders {
 
     private String TxnRef;
 
+    @Column(columnDefinition = "MEDIUMTEXT")
+    private String paymentUrl;
+
     @PrePersist
     void createdAt() {
         this.orderAt = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
