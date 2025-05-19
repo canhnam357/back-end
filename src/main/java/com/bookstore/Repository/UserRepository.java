@@ -14,6 +14,8 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, String>, JpaSpecificationExecutor<User> {
 
+    Optional<User> findByEmailAndVerifiedIsTrue(String email);
+
     Optional<User> findByEmailAndVerifiedIsFalse(String email);
 
     Optional<User> findByUserIdAndActiveIsTrue(String user_id);

@@ -257,7 +257,7 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
-            Optional<User> user = userRepository.findByEmailAndVerifiedIsFalse(registerRequest.getEmail());
+            Optional<User> user = userRepository.findByEmailAndVerifiedIsTrue(registerRequest.getEmail());
             if (user.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
                         .success(false)
