@@ -6,8 +6,6 @@ import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.OrderService;
-import com.bookstore.Service.VNPayService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -34,10 +33,9 @@ public class OrderServiceImpl implements OrderService {
     private final AddressRepository addressRepository;
     private final BookRepository bookRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private final VNPayService vnPayService;
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> createOrder(Req_Create_Order orderDTO, String authorizationHeader) {
         try {
             log.info("Bắt đầu tạo đơn hàng!");
@@ -106,9 +104,7 @@ public class OrderServiceImpl implements OrderService {
                 Book book = bookRepository.findById(cartItem.getBook().getBookId()).get();
                 if (book.isDeleted() || book.getInStock() == 0) {
                     bad_request = true;
-                }
-                else
-                {
+                } else {
                     if (book.getInStock() < cartItem.getQuantity()) {
                         cartItem.setQuantity(book.getInStock());
                     }
@@ -132,8 +128,7 @@ public class OrderServiceImpl implements OrderService {
             for (CartItem cartItem : cart.getCartItems()) {
                 if (orderDTO.getBookIds().contains(cartItem.getBook().getBookId())) {
                     orderCartItem.add(cartItem);
-                }
-                else {
+                } else {
                     newCartItems.add(cartItem);
                 }
             }
@@ -169,18 +164,28 @@ public class OrderServiceImpl implements OrderService {
                 orderItem.setQuantity(cartItem.getQuantity());
                 orderItem.setTotalPrice(cartItem.getTotalPrice());
                 orderItem.setUrlThumbnail(cartItem.getBook().getUrlThumbnail());
-                assert (bookRepository.findById(cartItem.getBook().getBookId()).isPresent());
-                Book book = bookRepository.findById(cartItem.getBook().getBookId()).get();
+
+                // Tìm và khóa sách
+                Book book = bookRepository.findByIdWithLock(cartItem.getBook().getBookId())
+                        .orElseThrow(() -> new IllegalStateException("Sách không tồn tại: " + cartItem.getBook().getBookName()));
+
+                // Kiểm tra giảm giá
                 if (book.getDiscount() != null && book.getDiscount().getStartDate().isBefore(now) && book.getDiscount().getEndDate().isAfter(now)) {
                     if (book.getDiscount().getDiscountType() == DiscountType.FIXED) {
                         orderItem.setPriceAfterSales(book.getPrice().subtract(book.getDiscount().getDiscount()));
-                    }
-                    else {
+                    } else {
                         orderItem.setPriceAfterSales(book.getPrice().multiply(BigDecimal.valueOf(100L).subtract(book.getDiscount().getDiscount())).divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP));
                     }
                     orderItem.setTotalPrice(orderItem.getPriceAfterSales().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
                 }
+
+                // Kiểm tra và cập nhật tồn kho
+                if (book.getInStock() < cartItem.getQuantity()) {
+                    throw new IllegalStateException("Số lượng tồn kho không đủ cho sách: " + cartItem.getBook().getBookName());
+                }
                 book.setInStock(book.getInStock() - cartItem.getQuantity());
+                bookRepository.save(book);
+
                 orderItemRepository.save(orderItem);
                 order.getOrderDetails().add(orderItem);
                 order.setTotalPrice(order.getTotalPrice().add(orderItem.getTotalPrice()));
@@ -200,9 +205,9 @@ public class OrderServiceImpl implements OrderService {
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            log.error("Tạo đơn hàng thất bại, lỗi : " + ex.getMessage());
+            log.error("Tạo đơn hàng thất bại, lỗi: " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Lỗi hệ thống!")
+                    .message("Lỗi hệ thống: " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -210,6 +215,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAllOfUser(String userId, String orderStatus, int page, int size) {
         try {
             Page<Orders> orders;
@@ -259,6 +265,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> orderDetail(String userId, String orderId) {
         try {
             assert (userRepository.findById(userId).isPresent());
@@ -314,6 +321,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(String orderStatus, int index, int size) {
         try {
             Page<Orders> orders;
@@ -359,6 +367,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAllForShipper(String orderStatus, int index, int size) {
         try {
             Page<Orders> orders;
@@ -410,6 +419,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getMonthlyRevenue(int year) {
         try {
             List<Object[]> rawResult = ordersRepository.findMonthlyRevenueByYear(year);
@@ -445,6 +455,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getOrderCountByStatus() {
         try {
             List<Object[]> rawResult = ordersRepository.countOrdersByStatus();

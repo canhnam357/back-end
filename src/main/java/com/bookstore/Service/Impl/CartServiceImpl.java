@@ -12,11 +12,14 @@ import com.bookstore.Repository.BookRepository;
 import com.bookstore.Repository.CartItemRepository;
 import com.bookstore.Repository.CartRepository;
 import com.bookstore.Service.CartService;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -35,6 +38,7 @@ public class CartServiceImpl implements CartService {
     private final BookRepository bookRepository;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> getCart(String userId) {
         try {
             // Lấy Cart theo userId
@@ -125,6 +129,8 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     public ResponseEntity<GenericResponse> addToCart(Req_Add_Cart addToCart, String userId) {
         try {
             log.info("Bắt đầu thêm vào giỏ hàng!");
@@ -187,6 +193,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> removeFromCart(String bookId, String userId) {
         try {
             log.info("Bắt đầu xoá khỏi giỏ hàng!");
@@ -216,6 +223,8 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     public ResponseEntity<GenericResponse> changeQuantity(String bookId, String userId, int quantity) {
         try {
             log.info("Bắt đầu thay đổi số lượng sản phẩm trong giỏ hàng!");
@@ -277,6 +286,8 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     public ResponseEntity<GenericResponse> updateQuantity(String bookId, String userId, int quantity) {
         try {
             log.info("Bắt đầu cập nhật số lượng sản phẩm trong giỏ hàng!");

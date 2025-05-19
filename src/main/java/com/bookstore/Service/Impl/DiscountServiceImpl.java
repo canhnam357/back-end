@@ -9,15 +9,19 @@ import com.bookstore.Entity.Discount;
 import com.bookstore.Repository.BookRepository;
 import com.bookstore.Repository.DiscountRepository;
 import com.bookstore.Service.DiscountService;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
@@ -30,6 +34,8 @@ public class DiscountServiceImpl implements DiscountService {
     private final BookRepository bookRepository;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Caching(evict = {
             @CacheEvict(value = "discountBooks", allEntries = true)
     })
@@ -148,6 +154,7 @@ public class DiscountServiceImpl implements DiscountService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(int index, int size) {
         try {
             Page<Discount> discountPage = discountRepository.getAll(PageRequest.of(index - 1, size));
@@ -168,6 +175,8 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Caching(evict = {
             @CacheEvict(value = "discountBooks", allEntries = true)
     })
@@ -263,6 +272,7 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getDiscountOfBook(String bookId) {
         try {
 

@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -114,6 +115,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(int page, int size, int isActive, int isVerified, String email) {
 
         // ban dau la List<User>
@@ -165,6 +167,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> updateUserStatus(String userId, Admin_Req_Update_UserStatus adminUpdateUserDTO) {
         try {
             log.info("Bắt đầu cập nhật trạng thái Người dùng!");
@@ -213,6 +216,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> register(Register registerRequest) {
         try {
 
@@ -311,6 +315,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getProfile(String userId) {
         try {
             Optional<User> user = userRepository.findByUserIdAndActiveIsTrue(userId);
@@ -345,6 +350,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> validateVerificationAccount(Req_Verify_OTPRegister register) {
         try {
             String email = register.getEmail();
@@ -385,10 +391,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public <S extends User> S save(S entity) {
         return userRepository.save(entity);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> changePassword(String userId, Req_Update_Password reqUpdatePassword) {
         try {
             Optional<User> userOptional = userRepository.findById(userId);
@@ -459,6 +467,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> changeAvatar(MultipartFile file, String userId) {
         try {
             Map data = this.cloudinary.uploader().upload(file.getBytes(), Map.of());
@@ -484,6 +493,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> changeProfile(String userId, Req_Update_Profile profile) {
         try {
             if (userRepository.findById(userId).isEmpty()) {
@@ -525,6 +535,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public User findOrCreateUser(String email, String fullName) {
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isPresent()) return user.get();
@@ -551,6 +562,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> resetPassword(Req_Reset_Password password) {
         try {
 
@@ -630,6 +642,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getUserById(String userId) {
         try {
             Optional<User> user = userRepository.findById(userId);
@@ -664,6 +677,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> countVerifiedUsersByMonth(int year) {
         try {
             List<Object[]> rawResult = userRepository.countVerifiedUsersByMonth(year);

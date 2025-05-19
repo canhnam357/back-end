@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class PublisherServiceImpl implements PublisherService {
     private final PublisherRepository publisherRepository;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Publisher createPublisher) {
         try {
             log.info("Bắt đầu tạo nhà xuất bản!");
@@ -48,6 +50,7 @@ public class PublisherServiceImpl implements PublisherService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
         try {
             Page<Publisher> publishers = publisherRepository.findAll(PageRequest.of(page - 1, size));
@@ -68,6 +71,7 @@ public class PublisherServiceImpl implements PublisherService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> search(int page, int size, String keyword) {
         try {
             String search_word = Normalized.removeVietnameseAccents(keyword);
@@ -91,6 +95,7 @@ public class PublisherServiceImpl implements PublisherService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> update(String publisherId, Admin_Req_Update_Publisher publisher) {
         try {
             log.info("Bắt đầu cập nhật nhà xuất bản!");
@@ -122,6 +127,7 @@ public class PublisherServiceImpl implements PublisherService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAllNotPageable(String keyword) {
         try {
             String search_word = Normalized.removeVietnameseAccents(keyword);

@@ -13,7 +13,6 @@ import com.bookstore.Repository.ReviewRepository;
 import com.bookstore.Repository.UserRepository;
 import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.ReviewService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,6 +23,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final JwtTokenProvider jwtTokenProvider;
     private final OrderItemRepository orderItemRepository;
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     @Caching(evict = {
             @CacheEvict(value = "highRatingBooks", allEntries = true)
@@ -112,6 +113,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(int page, int size, String bookId, int rating) {
         try {
             List<Res_Get_Review> res = new ArrayList<>();
@@ -161,6 +163,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     @Caching(evict = {
             @CacheEvict(value = "highRatingBooks", allEntries = true)
     })

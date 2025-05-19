@@ -5,11 +5,14 @@ import com.bookstore.Entity.Address;
 import com.bookstore.Repository.AddressRepository;
 import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.AddressService;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +26,7 @@ public class AddressServiceImpl implements AddressService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(String userId) {
         try {
             List<Address> addresses = addressRepository.findAllByUserUserId(userId);
@@ -54,6 +58,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> create(Req_Create_Address createAddress, String userId) {
         try {
             log.info("Bắt đầu tạo địa chỉ!");
@@ -101,6 +106,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> delete(String addressId, String userId) {
         try {
             log.info("Bắt đầu xoá địa chỉ!");
@@ -139,6 +145,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> update(Req_PatchUpdate_Address tempAddress, String userId, String addressId) {
         try {
             log.info("Bắt đầu cập nhật địa chỉ!");
@@ -192,6 +199,8 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> setDefault(String userId, String addressId) {
         try {
             log.info("Bắt đầu cập nhật địa chỉ làm mặc định!");

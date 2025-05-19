@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,11 +33,13 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public <S extends RefreshToken> S save(S entity) {
         return refreshTokenRepository.save(entity);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> refreshAccessToken(Req_Verify reqVerify){
         try{
             String userId = jwtTokenProvider.getUserIdFromRefreshToken(reqVerify.getToken());
@@ -80,6 +83,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void revokeRefreshToken(String userId){
         try{
             Optional<User> optionalUser = userRepository.findById(userId);
@@ -101,6 +105,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void logout(String refreshToken){
         try{
             if(jwtTokenProvider.validateToken(refreshToken)){
