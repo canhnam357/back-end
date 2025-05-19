@@ -41,6 +41,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     @Override
     @Async
+    @Transactional(rollbackFor = Exception.class)
     public void sendOtp(String email) {
         String otp = generateOtp();
         try {
@@ -86,12 +87,14 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         return otp.toString();
     }
     @Override
+    @Transactional(readOnly = true)
     public Optional<EmailVerification> findByEmail(String email) {
         return emailVerificationRepository.findByEmail(email);
     }
 
     @Override
     @Async
+    @Transactional(rollbackFor = Exception.class)
     public void sendOTPChangePassword(String userId) {
         String otp = generateOtp();
         try {
@@ -134,6 +137,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> sendOTPResetPassword(String email) {
         try {
 
@@ -195,7 +199,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     @Async
     public void createdOrderNotification(String orderId) {
         try {
@@ -238,7 +242,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED, rollbackFor = Exception.class)
     @Async
     public void refundOrderNotification(Orders order, ZonedDateTime refundAt) {
         try {

@@ -1,12 +1,11 @@
 package com.bookstore.Repository;
 
 import com.bookstore.Entity.Book;
+import jakarta.persistence.LockModeType;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
@@ -64,4 +63,16 @@ public interface BookRepository extends JpaRepository<Book, String>, JpaSpecific
         LIMIT :limit
         """, nativeQuery = true)
     List<Book> findTopBooksBySoldQuantity(@Param("limit") int limit);
+
+    @Modifying
+    @Query("UPDATE Book b SET b.inStock = b.inStock + :quantity WHERE b.bookId = :bookId")
+    int updateInStockAdd(@Param("bookId") String bookId, @Param("quantity") int quantity);
+
+    @Modifying
+    @Query("UPDATE Book b SET b.soldQuantity = b.soldQuantity + :quantity WHERE b.bookId = :bookId")
+    int updateSoldQuantity(@Param("bookId") String bookId, @Param("quantity") int quantity);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM Book b WHERE b.bookId = :bookId")
+    Optional<Book> findByIdWithLock(@Param("bookId") String bookId);
 }

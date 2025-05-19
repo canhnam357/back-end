@@ -54,6 +54,7 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
     private final EmailVerificationService emailVerificationService;
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(String orderId, int index, int size) {
         try {
             Page<RefundAttempt> refundAttempts;
@@ -74,7 +75,7 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
                     .message("Retrieved all refund status history successfully!")
                     .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
-                    .success(false)
+                    .success(true)
                     .build());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
@@ -85,7 +86,7 @@ public class RefundAttemptServiceImpl implements RefundAttemptService {
         }
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public boolean refundOrder(String orderId, String txnRef, String transactionNo, String transactionDate, String createdBy, String amount, String ipAddress) {
         String Message;
         try {

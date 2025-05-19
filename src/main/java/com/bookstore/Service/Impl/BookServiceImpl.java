@@ -52,8 +52,13 @@ public class BookServiceImpl implements BookService {
         return new PageImpl<>(res, books.getPageable(), books.getTotalElements());
     }
 
-    public Page<Res_Get_Books> convertPageToPageHaveTime(Page<Book> books, ZonedDateTime now) {
-        List<Res_Get_Books> res = convertListToListHaveTime(books.getContent(), now);
+    public Page<Res_Get_BookList> convertBookListPageToPageHaveTime(Page<Book> books, ZonedDateTime now) {
+        List<Res_Get_BookList> res = new ArrayList<>();
+        for (Book book : books) {
+            Res_Get_BookList temp = new Res_Get_BookList();
+            temp.convert(book, now);
+            res.add(temp);
+        }
         return new PageImpl<>(res, books.getPageable(), books.getTotalElements());
     }
 
@@ -69,6 +74,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(int page, int size, String keyword) {
         try {
             String search_word = Normalized.removeVietnameseAccents(keyword);
@@ -90,6 +96,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable("fetchAllBooks")
     public ResponseEntity<GenericResponse> getAllBookNotDeleted(int page, int size, BigDecimal leftBound, BigDecimal rightBound, String authorId, String publisherId, String distributorId, String bookName, String sort, String categoryIds) {
         try {
@@ -120,7 +127,7 @@ public class BookServiceImpl implements BookService {
             Page<Book> books = bookRepository.findAll(spec, PageRequest.of(page - 1, size));
             return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Lấy danh sách sách thành công!")
-                    .result(convertPageToPageHaveTime(books, now))
+                    .result(convertBookListPageToPageHaveTime(books, now))
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
@@ -135,6 +142,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getByIdNotDeleted(String bookId) {
         try {
             if (bookRepository.findByBookIdAndDeletedIsFalse(bookId).isEmpty()) {
@@ -275,6 +283,7 @@ public class BookServiceImpl implements BookService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> adminGetBooksOfAuthor(int page, int size, String authorId) {
         try {
             Page<Book> books = bookRepository.findAllByAuthorAuthorId(PageRequest.of(page - 1, size), authorId);
@@ -297,6 +306,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> adminGetBooksOfPublisher(int page, int size, String publisherId) {
         try {
             Page<Book> books = bookRepository.findAllByPublisherPublisherId(PageRequest.of(page - 1, size), publisherId);
@@ -319,6 +329,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> adminGetBooksOfDistributor(int page, int size, String distributorId) {
         try {
             Page<Book> books = bookRepository.findAllByDistributorDistributorId(PageRequest.of(page - 1, size), distributorId);
@@ -341,6 +352,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> adminGetBooksOfCategory(int page, int size, String categoryId) {
         try {
             Page<Book> books = bookRepository.findAllByCategoriesCategoryId(PageRequest.of(page - 1, size), categoryId);
@@ -370,6 +382,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getPriceRange() {
         try {
             List<BigDecimal> res = bookRepository.findAllDistinctPricesOrderByAsc();
@@ -392,6 +405,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     @Caching(evict = {
             @CacheEvict(value = "newArrivals", allEntries = true),
             @CacheEvict(value = "discountBooks", allEntries = true),
@@ -513,6 +527,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> search(String keyword) {
         try {
             String search_word = Normalized.removeVietnameseAccents(keyword);
@@ -534,6 +549,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable("newArrivals")
     public ResponseEntity<GenericResponse> getNewArrivalsBook() {
         try {
@@ -556,6 +572,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable("discountBooks")
     public ResponseEntity<GenericResponse> getDiscountBook() {
         try {
@@ -578,6 +595,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable("highRatingBooks")
     public ResponseEntity<GenericResponse> getHighRatingBook() {
         try {
@@ -600,6 +618,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable("mostPurchasedBooks")
     public ResponseEntity<GenericResponse> getMostPopularBooks() {
         try {
@@ -622,6 +641,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable("mostPurchasedCategories")
     public ResponseEntity<GenericResponse> getBooksInCategoriesMostSold() {
         try {

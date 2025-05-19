@@ -42,7 +42,6 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final BookRepository bookRepository;
 
-
     private boolean EMPLOYEEPermission(Role role) {
         return role != Role.ADMIN && role != Role.EMPLOYEE;
     }
@@ -52,7 +51,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Caching(evict = {
             @CacheEvict(value = "mostPurchasedBooks", allEntries = true),
             @CacheEvict(value = "mostPurchasedCategories", allEntries = true)
@@ -88,8 +87,6 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
             String fromStatus = reqChangeOrderStatus.getFromStatus();
             String toStatus = reqChangeOrderStatus.getToStatus();
-
-
 
             Orders order = ordersRepository.findById(orderId).get();
             if (Arrays.stream(OrderStatus.values()).noneMatch(e -> e.name().equals(fromStatus)) || Arrays.stream(OrderStatus.values()).noneMatch(e -> e.name().equals(toStatus))) {
@@ -210,28 +207,28 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
 
             order.setOrderStatus(OrderStatus.valueOf(toStatus));
             order = ordersRepository.save(order);
+
+            // Hoàn lại tồn kho khi đơn hàng bị REJECTED, CANCELLED, hoặc RETURNED
             if (toStatus.equals("REJECTED") || toStatus.equals("CANCELLED") || toStatus.equals("RETURNED")) {
                 for (OrderItem orderItem : order.getOrderDetails()) {
-                    Book book = bookRepository.findById(orderItem.getBookId())
-                            .orElseThrow(() -> new RuntimeException("Book not found with ID: " + orderItem.getBookId()));
-                    book.setInStock(book.getInStock() + orderItem.getQuantity());
-                    bookRepository.save(book);
+                    int updatedRows = bookRepository.updateInStockAdd(orderItem.getBookId(), orderItem.getQuantity());
+                    if (updatedRows == 0) {
+                        throw new IllegalStateException("Không thể cập nhật tồn kho cho sách ID: " + orderItem.getBookId());
+                    }
                 }
-
             }
 
+            // Cập nhật số lượng đã bán khi đơn hàng DELIVERED
             if (toStatus.equals("DELIVERED")) {
                 order.setPaymentStatus(PaymentStatus.SUCCESS);
                 ordersRepository.save(order);
                 for (OrderItem orderItem : order.getOrderDetails()) {
-                    Book book = bookRepository.findById(orderItem.getBookId())
-                            .orElseThrow(() -> new RuntimeException("Book not found with ID: " + orderItem.getBookId()));
-                    book.setSoldQuantity(book.getSoldQuantity() + orderItem.getQuantity());
-                    bookRepository.save(book);
+                    int updatedRows = bookRepository.updateSoldQuantity(orderItem.getBookId(), orderItem.getQuantity());
+                    if (updatedRows == 0) {
+                        throw new IllegalStateException("Không thể cập nhật số lượng đã bán cho sách ID: " + orderItem.getBookId());
+                    }
                 }
             }
-
-
 
             OrderStatusHistory orderStatusHistory = new OrderStatusHistory();
             orderStatusHistory.setOrder(order);
@@ -250,9 +247,9 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            log.error("Thay đổi trạng thái đơn hàng thất bại, lỗi : " + ex.getMessage());
+            log.error("Thay đổi trạng thái đơn hàng thất bại, lỗi: " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Lỗi hệ thống!")
+                    .message("Lỗi hệ thống: " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -260,6 +257,7 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(int index, int size) {
         try {
             Page<OrderStatusHistory> orderStatusHistories = orderStatusHistoryRepository.findAllByOrderByChangedAtDesc(PageRequest.of(index - 1, size));
@@ -270,16 +268,16 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
                 res.add(temp);
             }
             Page<Res_Get_OrderStatusHistory> dtoPage = new PageImpl<>(res, orderStatusHistories.getPageable(), orderStatusHistories.getTotalElements());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                     .message("Lấy danh sách Lịch sử thay đổi trạng thái đơn hàng thành công!")
                     .result(dtoPage)
                     .statusCode(HttpStatus.OK.value())
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            log.error("Lấy danh sách trạng thái đơn hàng thất bại, lỗi : " + ex.getMessage());
+            log.error("Lấy danh sách trạng thái đơn hàng thất bại, lỗi: " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Lỗi hệ thống!")
+                    .message("Lỗi hệ thống: " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
@@ -287,13 +285,13 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getByOrder(String orderId, int index, int size) {
         try {
             Page<OrderStatusHistory> orderStatusHistories;
             if (!orderId.isEmpty()) {
                 orderStatusHistories = orderStatusHistoryRepository.findByOrderOrderIdOrderByChangedAtDesc(orderId, PageRequest.of(index - 1, size));
-            }
-            else {
+            } else {
                 orderStatusHistories = orderStatusHistoryRepository.findAllByOrderByChangedAtDesc(PageRequest.of(index - 1, size));
             }
             List<Res_Get_OrderStatusHistory> res = new ArrayList<>();
@@ -310,13 +308,12 @@ public class OrderStatusHistoryServiceImpl implements OrderStatusHistoryService 
                     .success(true)
                     .build());
         } catch (Exception ex) {
-            log.error("Lấy danh sách trạng thái đơn hàng theo OrderId thất bại, lỗi : " + ex.getMessage());
+            log.error("Lấy danh sách trạng thái đơn hàng theo OrderId thất bại, lỗi: " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
-                    .message("Lỗi hệ thống!")
+                    .message("Lỗi hệ thống: " + ex.getMessage())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .success(false)
                     .build());
         }
     }
-
 }

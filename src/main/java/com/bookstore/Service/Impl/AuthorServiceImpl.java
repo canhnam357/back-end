@@ -14,6 +14,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
@@ -23,6 +25,7 @@ public class AuthorServiceImpl implements AuthorService {
     private final AuthorRepository authorRepository;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Author createAuthor) {
         try {
             log.info("Bắt đầu tạo tác giả!");
@@ -47,6 +50,7 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
         try {
             Page<Author> authors = authorRepository.findAll(PageRequest.of(page - 1, size));
@@ -67,6 +71,7 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> search(int page, int size, String keyword) {
         try {
             String search_word = Normalized.removeVietnameseAccents(keyword);
@@ -90,6 +95,7 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> update(String authorId, Admin_Req_Update_Author updateAuthor) {
         try {
             log.info("Bắt đầu cập nhật tác giả!");
@@ -122,6 +128,7 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> delete(String authorId) {
         try {
             log.info("Bắt đầu xoá tác giả!");
@@ -150,6 +157,7 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAllNotPageable(String keyword) {
         try {
             String search_word = Normalized.removeVietnameseAccents(keyword);

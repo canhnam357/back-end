@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import java.util.Optional;
 public class DistributorServiceImpl implements DistributorService {
     private final DistributorRepository distributorRepository;
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Distributor createDistributor) {
         try {
             log.info("Bắt đầu tạo nhà phát hành!");
@@ -48,6 +50,7 @@ public class DistributorServiceImpl implements DistributorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(int page, int size) {
         try {
             Page<Distributor> contributors = distributorRepository.findAll(PageRequest.of(page - 1, size));
@@ -68,6 +71,7 @@ public class DistributorServiceImpl implements DistributorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> search(int page, int size, String keyword) {
         try {
             String search_word = Normalized.removeVietnameseAccents(keyword);
@@ -91,6 +95,7 @@ public class DistributorServiceImpl implements DistributorService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> update(String distributorId, Admin_Req_Update_Distributor distributor) {
         try {
             log.info("Bắt đầu cập nhật thông tin nhà phát hành!");
@@ -122,6 +127,7 @@ public class DistributorServiceImpl implements DistributorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAllNotPageable(String keyword) {
         try {
             String search_word = Normalized.removeVietnameseAccents(keyword);

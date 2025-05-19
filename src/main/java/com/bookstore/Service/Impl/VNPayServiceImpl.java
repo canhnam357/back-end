@@ -61,6 +61,7 @@ public class VNPayServiceImpl implements VNPayService {
     private final RestTemplate restTemplate = new RestTemplate();
 
 
+    @Transactional(rollbackFor = Exception.class)
     public String createOrder(String ipAddress, String orderId){
         log.info("Bắt đầu tạo thanh toán VNPay!");
         String vnp_Version = "2.1.0";
@@ -140,6 +141,7 @@ public class VNPayServiceImpl implements VNPayService {
         return vnPayConfig.vnp_PayUrl + "?" + queryUrl;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public int orderReturn(HttpServletRequest request){
         Map fields = new HashMap();
         StringBuilder data = new StringBuilder();
@@ -200,6 +202,7 @@ public class VNPayServiceImpl implements VNPayService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getPaymentDetail(String userId, String orderId) {
         try {
             if (ordersRepository.findById(orderId).isEmpty()) {
@@ -360,6 +363,7 @@ public class VNPayServiceImpl implements VNPayService {
     }
 
     @Scheduled(fixedRate = 60 * 1000)
+    @Transactional
     public void refundPendingOrders() {
         log.info("START REFUND PROCESSING!!!");
         ZonedDateTime oneHourAgo = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusHours(1);

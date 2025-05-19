@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> create(Admin_Req_Create_Category createCategory) {
         try {
             log.info("Bắt đầu tạo thể loại!");
@@ -48,6 +50,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(String keyword) {
         try {
             List<Category> categories = categoryRepository.findAll();
@@ -68,6 +71,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<GenericResponse> update(String categoryId, Admin_Req_Update_Category category) {
         try {
             log.info("Bắt đầu tạo thể loại!");
@@ -99,6 +103,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAllNotPageable(String keyword) {
         try {
             String search_word = Normalized.removeVietnameseAccents(keyword);
