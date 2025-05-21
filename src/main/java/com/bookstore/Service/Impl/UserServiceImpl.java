@@ -40,6 +40,16 @@ public class UserServiceImpl implements UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final Cloudinary cloudinary;
 
+    public static boolean validatePassword(String password) {
+        if (password == null) {
+            return false;
+        }
+        boolean lengthValid = password.length() >= 8 && password.length() <= 32;
+        boolean letterValid = password.matches(".*[a-zA-Z].*");
+        boolean numberValid = password.matches(".*[0-9].*");
+        return lengthValid && letterValid && numberValid;
+    }
+
     @Override
     public ResponseEntity<GenericResponse> verifyAdmin(Admin_Req_Verify adminReqVerify) {
         try {
@@ -282,6 +292,14 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
+            if (!validatePassword(registerRequest.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Mật khẩu phải có độ dài từ 8-32 ký tự, có ít nhất 1 chữ cái, có ít nhất 1 chữ số!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
             User new_user = new User();
             new_user.setFullName(registerRequest.getFullName());
             new_user.setEmail(registerRequest.getEmail());
@@ -408,6 +426,14 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
+            if (!validatePassword(reqUpdatePassword.getNewPassword())) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Mật khẩu mới phải có độ dài từ 8-32 ký tự, có ít nhất 1 chữ cái, có ít nhất 1 chữ số!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .build());
+            }
+
             if (reqUpdatePassword.getNewPassword().length() < 8 || reqUpdatePassword.getNewPassword().length() > 32) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
@@ -431,7 +457,7 @@ public class UserServiceImpl implements UserService {
             if (reqUpdatePassword.getPassword().equals(reqUpdatePassword.getNewPassword())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
                         .success(false)
-                        .message("OTP không chính xác , vui lòng thử lại!")
+                        .message("Mật khẩu hiện tại và mật khẩu mới giống nhau!")
                         .statusCode(HttpStatus.CONFLICT.value())
                         .build());
             }
@@ -441,7 +467,7 @@ public class UserServiceImpl implements UserService {
             if (emailVerification.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
                         .success(false)
-                        .message("Incorrect OTP, please try again!")
+                        .message("OTP không chính xác , vui lòng thử lại!")
                         .statusCode(HttpStatus.BAD_REQUEST.value())
                         .build());
             }
@@ -588,6 +614,14 @@ public class UserServiceImpl implements UserService {
                         .success(false)
                         .message("Tài khoản không tồn tại!")
                         .statusCode(HttpStatus.NOT_FOUND.value())
+                        .build());
+            }
+
+            if (!validatePassword(password.getNewPassword())) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Mật khẩu phải có độ dài từ 8-32 ký tự, có ít nhất 1 chữ cái, có ít nhất 1 chữ số!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
