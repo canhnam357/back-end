@@ -307,12 +307,21 @@ public class VNPayServiceImpl implements VNPayService {
                     TransactionStatus + "|" + OrderInfo + "|" + PromotionCode + "|" + PromotionAmount;
 
             log.info("DATA Response from VNPAY Querydr: " + data);
+
+            if (ResponseCode.equals("94")) {
+                Message = "Giao dịch đã được gửi yêu cầu hoàn tiền trước đó. Yêu cầu này VNPAY đang xử lý";
+            }
+            else if (ResponseCode.equals("95")) {
+                Message = "Giao dịch này không thành công bên VNPAY. VNPAY từ chối xử lý yêu cầu";
+            }
+
+            if (!"00".equals(ResponseCode)) {
+                throw new IllegalStateException(Message);
+            }
+
             String computedHash = vnPayConfig.hmacSHA512(vnp_HashSecret, data);
             if (!computedHash.equals(SecureHash)) {
                 throw new IllegalStateException("Invalid response hash from VNPay");
-            }
-            if (!"00".equals(ResponseCode)) {
-                throw new IllegalStateException("Refund failed : " + Message);
             }
 
             BigDecimal amount = new BigDecimal(Amount);
