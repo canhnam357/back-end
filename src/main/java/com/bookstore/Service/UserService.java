@@ -14,10 +14,6 @@ public interface UserService {
 
     ResponseEntity<GenericResponse> validateVerificationAccount(Req_Verify_OTPRegister register);
 
-    ResponseEntity<GenericResponse> verifyAdmin(Admin_Req_Verify adminReqVerify);
-
-    ResponseEntity<GenericResponse> verify(String authorizationHeader);
-
     ResponseEntity<GenericResponse> getAll(int page, int size, int isActive, int isVerified, String email);
 
     ResponseEntity<GenericResponse> updateUserStatus(String userId, Admin_Req_Update_UserStatus adminUpdateUserDTO);

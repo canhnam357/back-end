@@ -33,7 +33,7 @@ public class PaymentController {
 
     @PostMapping("/api/create-order")
     @ResponseBody
-    public ResponseEntity<GenericResponse> createOrderCARD(@RequestHeader("Authorization") String authorizationHeader, HttpServletRequest request, @RequestBody Req_Create_Order order) {
+    public ResponseEntity<GenericResponse> createOrder(@RequestHeader("Authorization") String authorizationHeader, HttpServletRequest request, @RequestBody Req_Create_Order order) {
         ResponseEntity<GenericResponse> res = orderService.createOrder(order, authorizationHeader);
 
         if (!Objects.requireNonNull(res.getBody()).getSuccess()) {

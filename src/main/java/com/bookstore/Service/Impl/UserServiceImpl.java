@@ -5,7 +5,6 @@ import com.bookstore.Constant.Role;
 import com.bookstore.DTO.*;
 import com.bookstore.Entity.*;
 import com.bookstore.Repository.*;
-import com.bookstore.Security.JwtTokenProvider;
 import com.bookstore.Service.EmailVerificationService;
 import com.bookstore.Service.UserService;
 import com.bookstore.Specification.UserSpecification;
@@ -37,93 +36,17 @@ public class UserServiceImpl implements UserService {
     private final CartRepository cartRepository;
     private final EmailVerificationService emailVerificationService;
     private final EmailVerificationRepository emailVerificationRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final Cloudinary cloudinary;
 
     public static boolean validatePassword(String password) {
         if (password == null) {
-            return false;
+            return true;
         }
         boolean lengthValid = password.length() >= 8 && password.length() <= 32;
         boolean letterValid = password.matches(".*[a-zA-Z].*");
         boolean numberValid = password.matches(".*[0-9].*");
-        return lengthValid && letterValid && numberValid;
+        return !lengthValid || !letterValid || !numberValid;
     }
-
-    @Override
-    public ResponseEntity<GenericResponse> verifyAdmin(Admin_Req_Verify adminReqVerify) {
-        try {
-            String token = adminReqVerify.getAccessToken();
-            if (jwtTokenProvider._validateToken(token)) {
-                String userId = jwtTokenProvider.getUserIdFromJwt(token);
-                assert (userRepository.findById(userId).isPresent());
-                User user = userRepository.findById(userId).get();
-                if (user.getRole() == Role.ADMIN) {
-                    return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                            .success(true)
-                            .result(user.getFullName())
-                            .message("Xác thực Quản trị viên thành công!")
-                            .statusCode(HttpStatus.OK.value())
-                            .build());
-                }
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                        .success(false)
-                        .message("Người dùng không phải Quản trị viên!")
-                        .statusCode(HttpStatus.UNAUTHORIZED.value())
-                        .build());
-            }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                    .success(false)
-                    .message("AccessToken không chính xác!")
-                    .statusCode(HttpStatus.UNAUTHORIZED.value())
-                    .build());
-        } catch (Exception ex) {
-            log.error("Xác thực ADMIN thất bại, lỗi : " + ex.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                    .success(false)
-                    .message("Lỗi hệ thống!")
-                    .statusCode(HttpStatus.UNAUTHORIZED.value())
-                    .build());
-        }
-    }
-
-    @Override
-    public ResponseEntity<GenericResponse> verify(String authorizationHeader) {
-        try {
-            String token = authorizationHeader.substring(7);
-            if (jwtTokenProvider._validateToken(token)) {
-                String userId = jwtTokenProvider.getUserIdFromJwt(token);
-                assert (userRepository.findById(userId).isPresent());
-                User user = userRepository.findById(userId).get();
-                if (user.getRole() == Role.ADMIN || (user.isVerified() && user.isActive())) {
-                    return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
-                            .success(false)
-                            .result(user.getFullName())
-                            .message("Verified successfully!")
-                            .statusCode(HttpStatus.OK.value())
-                            .build());
-                }
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                        .success(false)
-                        .message("User is not an ADMIN, not active, or not verified!")
-                        .statusCode(HttpStatus.UNAUTHORIZED.value())
-                        .build());
-            }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                    .success(false)
-                    .message("Incorrect token!")
-                    .statusCode(HttpStatus.UNAUTHORIZED.value())
-                    .build());
-        } catch (Exception ex) {
-            log.error("Xác thực thất bại, lỗi : " + ex.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
-                    .success(false)
-                    .message("Lỗi hệ thống!")
-                    .statusCode(HttpStatus.UNAUTHORIZED.value())
-                    .build());
-        }
-    }
-
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<GenericResponse> getAll(int page, int size, int isActive, int isVerified, String email) {
@@ -292,7 +215,7 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
-            if (!validatePassword(registerRequest.getPassword())) {
+            if (validatePassword(registerRequest.getPassword())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("Mật khẩu phải có độ dài từ 8-32 ký tự, có ít nhất 1 chữ cái, có ít nhất 1 chữ số!")
@@ -426,7 +349,7 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
-            if (!validatePassword(reqUpdatePassword.getNewPassword())) {
+            if (validatePassword(reqUpdatePassword.getNewPassword())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("Mật khẩu mới phải có độ dài từ 8-32 ký tự, có ít nhất 1 chữ cái, có ít nhất 1 chữ số!")
@@ -447,10 +370,10 @@ public class UserServiceImpl implements UserService {
             User user = userOptional.get();
 
             if (!passwordEncoder.matches(reqUpdatePassword.getPassword(), user.getPassword())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("Mật khẩu hiện tại không chính xác!")
-                        .statusCode(HttpStatus.FORBIDDEN.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
@@ -617,7 +540,7 @@ public class UserServiceImpl implements UserService {
                         .build());
             }
 
-            if (!validatePassword(password.getNewPassword())) {
+            if (validatePassword(password.getNewPassword())) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("Mật khẩu phải có độ dài từ 8-32 ký tự, có ít nhất 1 chữ cái, có ít nhất 1 chữ số!")
