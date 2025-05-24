@@ -59,17 +59,6 @@ public class AuthController {
         return userService.validateVerificationAccount(register);
     }
 
-    @PostMapping("/verify-admin")
-    public ResponseEntity<GenericResponse> verifyAdmin(@RequestBody Admin_Req_Verify verifyAdminDTO){
-        return userService.verifyAdmin(verifyAdminDTO);
-    }
-
-
-    @PostMapping("/check")
-    public ResponseEntity<GenericResponse> verify(@RequestHeader("Authorization") String authorizationHeader){
-        return userService.verify(authorizationHeader);
-    }
-
     @PostMapping("/send-otp-reset-password")
     public ResponseEntity<GenericResponse> sendOtp(@RequestParam(defaultValue = "") String email) {
         return emailVerificationService.sendOTPResetPassword(email);

@@ -21,7 +21,7 @@ public class JwtTokenProvider {
 
     public String generateAccessToken(UserDetail userDetail) {
         Date now = new Date();
-        long JWT_ACCESS_EXPIRATION = 60 * 60 * 1000L;
+        long JWT_ACCESS_EXPIRATION = 15 * 60 * 1000L;
         Date expiryDate = new Date(now.getTime() + JWT_ACCESS_EXPIRATION);
         return Jwts.builder()
                 .setSubject(userDetail.getUser().getUserId())
