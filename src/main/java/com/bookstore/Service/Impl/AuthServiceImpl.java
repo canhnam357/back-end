@@ -150,10 +150,10 @@ public class AuthServiceImpl implements AuthService {
                         .statusCode(HttpStatus.OK.value())
                         .build());
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder()
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericResponse.builder()
                     .success(false)
                     .message("Đăng xuất thất bại, vui lòng đăng nhập trước khi đăng xuất!")
-                    .statusCode(HttpStatus.UNAUTHORIZED.value())
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
                     .build());
         } catch (Exception ex) {
             log.error("Đăng xuất thất bại, lỗi : " + ex.getMessage());

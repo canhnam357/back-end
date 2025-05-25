@@ -571,10 +571,10 @@ public class UserServiceImpl implements UserService {
             Optional<EmailVerification> emailVerification = emailVerificationRepository.findByOtpAndEmail(password.getOtp(), user.getEmail());
 
             if (emailVerification.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponse.builder()
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
                         .success(false)
                         .message("OTP Không chính xác, vui lòng thử lại!")
-                        .statusCode(HttpStatus.FORBIDDEN.value())
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .build());
             }
 
