@@ -58,7 +58,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     String accessToken = jwtTokenProvider.generateAccessToken(userDetail);
                     Map<String, String> resultMap = new HashMap<>();
                     resultMap.put("accessToken", accessToken);
-                    resultMap.put("refreshToken", reqVerify.getToken());
                     resultMap.put("username", optionalUser.get().getFullName());
                     return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
                             .success(true)

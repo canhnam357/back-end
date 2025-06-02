@@ -13,6 +13,7 @@ import com.bookstore.Service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -110,13 +111,20 @@ public class AuthServiceImpl implements AuthService {
             refreshTokenService.save(refreshToken);
             Map<String, String> tokenMap = new HashMap<>();
             tokenMap.put("accessToken", accessToken);
-            tokenMap.put("refreshToken", token);
             tokenMap.put("username", user.getFullName());
 
             user.setLastLoginAt(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             userRepository.save(user);
 
-            return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", token)
+                    .httpOnly(true)
+                    //.secure(true) // dùng HTTPS thì true
+                    .path("/") // chỉ gửi kèm khi gọi endpoint refresh
+                    .maxAge(7 * 24 * 60 * 60) // 7 ngày
+                    .sameSite("Lax") // hoặc "Strict" tùy use case
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).header("Set-Cookie", refreshTokenCookie.toString()).body(GenericResponse.builder()
                     .success(true)
                     .message("Đăng nhập thành công!")
                     .result(tokenMap)
@@ -144,7 +152,14 @@ public class AuthServiceImpl implements AuthService {
             String accessToken = authorizationHeader.substring(7);
             if (jwtTokenProvider.getUserIdFromJwt(accessToken).equals(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken))) {
                 refreshTokenService.logout(refreshToken);
-                return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder()
+                ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", "")
+                        .httpOnly(true)
+                        //.secure(true) // dùng HTTPS thì true
+                        .path("/") // chỉ gửi kèm khi gọi endpoint refresh
+                        .maxAge(0)
+                        .sameSite("Lax") // hoặc "Strict" tùy use case
+                        .build();
+                return ResponseEntity.status(HttpStatus.OK).header("Set-Cookie", refreshTokenCookie.toString()).body(GenericResponse.builder()
                         .success(true)
                         .message("Đăng xuất thành công!")
                         .statusCode(HttpStatus.OK.value())

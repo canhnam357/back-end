@@ -5,6 +5,7 @@ import com.bookstore.Entity.User;
 import com.bookstore.Repository.UserRepository;
 import com.bookstore.Service.RefreshTokenService;
 import com.bookstore.Service.UserService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -64,9 +65,16 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         refreshTokenService.revokeRefreshToken(userDetail.getUserId());
         refreshTokenService.save(refreshToken);
 
+        Cookie cookie = new Cookie("refreshToken", _refreshToken);
+        cookie.setHttpOnly(true); // Ngăn JS frontend truy cập được
+        //cookie.setSecure(true);   // Bắt buộc dùng HTTPS
+        cookie.setPath("/");      // Áp dụng cho toàn bộ domain
+        cookie.setMaxAge(7 * 24 * 60 * 60); // 7 ngày
+
+        response.addCookie(cookie);
+
         // Redirect về front-end với token
-        String redirectUrl = userUrl + "/callback?accessToken=" + accessToken +
-                "&refreshToken=" + refreshToken.getToken();
+        String redirectUrl = userUrl + "/callback?accessToken=" + accessToken;
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

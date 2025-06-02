@@ -7,6 +7,7 @@ import com.bookstore.Service.RefreshTokenService;
 import com.bookstore.Service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @Validated
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
 
@@ -45,13 +47,15 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<GenericResponse> logout(@RequestHeader("Authorization") String authorizationHeader,
-                                    @RequestParam("refreshToken") String refreshToken) {
+                                                  @CookieValue(value = "refreshToken", defaultValue = "") String refreshToken) {
+        log.info("refreshToken : " + refreshToken);
         return authService.logout(authorizationHeader, refreshToken);
     }
 
     @PostMapping("/refresh-access-token")
-    public ResponseEntity<?> refreshAccessToken(@RequestBody Req_Verify reqVerify) {
-        return refreshTokenService.refreshAccessToken(reqVerify);
+    public ResponseEntity<?> refreshAccessToken(@CookieValue(value = "refreshToken", defaultValue = "") String refreshToken) {
+        log.info("refreshToken : " + refreshToken);
+        return refreshTokenService.refreshAccessToken(new Req_Verify(refreshToken));
     }
 
     @PostMapping(value = "/verify-otp")

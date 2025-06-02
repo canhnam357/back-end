@@ -21,7 +21,7 @@ public class JwtTokenProvider {
 
     public String generateAccessToken(UserDetail userDetail) {
         Date now = new Date();
-        long JWT_ACCESS_EXPIRATION = 15 * 60 * 1000L;
+        long JWT_ACCESS_EXPIRATION = 10 * 1000L;
         Date expiryDate = new Date(now.getTime() + JWT_ACCESS_EXPIRATION);
         return Jwts.builder()
                 .setSubject(userDetail.getUser().getUserId())
@@ -67,26 +67,6 @@ public class JwtTokenProvider {
                 .getBody();
         return claims.getSubject();
     }
-
-    public boolean _validateToken(String token) {
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (ExpiredJwtException ex) {
-            log.error("Expired token : " + ex.getMessage());
-        } catch (UnsupportedJwtException ex) {
-            log.error("Token not supported : " + ex.getMessage());
-        } catch (MalformedJwtException ex) {
-            log.error("Incorrect format token : " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            log.error("Token is empty or null : " + ex.getMessage());
-        }
-        return false;
-    }
-
 
     public boolean validateToken(String authToken) throws JwtException {
         Jwts.parserBuilder()

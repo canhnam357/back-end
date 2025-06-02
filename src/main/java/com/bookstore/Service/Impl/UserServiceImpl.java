@@ -205,6 +205,14 @@ public class UserServiceImpl implements UserService {
 
             Optional<User> userNotVerified = userRepository.findByEmailAndVerifiedIsFalse(registerRequest.getEmail());
 
+            if (userNotVerified.isPresent() && userNotVerified.get().getLastLoginAt() != null) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(GenericResponse.builder()
+                        .success(false)
+                        .message("Email đã tồn tại!")
+                        .statusCode(HttpStatus.CONFLICT.value())
+                        .build());
+            }
+
             userNotVerified.ifPresent(userRepository::delete);
 
             if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
