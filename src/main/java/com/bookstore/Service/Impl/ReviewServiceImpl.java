@@ -49,6 +49,22 @@ public class ReviewServiceImpl implements ReviewService {
     public ResponseEntity<GenericResponse> addReview(String authorizationHeader, String bookId, Req_Create_Review review) {
         try {
             log.info("Bắt đầu thêm đánh giá!");
+            if (review.getContent() == null) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Nội dung không được để trống!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
+            }
+
+            if (review.getContent().length() > 2000) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Nội dung không được dài hơn 2000 ký tự!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
+            }
+
             String accessToken = authorizationHeader.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(accessToken);
 
@@ -170,6 +186,21 @@ public class ReviewServiceImpl implements ReviewService {
     public ResponseEntity<GenericResponse> update(String reviewId, String token, Req_Create_Review review) {
         try {
             log.info("Bắt đầu cập nhật đánh giá!");
+            if (review.getContent() == null) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Nội dung không được để trống!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
+            }
+
+            if (review.getContent().length() > 2000) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(GenericResponse.builder()
+                        .message("Nội dung không được dài hơn 2000 ký tự!")
+                        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .success(false)
+                        .build());
+            }
             String accessToken = token.substring(7);
             String userId = jwtTokenProvider.getUserIdFromJwt(accessToken);
             Optional<User> user = userRepository.findById(userId);
